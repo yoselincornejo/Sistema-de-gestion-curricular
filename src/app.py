@@ -170,6 +170,8 @@ CSS = """
     --orange:  #BA7517;
 }
 body { background:var(--bg); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; color:var(--txt); }
+.bk-root { background:var(--bg) !important; }
+.main-wrap { max-width:1400px; margin:0 auto; padding:0 32px; }
 
 /* Header */
 .app-header { background:white; padding:20px 28px; border-radius:12px;
@@ -190,9 +192,9 @@ body { background:var(--bg); font-family:-apple-system,BlinkMacSystemFont,"Segoe
     border-bottom:2px solid #F1F5F9; padding-bottom:10px; margin-bottom:16px; }
 
 /* Bloques dashboard */
-.bloque { background:white; border-radius:12px; padding:18px;
+.bloque { background:white; border-radius:12px; padding:22px;
     box-shadow:0 2px 6px rgba(0,0,0,0.04); border:1px solid var(--border);
-    border-top:4px solid var(--uv-blue); }
+    border-top:4px solid var(--uv-blue); flex:1; min-width:280px; }
 .bloque-title { font-size:11px; font-weight:700; text-transform:uppercase;
     letter-spacing:1px; margin-bottom:14px; }
 
@@ -266,12 +268,16 @@ def build_popup_html(comp_codigo, color):
             cuerpo += f'<div style="margin-bottom:8px">{chips}</div>'
 
     return f"""
-    <div class="popup-box">
-        <div class="popup-header">
-            <span class="popup-title" style="color:{color}">
+    <div style="margin-top:8px;padding:14px 16px;background:#F8FAFC;
+                border-radius:10px;border-left:3px solid {color};">
+        <div style="display:flex;justify-content:space-between;align-items:center;
+                    margin-bottom:10px;">
+            <span style="font-weight:700;font-size:13px;color:{color}">
                 {comp_codigo} — {DESC.get(comp_codigo,"")}
             </span>
-            <span class="popup-count">{len(asigs)} asignatura(s)</span>
+            <span style="font-size:11px;color:#64748B;background:white;
+                         padding:2px 9px;border-radius:10px;font-weight:600;
+                         border:1px solid #E2E8F0;">{len(asigs)} asignatura(s)</span>
         </div>
         {cuerpo}
     </div>"""
@@ -703,8 +709,8 @@ def crear_app():
 
     return pn.Column(
         header, tabs,
-        max_width=1100, align="center",
-        sizing_mode="stretch_width", margin=(24,20)
+        sizing_mode="stretch_width",
+        margin=(24, 40)
     )
 
 app = crear_app()
