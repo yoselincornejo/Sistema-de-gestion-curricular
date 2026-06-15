@@ -1,352 +1,279 @@
 """
-generador_excel.py
-Genera la Matriz de Competencias en formato Excel desde la base de datos.
-
-Uso:
-    python3 src/generador_excel.py
-    python3 src/generador_excel.py --salida data/output/mi_matriz.xlsx
+generador_excel.py — Matriz de Competencias plan 2025
+Estrategia template-as-data: toma la plantilla original, borra las filas
+de asignaturas y las reconstruye desde la BD. Todo el formato queda intacto.
 """
-
-import sqlite3
-import argparse
-import os
+import sqlite3, argparse, copy
 from datetime import datetime
 from pathlib import Path
+import openpyxl
+from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+from openpyxl.utils import get_column_letter
 
-try:
-    import openpyxl
-    from openpyxl.styles import (
-        PatternFill, Font, Alignment, Border, Side
-    )
-    from openpyxl.utils import get_column_letter
-except ImportError:
-    print("ERROR: openpyxl no instalado. Ejecuta: pip install openpyxl")
-    raise
+DB_PATH       = Path("data/sistema.db")
+OUT_DIR       = Path("data/output")
+PLANTILLA_PATH = Path("data/plantilla_matriz.xlsx")
 
-# ──────────────────────────────────────────────
-# CONFIGURACIÓN DE COLORES Y ESTILOS
-# ──────────────────────────────────────────────
-COLORES = {
-    "licenciatura":  "1F4E79",   # azul oscuro
-    "titulo":        "375623",   # verde oscuro
-    "sello_uv":      "7B2C2C",   # rojo oscuro
-    "desconocido":   "808080",   # gris
-    "header_fila":   "D6DCE4",   # gris azulado claro para filas de asignatura
-    "marca_x":       "FFD966",   # amarillo para la X de tributación
-    "blanco":        "FFFFFF",
-    "fila_par":      "F2F2F2",
-}
-
-TIPOS_ORDEN = {"licenciatura": 0, "titulo": 1, "sello_uv": 2, "desconocido": 3}
-TIPOS_ETIQUETA = {
-    "licenciatura": "Competencias de Licenciatura",
-    "titulo":       "Competencias Específicas del Título",
-    "sello_uv":     "Competencias Genéricas Sello UV",
-}
-
-DB_PATH = "data/sistema.db"
-
+# Filas en la plantilla original
+F_DATOS = 8    # primera fila de asignaturas
+F_ULTIMA_ORIG = 62  # última fila de datos en el original (para borrar)
 
 def conectar():
-    if not os.path.exists(DB_PATH):
-        raise FileNotFoundError(f"No se encontró la BD en {DB_PATH}. "
-                                f"Ejecuta desde la raíz del proyecto.")
-    return sqlite3.connect(DB_PATH)
+    if not DB_PATH.exists():
+        raise FileNotFoundError(f"BD no encontrada: {DB_PATH}")
+    conn = sqlite3.connect(str(DB_PATH)); conn.row_factory = None
+    return conn
 
-
-def obtener_columnas(cur):
-    """Retorna lista de RAs válidos ordenados para las columnas de la matriz."""
-    cur.execute("""
-        SELECT ra.id, c.codigo AS comp, c.tipo, c.descripcion AS comp_desc,
-               ra.nivel_dominio, ra.codigo AS ra_codigo,
-               ra.codigo_completo, ra.descripcion
+def obtener_datos():
+    conn = conectar()
+    # RAs válidos — solo los que existen en la plantilla original
+    ras = conn.execute("""
+        SELECT ra.id, ra.codigo_completo, c.codigo, c.tipo
         FROM resultados_aprendizaje ra
-        JOIN competencias c ON ra.competencia_id = c.id
+        JOIN competencias c ON c.id = ra.competencia_id
         WHERE c.tipo != 'desconocido'
         ORDER BY
-            CASE c.tipo
-                WHEN 'licenciatura' THEN 0
-                WHEN 'titulo'       THEN 1
-                WHEN 'sello_uv'     THEN 2
-                ELSE 3
-            END,
-            c.codigo,
-            COALESCE(ra.nivel_dominio, ''),
-            ra.codigo
-    """)
-    return cur.fetchall()
+            CASE c.tipo WHEN 'licenciatura' THEN 0 WHEN 'sello_uv' THEN 1 WHEN 'titulo' THEN 2 ELSE 3 END,
+            c.codigo, COALESCE(ra.nivel_dominio,''), ra.codigo
+    """).fetchall()
+    # (ra_id, codigo_completo, comp_codigo, tipo)
 
+    asigs = conn.execute("""
+        SELECT id, codigo, nombre, semestre FROM asignaturas ORDER BY semestre, codigo
+    """).fetchall()
+    # (asig_id, codigo, nombre, semestre)
 
-def obtener_asignaturas(cur):
-    """Retorna asignaturas ordenadas por semestre y código."""
-    cur.execute("""
-        SELECT id, codigo, nombre, semestre
-        FROM asignaturas
-        ORDER BY semestre, codigo
-    """)
-    return cur.fetchall()
-
-
-def obtener_tributaciones(cur):
-    """Retorna set de (asignatura_id, ra_id) para lookup O(1)."""
-    cur.execute("SELECT asignatura_id, ra_id FROM asignatura_ra")
-    return set(cur.fetchall())
-
-
-def fill(color_hex):
-    return PatternFill("solid", fgColor=color_hex)
-
-
-def font(bold=False, color="000000", size=10, italic=False):
-    return Font(bold=bold, color=color, size=size, italic=italic,
-                name="Calibri")
-
-
-def border_thin():
-    lado = Side(style="thin", color="AAAAAA")
-    return Border(left=lado, right=lado, top=lado, bottom=lado)
-
-
-def border_medium():
-    lado = Side(style="medium", color="444444")
-    return Border(left=lado, right=lado, top=lado, bottom=lado)
-
-
-def centrado(wrap=False):
-    return Alignment(horizontal="center", vertical="center", wrap_text=wrap)
-
-
-def aplicar_celda(ws, row, col, value, fill_color=None, bold=False,
-                  font_color="000000", font_size=10, align_center=True,
-                  wrap=True, border=True, italic=False):
-    cell = ws.cell(row=row, column=col, value=value)
-    if fill_color:
-        cell.fill = fill(fill_color)
-    cell.font = font(bold=bold, color=font_color, size=font_size, italic=italic)
-    if align_center:
-        cell.alignment = centrado(wrap=wrap)
-    else:
-        cell.alignment = Alignment(vertical="center", wrap_text=wrap)
-    if border:
-        cell.border = border_thin()
-    return cell
-
-
-def generar_matriz(salida: str = None):
-    conn = conectar()
-    cur = conn.cursor()
-
-    columnas = obtener_columnas(cur)      # lista de RAs
-    asignaturas = obtener_asignaturas(cur)
-    tributaciones = obtener_tributaciones(cur)
+    tribs = set(conn.execute(
+        "SELECT asignatura_id, ra_id FROM asignatura_ra"
+    ).fetchall())
 
     conn.close()
+    return ras, asigs, tribs
 
-    if not columnas:
-        print("⚠ No hay RAs válidos en la BD. Verifica competencias.")
-        return
+def nivel_academico(semestre):
+    if semestre <= 4: return "N1"
+    if semestre <= 8: return "N2"
+    return "N3"
 
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Matriz de Competencias"
+def _copy_cell_format(src_cell, dst_cell):
+    """Copia formato completo de src a dst."""
+    if src_cell.has_style:
+        dst_cell.font      = copy.copy(src_cell.font)
+        dst_cell.fill      = copy.copy(src_cell.fill)
+        dst_cell.border    = copy.copy(src_cell.border)
+        dst_cell.alignment = copy.copy(src_cell.alignment)
+        dst_cell.number_format = src_cell.number_format
 
-    # ──────────────────────────────────────────
-    # FILA 1: Título principal
-    # ──────────────────────────────────────────
-    COLS_FIJAS = 4   # semestre | código | asignatura | créditos
-    N_COLS = COLS_FIJAS + len(columnas)
+def _set_cell(ws, row, col, value, font=None, alignment=None):
+    """Escribe en celda si no es MergedCell."""
+    try:
+        c = ws.cell(row=row, column=col)
+        c.value = value
+        if font:      c.font      = font
+        if alignment: c.alignment = alignment
+    except AttributeError:
+        pass  # MergedCell — ignorar
 
-    ws.merge_cells(start_row=1, start_column=1,
-                   end_row=1, end_column=N_COLS)
-    titulo_cell = ws.cell(row=1, column=1,
-                          value="MATRIZ DE COMPETENCIAS — INGENIERÍA CIVIL MATEMÁTICA — PLAN 2025")
-    titulo_cell.font = font(bold=True, color="FFFFFF", size=13)
-    titulo_cell.fill = fill("1A3A5C")
-    titulo_cell.alignment = centrado(wrap=False)
+def generar_matriz(salida=None):
+    if not PLANTILLA_PATH.exists():
+        raise FileNotFoundError(
+            f"Plantilla no encontrada: {PLANTILLA_PATH}\n"
+            f"Copia la plantilla original a data/plantilla_matriz.xlsx"
+        )
 
-    # ──────────────────────────────────────────
-    # FILA 2: Grupos de tipo de competencia
-    # ──────────────────────────────────────────
-    # Calcular rangos por tipo
-    grupos = {}
-    for idx, (ra_id, comp, tipo, comp_desc, nivel, ra_cod, cod_completo, ra_desc) in enumerate(columnas):
-        grupos.setdefault(tipo, []).append(COLS_FIJAS + 1 + idx)
+    ras, asigs, tribs = obtener_datos()
+    if not ras:
+        print("⚠ Sin RAs válidos en la BD."); return
 
-    # Celdas fijas vacías fila 2
-    for col in range(1, COLS_FIJAS + 1):
-        aplicar_celda(ws, 2, col, "", fill_color="1A3A5C", border=True)
+    # ── Cargar plantilla original ─────────────────────────────────
+    wb = openpyxl.load_workbook(str(PLANTILLA_PATH))
+    ws = wb['mapa (v2 2018)']
 
-    for tipo, col_indices in grupos.items():
-        col_ini = min(col_indices)
-        col_fin = max(col_indices)
-        if col_ini < col_fin:
-            ws.merge_cells(start_row=2, start_column=col_ini,
-                           end_row=2, end_column=col_fin)
-        etiqueta = TIPOS_ETIQUETA.get(tipo, tipo.upper())
-        color = COLORES.get(tipo, "808080")
-        aplicar_celda(ws, 2, col_ini, etiqueta,
-                      fill_color=color, bold=True,
-                      font_color="FFFFFF", font_size=10)
+    # ── Mapear RA codigo_completo → columna desde la plantilla ────
+    # La fila 6 tiene los códigos de RA como texto en cada columna
+    ra_to_col = {}
+    for col in range(1, ws.max_column + 1):
+        val = ws.cell(6, col).value
+        if val and isinstance(val, str):
+            # Normalizar: quitar descripción larga, dejar solo el código
+            # Ej: "CL1, N1, RA1: Relaciona..." → "CL1, N1, RA1"
+            codigo = val.split(":")[0].strip()
+            ra_to_col[codigo] = col
 
-    # ──────────────────────────────────────────
-    # FILA 3: Grupos de competencia individual (CL1, CL2, CE1...)
-    # ──────────────────────────────────────────
-    grupos_comp = {}
-    for idx, (ra_id, comp, tipo, comp_desc, nivel, ra_cod, cod_completo, ra_desc) in enumerate(columnas):
-        key = (comp, tipo)
-        grupos_comp.setdefault(key, []).append(COLS_FIJAS + 1 + idx)
+    # También mapear por código_completo exacto de la BD
+    # Construir lookup normalizado
+    def normalizar(s):
+        return s.strip().replace(" ", "").upper()
 
-    for col in range(1, COLS_FIJAS + 1):
-        aplicar_celda(ws, 3, col, "", fill_color="D6DCE4", border=True)
+    ra_col_norm = {normalizar(k): v for k, v in ra_to_col.items()}
 
-    for (comp, tipo), col_indices in grupos_comp.items():
-        col_ini = min(col_indices)
-        col_fin = max(col_indices)
-        if col_ini < col_fin:
-            ws.merge_cells(start_row=3, start_column=col_ini,
-                           end_row=3, end_column=col_fin)
-        color = COLORES.get(tipo, "808080")
-        # Color más claro para este nivel
-        color_claro = _aclarar_color(color)
-        aplicar_celda(ws, 3, col_ini, comp,
-                      fill_color=color_claro, bold=True,
-                      font_color=color, font_size=10)
+    # Mapear cada RA de la BD a su columna en la plantilla
+    ra_id_to_col = {}
+    for ra_id, ccomp, comp, tipo in ras:
+        norm = normalizar(ccomp)
+        if norm in ra_col_norm:
+            ra_id_to_col[ra_id] = ra_col_norm[norm]
 
-    # ──────────────────────────────────────────
-    # FILA 4: Nivel de dominio (N1, N2, N3...)
-    # ──────────────────────────────────────────
-    grupos_nivel = {}
-    for idx, (ra_id, comp, tipo, comp_desc, nivel, ra_cod, cod_completo, ra_desc) in enumerate(columnas):
-        nivel_key = (comp, tipo, nivel or "—")
-        grupos_nivel.setdefault(nivel_key, []).append(COLS_FIJAS + 1 + idx)
+    print(f"  RAs mapeados a columnas: {len(ra_id_to_col)}/{len(ras)}")
 
-    for col in range(1, COLS_FIJAS + 1):
-        aplicar_celda(ws, 4, col, "", fill_color="EBF3FB", border=True)
+    # ── Limpiar filas de datos existentes ─────────────────────────
+    # Deshacer TODOS los merges que toquen filas de datos
+    merges_a_eliminar = [str(m) for m in ws.merged_cells.ranges
+                         if m.max_row >= F_DATOS]
+    for m in merges_a_eliminar:
+        try: ws.unmerge_cells(m)
+        except: pass
 
-    for (comp, tipo, nivel_key), col_indices in grupos_nivel.items():
-        col_ini = min(col_indices)
-        col_fin = max(col_indices)
-        if col_ini < col_fin:
-            ws.merge_cells(start_row=4, start_column=col_ini,
-                           end_row=4, end_column=col_fin)
-        color = COLORES.get(tipo, "808080")
-        aplicar_celda(ws, 4, col_ini, nivel_key,
-                      fill_color="EBF3FB", bold=False,
-                      font_color=color, font_size=9)
+    # Borrar contenido y formato de filas de datos
+    for row in range(F_DATOS, F_ULTIMA_ORIG + 10):  # margen extra
+        for col in range(1, ws.max_column + 1):
+            try:
+                c = ws.cell(row, col)
+                c.value = None
+                c.font = Font(name="Calibri", size=12)
+                c.fill = PatternFill(fill_type=None)
+            except AttributeError:
+                pass
 
-    # ──────────────────────────────────────────
-    # FILA 5: Código completo del RA (encabezado de columna)
-    # ──────────────────────────────────────────
-    HEADER_FIJOS = [("Sem.", 6), ("Código", 10), ("Asignatura", 32), ("Cred.", 6)]
-    for col, (texto, ancho) in enumerate(HEADER_FIJOS, start=1):
-        aplicar_celda(ws, 5, col, texto, fill_color="2E5E8E",
-                      bold=True, font_color="FFFFFF", font_size=10)
-        ws.column_dimensions[get_column_letter(col)].width = ancho
+    # ── Tomar fila plantilla de referencia (formato de fila 8 original)
+    # Guardamos el formato de cada columna de la fila 8 original ANTES de borrar
+    # → ya fue borrado, así que usamos valores conocidos del análisis
+    font_x      = Font(name="Calibri", size=12, bold=True, color="FF0000")
+    font_normal = Font(name="Calibri", size=12)
+    font_sem    = Font(name="Calibri", size=18, bold=True)
+    font_nivel  = Font(name="Calibri", size=36, bold=True)
+    font_codigo = Font(name="Calibri", size=11, bold=True)
+    font_nombre = Font(name="Calibri", size=11, bold=True)
+    font_cred   = Font(name="Calibri", size=12, bold=True)
+    fill_cred   = PatternFill("solid", fgColor="D8D8D8")
 
-    for idx, (ra_id, comp, tipo, comp_desc, nivel, ra_cod, cod_completo, ra_desc) in enumerate(columnas):
-        col = COLS_FIJAS + 1 + idx
-        color = COLORES.get(tipo, "808080")
-        color_claro = _aclarar_color(color)
-        aplicar_celda(ws, 5, col, cod_completo,
-                      fill_color=color_claro,
-                      font_color=color, font_size=8,
-                      bold=False, wrap=True)
-        ws.column_dimensions[get_column_letter(col)].width = 14
+    align_center = Alignment(horizontal="center", vertical="center")
+    align_left   = Alignment(horizontal="left",   vertical="center")
+    align_rot90  = Alignment(horizontal="center", vertical="center", text_rotation=90)
 
-    # Altura de la fila de headers de RA
-    ws.row_dimensions[5].height = 80
+    # ── Calcular agrupaciones por semestre ────────────────────────
+    from collections import OrderedDict
+    sem_filas = OrderedDict()
+    for idx, (asig_id, codigo, nombre, semestre) in enumerate(asigs):
+        fila = F_DATOS + idx
+        sem_filas.setdefault(semestre, []).append(fila)
 
-    # ──────────────────────────────────────────
-    # FILAS DE DATOS: una por asignatura
-    # ──────────────────────────────────────────
+    # ── Columnas de COUNTIF por bloque (fiel al original) ─────────
+    # En el original: G=comp.lic (L:AG), H=comp.gen (AI:BZ), I=comp.esp (CB:DC)
+    # Para el plan 2025, calculamos los rangos reales desde ra_to_col
+    col_lic_min = col_lic_max = col_gen_min = col_gen_max = col_esp_min = col_esp_max = None
+    for ra_id, ccomp, comp, tipo in ras:
+        col = ra_id_to_col.get(ra_id)
+        if col is None: continue
+        if tipo == "licenciatura":
+            col_lic_min = min(col, col_lic_min or col)
+            col_lic_max = max(col, col_lic_max or col)
+        elif tipo == "sello_uv":
+            col_gen_min = min(col, col_gen_min or col)
+            col_gen_max = max(col, col_gen_max or col)
+        elif tipo == "titulo":
+            col_esp_min = min(col, col_esp_min or col)
+            col_esp_max = max(col, col_esp_max or col)
+
+    COL_TOT = 6   # F
+    COL_LIC = 7   # G
+    COL_GEN = 8   # H
+    COL_ESP = 9   # I
+
+    # Actualizar fila 7 (contadores por columna de RA)
+    UF = F_DATOS + len(asigs) - 1
+    for ra_id, ccomp, comp, tipo in ras:
+        col = ra_id_to_col.get(ra_id)
+        if col is None: continue
+        cl = get_column_letter(col)
+        try:
+            ws.cell(7, col).value = f'=COUNTIF({cl}{F_DATOS}:{cl}{UF},"X")'
+        except AttributeError:
+            pass
+
+    # ── Escribir filas de asignaturas ─────────────────────────────
     sem_actual = None
-    for fila_idx, (asig_id, codigo, nombre, semestre) in enumerate(asignaturas):
-        fila = 6 + fila_idx
-        es_par = fila_idx % 2 == 0
-        color_fila = "F7FAFD" if es_par else "FFFFFF"
+    for idx, (asig_id, codigo, nombre, semestre) in enumerate(asigs):
+        fila = F_DATOS + idx
 
-        # Separador visual de semestre
+        # Altura de fila
+        ws.row_dimensions[fila].height = 35.25
+
+        # ── Col A: Nivel académico (merge vertical, fuente 36) ────
         if semestre != sem_actual:
             sem_actual = semestre
+            filas_sem = sem_filas[semestre]
+            f1, f2 = filas_sem[0], filas_sem[-1]
 
-        # Créditos (si están disponibles — campo no en BD actual, ponemos vacío)
-        datos_fila = [semestre, codigo, nombre, ""]
+            if f1 != f2:
+                ws.merge_cells(start_row=f1, start_column=1,
+                               end_row=f2, end_column=1)
+            ws.cell(f1, 1).value = nivel_academico(semestre)
+            ws.cell(f1, 1).font = font_nivel
+            ws.cell(f1, 1).alignment = align_rot90
 
-        for col, valor in enumerate(datos_fila, start=1):
-            bold = col == 3  # nombre en negrita
-            aplicar_celda(ws, fila, col, valor,
-                          fill_color=color_fila,
-                          bold=bold, align_center=(col != 3),
-                          wrap=(col == 3))
+            # ── Col B: Número semestre (merge vertical) ───────────
+            if f1 != f2:
+                ws.merge_cells(start_row=f1, start_column=2,
+                               end_row=f2, end_column=2)
+            ws.cell(f1, 2).value = semestre
+            ws.cell(f1, 2).font = font_sem
+            ws.cell(f1, 2).alignment = align_center
 
-        # Columnas de RAs
-        for idx, (ra_id, comp, tipo, comp_desc, nivel, ra_cod, cod_completo, ra_desc) in enumerate(columnas):
-            col = COLS_FIJAS + 1 + idx
-            tributa = (asig_id, ra_id) in tributaciones
-            valor = "X" if tributa else ""
-            color_celda = COLORES["marca_x"] if tributa else color_fila
-            font_color = "7B4F00" if tributa else "AAAAAA"
-            aplicar_celda(ws, fila, col, valor,
-                          fill_color=color_celda,
-                          bold=tributa, font_color=font_color,
-                          font_size=10)
+        # ── Col C: Código ─────────────────────────────────────────
+        _set_cell(ws, fila, 3, codigo, font=font_codigo, alignment=align_center)
 
-        ws.row_dimensions[fila].height = 28
+        # ── Col D: Nombre ─────────────────────────────────────────
+        _set_cell(ws, fila, 4, nombre, font=font_nombre, alignment=align_left)
 
-    # ──────────────────────────────────────────
-    # FILA FINAL: leyenda y metadatos
-    # ──────────────────────────────────────────
-    fila_leyenda = 6 + len(asignaturas) + 1
-    ws.merge_cells(start_row=fila_leyenda, start_column=1,
-                   end_row=fila_leyenda, end_column=N_COLS)
-    leyenda = (f"Generado automáticamente desde BD — {datetime.now().strftime('%d/%m/%Y %H:%M')} "
-               f"| {len(asignaturas)} asignaturas | {len(columnas)} RAs/Desempeños")
-    cell = ws.cell(row=fila_leyenda, column=1, value=leyenda)
-    cell.font = font(italic=True, color="666666", size=9)
-    cell.fill = fill("F2F2F2")
-    cell.alignment = Alignment(horizontal="left", vertical="center")
+        # ── Col E: Créditos (fondo gris) ──────────────────────────
+        try:
+            c = ws.cell(fila, 5)
+            c.value = None
+            c.font = font_cred
+            c.fill = fill_cred
+        except AttributeError: pass
 
-    # ──────────────────────────────────────────
-    # FREEZE PANES y configuración de hoja
-    # ──────────────────────────────────────────
-    ws.freeze_panes = ws.cell(row=6, column=COLS_FIJAS + 1)
-    ws.sheet_properties.tabColor = "1F4E79"
+        # ── Col F: Total SUM ──────────────────────────────────────
+        lc = get_column_letter(COL_LIC)
+        le = get_column_letter(COL_ESP)
+        _set_cell(ws, fila, COL_TOT,
+                  f"=SUM({lc}{fila}:{le}{fila})",
+                  font=font_normal, alignment=align_center)
 
-    # Fila 1 altura
-    ws.row_dimensions[1].height = 30
-    for r in [2, 3, 4]:
-        ws.row_dimensions[r].height = 22
-    ws.row_dimensions[5].height = 80
+        # ── Col G,H,I: COUNTIF por bloque ────────────────────────
+        if col_lic_min and col_lic_max:
+            rng = f"{get_column_letter(col_lic_min)}{fila}:{get_column_letter(col_lic_max)}{fila}"
+            _set_cell(ws, fila, COL_LIC, f'=COUNTIF({rng},"X")',
+                      font=font_normal, alignment=align_center)
+        if col_gen_min and col_gen_max:
+            rng = f"{get_column_letter(col_gen_min)}{fila}:{get_column_letter(col_gen_max)}{fila}"
+            _set_cell(ws, fila, COL_GEN, f'=COUNTIF({rng},"X")',
+                      font=font_normal, alignment=align_center)
+        if col_esp_min and col_esp_max:
+            rng = f"{get_column_letter(col_esp_min)}{fila}:{get_column_letter(col_esp_max)}{fila}"
+            _set_cell(ws, fila, COL_ESP, f'=COUNTIF({rng},"X")',
+                      font=font_normal, alignment=align_center)
 
-    # ──────────────────────────────────────────
-    # GUARDAR
-    # ──────────────────────────────────────────
+        # ── X en columnas de RA ───────────────────────────────────
+        for ra_id, ccomp, comp, tipo in ras:
+            col = ra_id_to_col.get(ra_id)
+            if col is None: continue
+            if (asig_id, ra_id) in tribs:
+                _set_cell(ws, fila, col, "X",
+                          font=font_x, alignment=align_center)
+
+    # ── Guardar ───────────────────────────────────────────────────
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
     if salida is None:
-        os.makedirs("data/output", exist_ok=True)
-        fecha = datetime.now().strftime("%Y%m%d_%H%M")
-        salida = f"data/output/matriz_competencias_{fecha}.xlsx"
-
+        salida = str(OUT_DIR / f"matriz_competencias_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx")
     wb.save(salida)
     print(f"✓ Matriz generada: {salida}")
-    print(f"  {len(asignaturas)} asignaturas × {len(columnas)} RAs/Desempeños")
+    print(f"  {len(asigs)} asignaturas × {len(ra_id_to_col)} RAs mapeados")
     return salida
 
-
-def _aclarar_color(hex_color: str) -> str:
-    """Convierte un color hex oscuro en una versión muy clara (mezcla con blanco 85%)."""
-    r = int(hex_color[0:2], 16)
-    g = int(hex_color[2:4], 16)
-    b = int(hex_color[4:6], 16)
-    factor = 0.82
-    r2 = int(r + (255 - r) * factor)
-    g2 = int(g + (255 - g) * factor)
-    b2 = int(b + (255 - b) * factor)
-    return f"{r2:02X}{g2:02X}{b2:02X}"
-
-
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Genera la Matriz de Competencias en Excel")
-    parser.add_argument("--salida", default=None,
-                        help="Ruta del archivo de salida (default: data/output/matriz_FECHA.xlsx)")
-    args = parser.parse_args()
-    generar_matriz(salida=args.salida)
+    p = argparse.ArgumentParser()
+    p.add_argument("--salida", default=None)
+    a = p.parse_args()
+    generar_matriz(salida=a.salida)

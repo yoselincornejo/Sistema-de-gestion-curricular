@@ -5,16 +5,20 @@ Aplicación web local con Panel.
 Ejecutar:
     panel serve src/app.py --show --autoreload
 """
-
 import sqlite3
 import os
+import sys
 import panel as pn
 import param
 from pathlib import Path
 from datetime import datetime
 
-pn.extension(sizing_mode="stretch_width", notifications=True)
+sys.path.insert(0, os.path.dirname(__file__))
 
+from generador_excel import generar_matriz
+from generador_word import generar_programa_individual, generar_mapa_progreso
+
+pn.extension(sizing_mode="stretch_width", notifications=True)
 RUTA_DB = Path("data/sistema.db")
 RUTA_OUTPUT = Path("data/output")
 RUTA_OUTPUT.mkdir(parents=True, exist_ok=True)
@@ -84,28 +88,23 @@ def get_asignaturas_lista():
 def get_programa_completo(asig_id):
     """Retorna todos los datos de un programa para el editor."""
     conn = conexion()
-    asig = conn.execute(
+    asig = dict(conn.execute(
         "SELECT * FROM asignaturas WHERE id = ?", (asig_id,)
-    ).fetchone()
-    unidades = conn.execute(
-        "SELECT * FROM unidades WHERE asignatura_id = ? ORDER BY orden",
-        (asig_id,)
-    ).fetchall()
-    metodologias = conn.execute(
+    ).fetchone())
+    unidades = [dict(r) for r in conn.execute(
+        "SELECT * FROM unidades WHERE asignatura_id = ? ORDER BY orden", (asig_id,)
+    ).fetchall()]
+    metodologias = [dict(r) for r in conn.execute(
         "SELECT * FROM metodologias WHERE asignatura_id = ?", (asig_id,)
-    ).fetchall()
-    evaluaciones = conn.execute(
-        "SELECT * FROM evaluaciones WHERE asignatura_id = ? ORDER BY id",
-        (asig_id,)
-    ).fetchall()
-    ras = conn.execute("""
-        SELECT ra.id, ra.codigo_completo, c.codigo as comp, c.tipo
-        FROM asignatura_ra ar
-        JOIN resultados_aprendizaje ra ON ra.id = ar.ra_id
-        JOIN competencias c ON c.id = ra.competencia_id
-        ORDER BY c.codigo, ra.codigo_completo
-    """).fetchall() if False else conn.execute("""
-        SELECT ra.id, ra.codigo_completo, c.codigo as comp, c.tipo
+    ).fetchall()]
+    evaluaciones = [dict(r) for r in conn.execute(
+        "SELECT * FROM evaluaciones WHERE asignatura_id = ? ORDER BY id", (asig_id,)
+    ).fetchall()]
+
+    # Para JOINs: row_factory=None evita el IndexError con aliases
+    conn.row_factory = None
+    ras_raw = conn.execute("""
+        SELECT ra.id, ra.codigo_completo, c.codigo, c.tipo
         FROM asignatura_ra ar
         JOIN resultados_aprendizaje ra ON ra.id = ar.ra_id
         JOIN competencias c ON c.id = ra.competencia_id
@@ -113,16 +112,27 @@ def get_programa_completo(asig_id):
         ORDER BY c.codigo, ra.codigo_completo
     """, (asig_id,)).fetchall()
 
-    todos_ras = conn.execute("""
+    todos_ras_raw = conn.execute("""
         SELECT ra.id, ra.codigo_completo, c.codigo, c.tipo
         FROM resultados_aprendizaje ra
         JOIN competencias c ON c.id = ra.competencia_id
         WHERE c.tipo != 'desconocido'
-        ORDER BY c.codigo, ra.codigo_completo
+        ORDER BY
+            CASE c.tipo
+                WHEN 'licenciatura' THEN 0
+                WHEN 'titulo'       THEN 1
+                WHEN 'sello_uv'     THEN 2
+                ELSE 3
+            END,
+            c.codigo, ra.codigo_completo
     """).fetchall()
 
     conn.close()
-    return dict(asig), list(unidades), list(metodologias), list(evaluaciones), list(ras), list(todos_ras)
+
+    ras = [{"id": r[0], "codigo_completo": r[1], "comp": r[2], "tipo": r[3]} for r in ras_raw]
+    todos_ras = [{"id": r[0], "codigo_completo": r[1], "comp": r[2], "tipo": r[3]} for r in todos_ras_raw]
+
+    return asig, unidades, metodologias, evaluaciones, ras, todos_ras
 
 
 def guardar_programa(asig_id, datos):
@@ -457,22 +467,19 @@ class Dashboard(param.Parameterized):
             button_type="success", width=300
         )
         status = pn.pane.HTML("")
+def generar_excel(event):
+    try:
+        ruta = generar_matriz()
+        status.object = f'<p style="color:green;font-weight:600">✓ Generado: {ruta}</p>'
+    except Exception as e:
+        status.object = f'<p style="color:red">✗ Error: {e}</p>'
 
-        def generar_excel(event):
-            try:
-                from generador_excel import generar_matriz
-                ruta = generar_matriz()
-                status.object = f'<p style="color:green;font-weight:600">✓ Generado: {ruta}</p>'
-            except Exception as e:
-                status.object = f'<p style="color:red">✗ Error: {e}</p>'
-
-        def generar_word(event):
-            try:
-                from generador_word import generar_mapa_progreso
-                ruta = generar_mapa_progreso()
-                status.object = f'<p style="color:green;font-weight:600">✓ Generado: {ruta}</p>'
-            except Exception as e:
-                status.object = f'<p style="color:#e67e00">⚠ Mapa de Progreso aún no implementado</p>'
+def generar_word(event):
+    try:
+        ruta = generar_mapa_progreso()
+        status.object = f'<p style="color:green;font-weight:600">✓ Generado: {ruta}</p>'
+    except Exception as e:
+        status.object = f'<p style="color:red">✗ Error: {e}</p>'
 
         btn_excel.on_click(generar_excel)
         btn_word.on_click(generar_word)
@@ -703,11 +710,10 @@ class EditorProgramas(param.Parameterized):
 
         def on_generar_word(event):
             try:
-                from generador_word import generar_programa_individual
                 ruta = generar_programa_individual(self.asignatura_id)
                 self._status.object = f'<p style="color:green;font-weight:600">✓ Word generado: {ruta}</p>'
             except Exception as e:
-                self._status.object = f'<p style="color:#e67e00">⚠ Generador Word pendiente de implementar</p>'
+                self._status.object = f'<p style="color:red">✗ Error: {e}</p>'
 
         btn_guardar.on_click(on_guardar)
         btn_generar_word.on_click(on_generar_word)

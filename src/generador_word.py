@@ -1,0 +1,574 @@
+"""
+generador_word.py — Template-as-data
+Toma el Word original de data/programas/, edita quirúrgicamente
+las secciones que viven en la BD, y guarda en data/output/.
+"""
+import sqlite3, re, copy, os
+from pathlib import Path
+from datetime import datetime
+from docx import Document
+from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
+
+DB_PATH  = Path("data/sistema.db")
+OUT_DIR  = Path("data/output")
+PROG_DIR = Path("data/programas")
+
+WNS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+
+# ── BD ────────────────────────────────────────────────────────────
+
+def conectar():
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def get_programa(asig_id):
+    conn = conectar()
+    asig = dict(conn.execute(
+        "SELECT * FROM asignaturas WHERE id=?", (asig_id,)
+    ).fetchone())
+    unidades = [dict(r) for r in conn.execute(
+        "SELECT * FROM unidades WHERE asignatura_id=? ORDER BY orden", (asig_id,)
+    ).fetchall()]
+    metodologias = [dict(r) for r in conn.execute(
+        "SELECT * FROM metodologias WHERE asignatura_id=?", (asig_id,)
+    ).fetchall()]
+    evaluaciones = [dict(r) for r in conn.execute(
+        "SELECT * FROM evaluaciones WHERE asignatura_id=? ORDER BY id", (asig_id,)
+    ).fetchall()]
+    conn.row_factory = None
+    ras = conn.execute("""
+        SELECT ra.codigo_completo, ra.descripcion, c.codigo, c.tipo
+        FROM asignatura_ra ar
+        JOIN resultados_aprendizaje ra ON ra.id=ar.ra_id
+        JOIN competencias c ON c.id=ra.competencia_id
+        WHERE ar.asignatura_id=?
+        ORDER BY c.codigo, ra.codigo_completo
+    """, (asig_id,)).fetchall()
+    conn.close()
+    ras = [{"codigo_completo": r[0], "descripcion": r[1],
+            "comp": r[2], "tipo": r[3]} for r in ras]
+    return asig, unidades, metodologias, evaluaciones, ras
+
+def buscar_word_original(codigo):
+    """Busca el .docx original por código de asignatura."""
+    codigo_norm = codigo.strip().replace(" ", "")
+    for docx in PROG_DIR.rglob("*.docx"):
+        # Normalizar nombre de archivo para comparar
+        nombre = docx.stem.replace(" ", "").upper()
+        if codigo_norm.upper() in nombre:
+            return docx
+    return None
+
+# ── Helpers XML ───────────────────────────────────────────────────
+
+def get_cell_text(cell):
+    return "".join(t.text for t in cell._tc.iter(f"{{{WNS}}}t") if t.text)
+
+def clear_cell(cell):
+    """Vacía el contenido de una celda conservando su formato."""
+    for p in cell.paragraphs:
+        for run in p.runs:
+            run.text = ""
+    # Dejar al menos un párrafo vacío
+    if not cell.paragraphs:
+        cell.add_paragraph()
+
+def set_cell_text(cell, text, bold=False, preserve_style=True):
+    """Reemplaza el texto de una celda conservando el estilo del primer run."""
+    para = cell.paragraphs[0]
+    # Copiar formato del primer run si existe
+    fmt = {}
+    if para.runs and preserve_style:
+        r0 = para.runs[0]
+        fmt = {
+            "bold":   r0.bold,
+            "italic": r0.italic,
+            "size":   r0.font.size,
+            "color":  r0.font.color.rgb if r0.font.color and r0.font.color.type else None,
+            "name":   r0.font.name,
+        }
+    # Borrar runs existentes
+    for run in para.runs:
+        run.text = ""
+    if para.runs:
+        run = para.runs[0]
+    else:
+        run = para.add_run()
+    run.text = text
+    if bold:
+        run.bold = True
+    elif fmt.get("bold") is not None:
+        run.bold = fmt["bold"]
+
+def clone_paragraph_format(src_para, dst_para):
+    """Copia el pPr (formato de párrafo) de src a dst."""
+    src_pPr = src_para._p.find(qn("w:pPr"))
+    if src_pPr is not None:
+        dst_pPr = dst_para._p.find(qn("w:pPr"))
+        if dst_pPr is not None:
+            dst_para._p.remove(dst_pPr)
+        dst_para._p.insert(0, copy.deepcopy(src_pPr))
+
+def clone_run_format(src_run, dst_run):
+    """Copia el rPr (formato de run) de src a dst."""
+    src_rPr = src_run._r.find(qn("w:rPr"))
+    if src_rPr is not None:
+        dst_rPr = dst_run._r.find(qn("w:rPr"))
+        if dst_rPr is not None:
+            dst_run._r.remove(dst_rPr)
+        dst_run._r.insert(0, copy.deepcopy(src_rPr))
+
+def get_body_elements(doc):
+    """Retorna lista de elementos del body con su índice."""
+    return list(doc.element.body)
+
+def find_section_index(body_elems, marker_text):
+    """Encuentra el índice del primer elemento que contiene marker_text."""
+    for i, elem in enumerate(body_elems):
+        tag = elem.tag.split("}")[-1]
+        if tag == "p":
+            text = "".join(t.text for t in elem.iter(f"{{{WNS}}}t") if t.text)
+            if marker_text.lower() in text.lower():
+                return i
+    return -1
+
+def find_table_after(body_elems, start_idx):
+    """Encuentra la primera tabla después del índice dado."""
+    for i in range(start_idx, len(body_elems)):
+        if body_elems[i].tag.split("}")[-1] == "tbl":
+            return i
+    return -1
+
+# ── Edición de secciones ──────────────────────────────────────────
+
+def editar_tabla_identificacion(doc, asig):
+    """Tabla de identificación: nombre, código, requisitos."""
+    body = get_body_elements(doc)
+    idx_sec = find_section_index(body, "IDENTIFICACIÓN:")
+    if idx_sec < 0:
+        return
+    # La tabla de identificación simple (Nombre / Código / Requisito) viene después
+    # Hay dos tablas de identificación: la grande (Facultad/Carrera) y la pequeña
+    # Buscar la que tiene "Nombre" y "Código" como primera columna
+    tables_after = [i for i in range(idx_sec, len(body))
+                    if body[i].tag.split("}")[-1] == "tbl"]
+
+    for tbl_idx in tables_after[:3]:
+        tbl_elem = body[tbl_idx]
+        rows = list(tbl_elem.iter(f"{{{WNS}}}tr"))
+        if len(rows) >= 2:
+            first_cell = "".join(t.text for t in
+                list(rows[0].iter(f"{{{WNS}}}tc"))[0].iter(f"{{{WNS}}}t") if t.text)
+            if "Nombre" in first_cell or "nombre" in first_cell:
+                # Esta es la tabla pequeña de identificación
+                for row in rows:
+                    cells = list(row.iter(f"{{{WNS}}}tc"))
+                    if len(cells) >= 2:
+                        label = "".join(t.text for t in cells[0].iter(f"{{{WNS}}}t") if t.text)
+                        if "Nombre" in label:
+                            set_cell_text(
+                                _tc_to_cell(doc, cells[1]),
+                                asig.get("nombre", "")
+                            )
+                        elif "Código" in label or "Codigo" in label:
+                            set_cell_text(
+                                _tc_to_cell(doc, cells[1]),
+                                asig.get("codigo", "")
+                            )
+                        elif "Requisito" in label:
+                            set_cell_text(
+                                _tc_to_cell(doc, cells[1]),
+                                asig.get("requisitos", "") or "Sin Requisito"
+                            )
+                break
+
+def _tc_to_cell(doc, tc_elem):
+    """Wrapper para obtener un Cell desde un elemento tc XML."""
+    from docx.table import _Cell
+    return _Cell(tc_elem, None)
+
+def editar_ras(doc, ras):
+    """
+    Reemplaza los párrafos de RAs entre 'RESULTADOS DE APRENDIZAJE Y DESEMPEÑOS'
+    y 'UNIDADES DE APRENDIZAJE Y CONTENIDOS'.
+    """
+    body = get_body_elements(doc)
+    idx_ra  = find_section_index(body, "RESULTADOS DE APRENDIZAJE")
+    idx_uni = find_section_index(body, "UNIDADES DE APRENDIZAJE")
+    if idx_ra < 0 or idx_uni < 0:
+        return
+
+    # El texto introductorio está justo después del header (idx_ra+1)
+    # Los párrafos de RAs están entre idx_ra+2 y idx_uni-1
+    # Identificar el párrafo introductorio y los párrafos de lista de RAs
+    ra_parrafos_idx = []
+    for i in range(idx_ra + 1, idx_uni):
+        elem = body[i]
+        if elem.tag.split("}")[-1] == "p":
+            text = "".join(t.text for t in elem.iter(f"{{{WNS}}}t") if t.text)
+            # Los párrafos de RAs tienen formato "CG1, D1:" o "CL1, N1, RA1:"
+            if re.match(r"[A-Z]{2}\d", text.strip()):
+                ra_parrafos_idx.append(i)
+
+    if not ra_parrafos_idx:
+        return
+
+    # Tomar el formato del primer párrafo de RA como plantilla
+    plantilla_elem = body[ra_parrafos_idx[0]]
+
+    # Eliminar todos los párrafos de RA existentes (de atrás para adelante)
+    body_xml = doc.element.body
+    for i in sorted(ra_parrafos_idx, reverse=True):
+        body_xml.remove(body[i])
+
+    # Reinsertar párrafos con los RAs de la BD
+    # Insertar antes de idx_uni (que ahora cambió de posición)
+    body_refresh = get_body_elements(doc)
+    idx_uni_new = find_section_index(body_refresh, "UNIDADES DE APRENDIZAJE")
+
+    for ra in reversed(ras):
+        texto = ra["codigo_completo"]
+        if ra.get("descripcion"):
+            texto += f": {ra['descripcion']}"
+
+        # Clonar párrafo plantilla
+        nuevo_p = copy.deepcopy(plantilla_elem)
+        # Limpiar runs y poner texto nuevo
+        for r in nuevo_p.findall(f".//{{{WNS}}}r"):
+            nuevo_p.remove(r)
+        run_elem = copy.deepcopy(
+            plantilla_elem.findall(f".//{{{WNS}}}r")[0]
+            if plantilla_elem.findall(f".//{{{WNS}}}r") else OxmlElement("w:r")
+        )
+        t_elem = run_elem.find(f"{{{WNS}}}t")
+        if t_elem is None:
+            t_elem = OxmlElement("w:t")
+            run_elem.append(t_elem)
+        t_elem.text = texto
+        t_elem.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
+        nuevo_p.append(run_elem)
+
+        ref_elem = body_refresh[idx_uni_new]
+        doc.element.body.insert(
+            list(doc.element.body).index(ref_elem),
+            nuevo_p
+        )
+
+def editar_unidades(doc, unidades):
+    """Reemplaza filas de datos en la tabla de Unidades y Contenidos."""
+    body = get_body_elements(doc)
+    idx_uni = find_section_index(body, "UNIDADES DE APRENDIZAJE")
+    if idx_uni < 0:
+        return
+    tbl_idx = find_table_after(body, idx_uni)
+    if tbl_idx < 0:
+        return
+
+    # Obtener el objeto Table de python-docx
+    tabla = _get_table_obj(doc, body[tbl_idx])
+    if tabla is None:
+        return
+
+    # Guardar fila header (primera fila)
+    header_row = tabla.rows[0]
+
+    # Eliminar filas de datos (todo menos el header)
+    tbl_elem = body[tbl_idx]
+    rows_xml = tbl_elem.findall(f"{{{WNS}}}tr")
+    for row_xml in rows_xml[1:]:
+        tbl_elem.remove(row_xml)
+
+    # Plantilla de fila (clonar la segunda fila si existía, si no usar la primera)
+    plantilla_row = rows_xml[1] if len(rows_xml) > 1 else rows_xml[0]
+
+    for u in unidades:
+        nueva_fila = copy.deepcopy(plantilla_row)
+        celdas = nueva_fila.findall(f"{{{WNS}}}tc")
+        if len(celdas) >= 2:
+            # Columna 1: indicador de logro / RA
+            _set_tc_text(celdas[0], u.get("indicador_logro", "") or "")
+            # Columna 2: contenidos
+            _set_tc_text(celdas[1], u.get("contenidos", "") or u.get("nombre", ""))
+        tbl_elem.append(nueva_fila)
+
+def editar_evaluaciones(doc, evaluaciones):
+    """Reemplaza filas de datos en la tabla de Evaluaciones."""
+    body = get_body_elements(doc)
+    idx_ev = find_section_index(body, "ESTRATEGIA DE EVALUACIÓN")
+    if idx_ev < 0:
+        idx_ev = find_section_index(body, "EVALUACIÓN")
+    if idx_ev < 0:
+        return
+    tbl_idx = find_table_after(body, idx_ev)
+    if tbl_idx < 0:
+        return
+
+    tbl_elem = body[tbl_idx]
+    rows_xml = tbl_elem.findall(f"{{{WNS}}}tr")
+    if len(rows_xml) < 2:
+        return
+
+    plantilla_row = rows_xml[1]
+
+    # Eliminar filas de datos
+    for row_xml in rows_xml[1:]:
+        tbl_elem.remove(row_xml)
+
+    for ev in evaluaciones:
+        tipo = ev.get("tipo", "")
+        porc = ev.get("porcentaje", "")
+        if not tipo.strip():
+            continue
+        nueva_fila = copy.deepcopy(plantilla_row)
+        celdas = nueva_fila.findall(f"{{{WNS}}}tc")
+        if len(celdas) >= 2:
+            _set_tc_text(celdas[0], tipo)
+            _set_tc_text(celdas[1], porc)
+        tbl_elem.append(nueva_fila)
+
+def editar_datos_actualizacion(doc, asig):
+    """Actualiza la tabla de Datos de Actualización."""
+    body = get_body_elements(doc)
+    idx = find_section_index(body, "DATOS ACTUALIZACIÓN")
+    if idx < 0:
+        return
+    tbl_idx = find_table_after(body, idx)
+    if tbl_idx < 0:
+        return
+
+    tbl_elem = body[tbl_idx]
+    for row in tbl_elem.findall(f"{{{WNS}}}tr"):
+        celdas = row.findall(f"{{{WNS}}}tc")
+        if len(celdas) >= 2:
+            label = _get_tc_text(celdas[0])
+            if "Versión" in label or "Fecha" in label:
+                version = asig.get("version", "") or f"V1.0 {datetime.now().year}"
+                _set_tc_text(celdas[1], version)
+
+# ── Helpers XML internos ──────────────────────────────────────────
+
+def _get_tc_text(tc_elem):
+    return "".join(t.text for t in tc_elem.iter(f"{{{WNS}}}t") if t.text)
+
+def _set_tc_text(tc_elem, text):
+    """Pone texto en un elemento tc XML, conservando formato del primer run."""
+    paras = tc_elem.findall(f"{{{WNS}}}p")
+    if not paras:
+        return
+    para = paras[0]
+    runs = para.findall(f"{{{WNS}}}r")
+
+    # Limpiar todos los párrafos extra
+    for p in paras[1:]:
+        tc_elem.remove(p)
+
+    # Limpiar runs del primer párrafo
+    for r in runs:
+        para.remove(r)
+
+    # Crear run nuevo con el texto
+    run = OxmlElement("w:r")
+    # Copiar rPr del primer run original si existía
+    if runs:
+        rPr = runs[0].find(f"{{{WNS}}}rPr")
+        if rPr is not None:
+            run.append(copy.deepcopy(rPr))
+    t = OxmlElement("w:t")
+    t.text = text
+    if text and (text[0] == " " or text[-1] == " "):
+        t.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
+    run.append(t)
+    para.append(run)
+
+def _get_table_obj(doc, tbl_elem):
+    """Obtiene el objeto Table de python-docx a partir del elemento XML."""
+    for t in doc.tables:
+        if t._tbl is tbl_elem:
+            return t
+    return None
+
+# ── Función principal ─────────────────────────────────────────────
+
+def generar_programa_individual(asig_id, salida=None):
+    asig, unidades, metodologias, evaluaciones, ras = get_programa(asig_id)
+    codigo = asig.get("codigo", "")
+
+    # Buscar el Word original
+    original = buscar_word_original(codigo)
+    if original is None:
+        print(f"⚠ No se encontró el Word original para '{codigo}'")
+        print(f"  Buscado en: {PROG_DIR}")
+        return None
+
+    print(f"  Usando original: {original.name}")
+
+    # Cargar el documento
+    doc = Document(str(original))
+
+    # Editar secciones quirúrgicamente
+    editar_tabla_identificacion(doc, asig)
+    editar_ras(doc, ras)
+    editar_unidades(doc, unidades)
+    editar_evaluaciones(doc, evaluaciones)
+    editar_datos_actualizacion(doc, asig)
+
+    # Guardar
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    if salida is None:
+        codigo_safe = codigo.replace(" ", "_")
+        salida = str(OUT_DIR / f"programa_{codigo_safe}.docx")
+
+    doc.save(salida)
+    print(f"✓ Programa generado: {salida}")
+    return salida
+
+
+# ── Mapa de Progreso ──────────────────────────────────────────────
+
+def generar_mapa_progreso(salida=None):
+    """Genera el Mapa de Progreso en Word desde la BD."""
+    from docx.shared import Pt, Cm, RGBColor
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.enum.table import WD_TABLE_ALIGNMENT
+
+    LOGO_PATH = Path("data/logo_uv.jpg")
+
+    conn = sqlite3.connect(str(DB_PATH)); conn.row_factory = None
+
+    competencias = conn.execute("""
+        SELECT id, codigo, tipo, descripcion FROM competencias
+        WHERE tipo != 'desconocido'
+        ORDER BY CASE tipo WHEN 'licenciatura' THEN 0 WHEN 'titulo' THEN 1 WHEN 'sello_uv' THEN 2 END, codigo
+    """).fetchall()
+
+    doc = Document()
+    for section in doc.sections:
+        section.top_margin = Cm(2); section.bottom_margin = Cm(2)
+        section.left_margin = Cm(2.5); section.right_margin = Cm(2.5)
+
+    def _set_cell_bg(cell, hex_color):
+        tc = cell._tc; tcPr = tc.get_or_add_tcPr()
+        shd = OxmlElement('w:shd')
+        shd.set(qn('w:val'),'clear'); shd.set(qn('w:color'),'auto')
+        shd.set(qn('w:fill'), hex_color); tcPr.append(shd)
+
+    def _para(cell, text, bold=False, size=10, color=None,
+              align=WD_ALIGN_PARAGRAPH.LEFT):
+        cell.paragraphs[0].clear()
+        p = cell.paragraphs[0]; p.alignment = align
+        run = p.add_run(text); run.bold = bold
+        run.font.size = Pt(size)
+        if color: run.font.color.rgb = color
+
+    # Header
+    t_hdr = doc.add_table(rows=1, cols=2); t_hdr.style = 'Table Grid'
+    c_logo = t_hdr.cell(0,0); c_logo.width = Cm(5)
+    if LOGO_PATH.exists():
+        p = c_logo.paragraphs[0]; p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.add_run().add_picture(str(LOGO_PATH), width=Cm(4.5))
+    c_tit = t_hdr.cell(0,1)
+    _set_cell_bg(c_tit, "1F4E79")
+    _para(c_tit, "MAPA DE PROGRESO\nINGENIERÍA CIVIL MATEMÁTICA — PLAN 2025",
+          bold=True, color=RGBColor(255,255,255), size=13,
+          align=WD_ALIGN_PARAGRAPH.CENTER)
+
+    doc.add_paragraph()
+
+    TIPO_HDR = {"licenciatura":"COMPETENCIAS DE LICENCIATURA",
+                "titulo":"COMPETENCIAS ESPECÍFICAS DEL TÍTULO PROFESIONAL",
+                "sello_uv":"COMPETENCIAS GENÉRICAS SELLO UV"}
+    TIPO_HEX = {"licenciatura":"1F4E79","titulo":"375623","sello_uv":"843C0C"}
+
+    tipo_actual = None
+    for comp_id, comp_cod, comp_tipo, comp_desc in competencias:
+        if comp_tipo != tipo_actual:
+            tipo_actual = comp_tipo
+            p = doc.add_paragraph()
+            r = p.add_run(TIPO_HDR.get(tipo_actual, tipo_actual.upper()))
+            r.bold = True; r.font.size = Pt(13)
+            hx = TIPO_HEX.get(tipo_actual,"1F4E79")
+            r.font.color.rgb = RGBColor(int(hx[:2],16),int(hx[2:4],16),int(hx[4:],16))
+
+        p2 = doc.add_paragraph()
+        r2 = p2.add_run(f"{comp_cod}: {comp_desc or ''}")
+        r2.bold = True; r2.font.size = Pt(11)
+        hx = TIPO_HEX.get(comp_tipo,"1F4E79")
+        r2.font.color.rgb = RGBColor(int(hx[:2],16),int(hx[2:4],16),int(hx[4:],16))
+
+        ras_raw = conn.execute("""
+            SELECT nivel_dominio, codigo_completo, descripcion
+            FROM resultados_aprendizaje WHERE competencia_id=?
+            ORDER BY COALESCE(nivel_dominio,''), codigo
+        """, (comp_id,)).fetchall()
+
+        niveles = {}
+        for nivel, ccomp, desc in ras_raw:
+            niveles.setdefault(nivel or "Sin nivel", []).append((ccomp, desc or ""))
+
+        if not niveles:
+            doc.add_paragraph("   (Sin resultados de aprendizaje declarados)").runs[0].italic = True
+            doc.add_paragraph(); continue
+
+        cols_niv = sorted(niveles.keys())
+        t = doc.add_table(rows=0, cols=len(cols_niv))
+        t.style = 'Table Grid'
+
+        # Header
+        row_h = t.add_row()
+        hx = TIPO_HEX.get(comp_tipo,"1F4E79")
+        for ci, niv in enumerate(cols_niv):
+            c = row_h.cells[ci]; _set_cell_bg(c, hx)
+            _para(c, niv, bold=True, color=RGBColor(255,255,255),
+                  align=WD_ALIGN_PARAGRAPH.CENTER)
+
+        # RAs
+        max_n = max(len(v) for v in niveles.values())
+        for ri in range(max_n):
+            row_d = t.add_row()
+            for ci, niv in enumerate(cols_niv):
+                items = niveles[niv]
+                if ri < len(items):
+                    ccomp, desc = items[ri]
+                    txt = f"• {ccomp}"
+                    if desc: txt += f": {desc}"
+                    _para(row_d.cells[ci], txt, size=9)
+
+        # Asignaturas por nivel
+        row_a = t.add_row()
+        bg_claro = {"licenciatura":"DEEAF1","titulo":"E2EFDA","sello_uv":"FCE4D6"}.get(comp_tipo,"F2F2F2")
+        for ci, niv in enumerate(cols_niv):
+            ra_codes = [r[0] for r in niveles[niv]]
+            if ra_codes:
+                placeholders = ",".join("?" * len(ra_codes))
+                asigs_niv = conn.execute(f"""
+                    SELECT DISTINCT a.codigo, a.nombre FROM asignaturas a
+                    JOIN asignatura_ra ar ON ar.asignatura_id=a.id
+                    JOIN resultados_aprendizaje ra ON ra.id=ar.ra_id
+                    WHERE ra.codigo_completo IN ({placeholders})
+                    ORDER BY a.semestre, a.codigo
+                """, ra_codes).fetchall()
+            else:
+                asigs_niv = []
+            c = row_a.cells[ci]; _set_cell_bg(c, bg_claro)
+            txt = "\n".join(f"• {a[0]} {a[1]}" for a in asigs_niv) or "(ninguna)"
+            _para(c, txt, size=8)
+
+        doc.add_paragraph()
+
+    conn.close()
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    if salida is None:
+        salida = str(OUT_DIR / f"mapa_progreso_{datetime.now().strftime('%Y%m%d_%H%M')}.docx")
+    doc.save(salida)
+    print(f"✓ Mapa de Progreso generado: {salida}")
+    return salida
+
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == "mapa":
+        generar_mapa_progreso()
+    else:
+        print("Uso: python3 src/generador_word.py mapa")
