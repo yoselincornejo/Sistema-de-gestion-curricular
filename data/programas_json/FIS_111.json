@@ -1,0 +1,90 @@
+{
+  "archivo": "FIS 111 Fundamentos de Física.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Plan Común Ingeniería Civil Ingeniería Civil Ambiental Ingeniería Civil Biomédica Ingeniería Civil Industrial Ingeniería Civil Informática Ingeniería Civil Matemática Ingeniería Civil Oceánica",
+    "nombre": "Fundamentos de Física",
+    "codigo": "FIS 111",
+    "nivel": "2do semestre de 1er año",
+    "duracion": "Semestral",
+    "requisitos": "​​MAT 111 Fundamentos de Matemática"
+  },
+  "responsables": {
+    "responsable": "Coordinación General de Física FACING, Coordinador(a) de Docencia FACING",
+    "docente_a_cargo": "",
+    "version": "V1.2 2026"
+  },
+  "metodologias": [
+    "Unidad 1 MEDICIONES, ESTIMACIONES Y ERRORES Taller 1: Sistemas de unidades, transformación de unidades y análisis dimensional",
+    "Unidad 1 MEDICIONES, ESTIMACIONES Y ERRORES Taller 2: Escalas lineales y de potencias",
+    "Unidad 1 MEDICIONES, ESTIMACIONES Y ERRORES Taller 3: Mediciones, estimaciones, errores y órdenes de magnitud",
+    "Unidad 2: RAPIDEZ DE CAMBIO Taller 4: Rapidez media de cambio y modelos",
+    "Unidad 2: RAPIDEZ DE CAMBIO Taller 5: Rapidez instantánea de cambio",
+    "Unidad 3 VECTORES Taller 6: Vectores (introductorio) Unidad 3 VECTORES Taller 7: Vectores 2D y 3D Unidad 3 VECTORES Taller 8: Movimiento rectilíneo con rapidez constante",
+    "Unidad 3 VECTORES Taller 9: Movimiento circular uniforme",
+    "Unidad 4 DESCRIPCIÓN DEL MOVIMIENTO Taller 10: Movimiento con Velocidad Constante",
+    "Unidad 4 DESCRIPCIÓN DEL MOVIMIENTO Taller 11: Movimiento con Aceleración Constante Unidad 5 INTRODUCCIÓN A LA DINÁMICA TRASLACIONAL Taller 12: Leyes de Newton (parte 1) Unidad 5 INTRODUCCIÓN A LA DINÁMICA TRASLACIONAL Taller 13: Leyes de Newton (parte 2)",
+    "Unidad 5 INTRODUCCIÓN A LA DINÁMICA TRASLACIONAL Taller 14: Leyes de Newton (parte 3)"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Prueba Sumativa 1",
+      "porcentaje": "20%"
+    },
+    {
+      "tipo": "Prueba Sumativa 2",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Prueba Sumativa 3",
+      "porcentaje": "30%"
+    },
+    {
+      "tipo": "Evaluaciones de Taller: Evaluación 1 5% Evaluación 2 10% Evaluación 3 10%",
+      "porcentaje": "25%"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CL1, RA1",
+        "CL1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 1 MEDICIONES, ESTIMACIONES Y ERRORES Contenidos: Definiciones operacionales (masa, longitud, tiempo) Sistemas de unidades Análisis dimensional Prefijos y notación científica Transformación de unidades Escalas lineales y de potencias Cálculos a mano, estimaciones y órdenes de magnitud Errores, tipos de errores, cálculo de errores y su propagación",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, RA1",
+        "CL1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 2: RAPIDEZ DE CAMBIO Contenidos: Construcción de modelos a partir de mediciones Interpolación, extrapolación y regresión lineal Rapidez media de cambio Rapidez instantánea de cambio",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, RA1",
+        "CL1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 3 VECTORES Contenidos: Cantidades escalares y vectoriales Vectores 2D y 3D, representación geométrica y analítica Operaciones entre vectores, suma y multiplicación por escalar Vectores unitarios",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, RA1",
+        "CL1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 4 DESCRIPCIÓN DEL MOVIMIENTO Contenidos: Sistemas de referencia inercial, vectores posición y desplazamiento Velocidad, distinción entre velocidad media e instantánea Movimiento con velocidad constante Aceleración, distinción entre aceleración media e instantánea Movimiento con aceleración constante Movimiento circular uniforme y acelerado Relación entre variables lineales y angulares.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, RA1",
+        "CL1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 5 INTRODUCCIÓN A LA DINÁMICA TRASLACIONAL Contenidos: Leyes de Newton Diagramas de Interacción Diagramas de Cuerpo Libre Fuerza de Gravedad Distinción entre fuerzas normales y tangenciales Fuerza de roce Aplicación de las leyes de Newton a la dinámica traslacional",
+      "indicador_logro": ""
+    }
+  ],
+  "semestre": 2
+}

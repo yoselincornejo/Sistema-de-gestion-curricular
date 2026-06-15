@@ -1,0 +1,21 @@
+{
+  "archivo": "IMAT 415 Idioma IV.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Idioma IV",
+    "codigo": "IMAT 415",
+    "nivel": "X Semestre",
+    "duracion": "Semestral",
+    "requisitos": "IMAT 325"
+  },
+  "responsables": {
+    "responsable": "Comité curricular permanente",
+    "docente_a_cargo": "Claustro Ingeniería Civil Matemática",
+    "version": "Marzo 2026"
+  },
+  "metodologias": [],
+  "evaluaciones": [],
+  "unidades": [],
+  "semestre": 10
+}

@@ -1,0 +1,76 @@
+{
+  "archivo": "MAT 212 Álgebra Lineal.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil (EIC) Ingeniería Civil Ambiental (ICA) Ingeniería Civil Biomédica (CBM) Ingeniería Civil Industrial (EII) Ingeniería Civil Informática (ICI) Ingeniería Civil Matemática (ICM) Ingeniería Civil Oceánica (ICO)",
+    "nombre": "Álgebra Lineal",
+    "codigo": "MAT 212",
+    "nivel": "III Semestre ( 2° Año)",
+    "duracion": "Semestral"
+  },
+  "responsables": {
+    "responsable": "Coordinador General de Matemática FACING.",
+    "docente_a_cargo": "",
+    "version": "V1.1 2026"
+  },
+  "metodologias": [
+    "Clases expositivas combinadas con aprendizaje colaborativo Resolución de ejercicios en clase, a través de guías de enseñanza a cargo del/la docente",
+    "Resolución de problemas relacionados con su especialidad",
+    "Uso de software para el aprendizaje activo",
+    "Se permitirá el uso de herramientas de Inteligencia Artificial (IA) generativa como apoyo en las actividades de aprendizaje",
+    "Su utilización estará autorizada y condicionada a las indicaciones expresas que entregue el o la docente para cada actividad, debiendo los estudiantes declarar siempre la herramienta empleada y el tipo de apoyo recibido, enmarcando su uso en los principios institucionales de transparencia y responsabilidad"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Prueba Sumativa 1",
+      "porcentaje": "20%"
+    },
+    {
+      "tipo": "Prueba Sumativa 2",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Prueba Sumativa 3",
+      "porcentaje": "30%"
+    },
+    {
+      "tipo": "Evaluaciones de Taller: Evaluación 1 5% Evaluación 2 10% Evaluación 3 10%",
+      "porcentaje": "Promedio de Evaluaciones de Taller 25% de la Nota Semestral"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 1: Matrices y Sistemas Lineales Definición de Matrices y ejemplos. Operatoria de matrices. Propiedad de las operaciones entre matrices Matrices particulares. Traspuesta Matrices elementales. Sistemas lineales y escalonamiento de matrices. Soluciones de sistemas lineales. Matriz Inversa y Determinante. Determinante y polinomio característico. Cálculo de valores y vectores propios. Matrices diagonalizables, matrices semidefinidas positivas.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 2: Geometría lineal en Rn Rectas y planos en Rn. Ecuación paramétrica y cartesiana de rectas y planos. Rectas, planos e hiperplanos cómo s.e.v. afines de R^n. Paralelismo, ángulos y ortogonalidad. Producto cruz y ecuación normal de un plano. Conjuntos ortogonales y ortonormales. Proyecciones ortogonales y Método de Gram-Schmidt.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 3: Espacios vectoriales Cuerpos y Espacios vectoriales. Subespacio Vectorial Combinaciones lineales, Independencia lineal y generadores. Bases y dimensión Suma de SEV Espacios vectoriales suplementarios.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 4: Transformaciones lineales y subespacios relacionados. Contenidos: Definiciones y ejemplos. Coordenadas Núcleo, imagen. Primeras propiedades Teorema de núcleo e imagen y sus consecuencias. Matriz representante de una transformación lineal. Matrices de cambio de base. Matrices diagonalizables y espacios propios Matrices diagonalizables (continuación)",
+      "indicador_logro": ""
+    }
+  ],
+  "semestre": 3
+}

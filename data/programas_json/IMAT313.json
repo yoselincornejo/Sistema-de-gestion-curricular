@@ -1,0 +1,81 @@
+{
+  "archivo": "IMAT 313 Combinatoria y Algoritmos.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Combinatoria y Algoritmos",
+    "codigo": "IMAT313",
+    "nivel": "6to Semestre",
+    "duracion": "Semestral",
+    "requisitos": "IMAT221: Taller de deducción Matemática IMAT211: Programación para Ingeniería"
+  },
+  "responsables": {
+    "responsable": "Andrea Jiménez-Daniel Quiroz",
+    "docente_a_cargo": "Andrea Jiménez, Daniel Quiroz",
+    "version": "Abril 2026"
+  },
+  "metodologias": [
+    "Aprendizaje Basado en Equipos  Estudio de casos  Aprendizaje Basado en Indagación  Experimentos de Laboratorio  Aprendizaje Basado en Problemas  Juego de roles  Aprendizaje Basado en Proyectos X Prácticas de laboratorio  Aprendizaje Entre Pares  Salida a terreno  Aprendizaje Colaborativo  Seminario investigativo  Aprendizaje Servicio  Simulación X Clase Expositiva Participativa  Tutorías  Clase Invertida  Visitas a empresas  Conferencias (visitas de expertos)  Otra metodología (indique cual):  Debate"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Evaluación sumativa con prueba de desarrollo 1",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Evaluación sumativa con prueba de desarrollo 2",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Evaluación sumativa con prueba de desarrollo 3",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Informes, tareas o exposiciones en donde se medirá al estudiante en cuanto al aprendizaje aplicado de la asignatura",
+      "porcentaje": "25%"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "ND2, RA2",
+        "CE1, N1, RA4",
+        "CE1, N1, RA2",
+        "CE1, N2, RA5"
+      ],
+      "unidad_y_contenidos": "Unidad 1 COMBINATORIA ELEMENTAL Contenidos Principios básicos de conteo. Principio del palomar. Conteo y Funciones. Coeficientes binomiales y el triángulo de Pascal. Teorema del binomio. Demostraciones combinatoriales. Bolas y Urnas. El principio de inclusión-exclusión. Recurrencias Funciones generadoras Teoria de Ramsey",
+      "indicador_logro": "Aplicar principios fundamentales de conteo (reglas básicas, principio del palomar e inclusión-exclusión) en la resolución de problemas discretos. Utilizar coeficientes binomiales y el teorema del binomio, interpretando sus significados combinatorios. Modelar problemas mediante recurrencias y funciones generadoras, identificando patrones y estructuras. Construir y analizar argumentos combinatoriales, incluyendo demostraciones basadas en conteo."
+    },
+    {
+      "ras": [
+        "ND2, RA2",
+        "CE1, N1, RA4",
+        "CE1, N2, RA5",
+        "CE2, N1, RA4"
+      ],
+      "unidad_y_contenidos": "Unidad 2 INTRODUCCIÓN A LOS ALGORITMOS Contenidos ¿Por qué estudiar algoritmos? Ejemplos de algoritmos y ejecución Correctitud, ejemplos Tiempo de ejecución, ejemplos Multiplicación de Enteros",
+      "indicador_logro": "Explicar el concepto de algoritmo y su relevancia, analizando ejemplos concretos de ejecución. Evaluar la correctitud de algoritmos simples, justificando su funcionamiento. Analizar el tiempo de ejecución en casos básicos, identificando operaciones dominantes. Aplicar algoritmos elementales, como la multiplicación de enteros, reconociendo distintas estrategias."
+    },
+    {
+      "ras": [
+        "ND2, RA2",
+        "CE1, N1, RA4",
+        "CE2, N1, RA2",
+        "CE1, N2, RA5"
+      ],
+      "unidad_y_contenidos": "Unidad 3 Diseño de algoritmos y tiempo de ejecución Contenidos Algoritmos Recursivos Paradigma Divide y vencerás Multiplicación de Enteros Recursiva Algoritmo de Karatsuba El problema de Búsqueda, Búsqueda Binaria, el segundo más grande El problema de ordenamiento Merge Sort Notación asintótica Conteo de inversiones El método maestro, demostración del teorema Quick Sort",
+      "indicador_logro": "Diseñar algoritmos utilizando recursión y el paradigma divide y vencerás, aplicados a problemas clásicos. Analizar la complejidad de algoritmos, utilizando notación asintótica y el método maestro. Implementar y comparar algoritmos de búsqueda y ordenamiento (búsqueda binaria, merge sort, quick sort), evaluando su eficiencia. Resolver problemas mediante técnicas algorítmicas avanzadas, como conteo de inversiones y multiplicación eficiente (e.g., Karatsuba)."
+    },
+    {
+      "ras": [
+        "ND2, RA2",
+        "CE2, N1, RA2",
+        "CE1, N2, RA5",
+        "CE2, N1, RA4"
+      ],
+      "unidad_y_contenidos": "Unidad 4 Algoritmos en grafos Contenidos Definiciones y conceptos básicos Búsqueda en anchura / BFS y aplicaciones: distancia y componentes conexas Búsqueda en profundidad / DFS",
+      "indicador_logro": "Interpretar y utilizar conceptos fundamentales de teoría de grafos en la modelación de problemas. Aplicar algoritmos de recorrido en grafos (BFS y DFS) para explorar estructuras. Resolver problemas sobre grafos, como cálculo de distancias y determinación de componentes conexas. Analizar la eficiencia y correctitud de algoritmos en grafos, considerando su estructura y representación."
+    }
+  ],
+  "semestre": 6
+}

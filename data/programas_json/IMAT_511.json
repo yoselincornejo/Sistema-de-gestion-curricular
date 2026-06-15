@@ -1,0 +1,77 @@
+{
+  "archivo": "IMAT 511 Grafos.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Grafos",
+    "codigo": "IMAT 511",
+    "nivel": "Semestre 9 de 3er ciclo",
+    "duracion": "Semestral",
+    "requisitos": "IMAT 313 Combinatoria y Algoritmos"
+  },
+  "responsables": {
+    "responsable": "Andrea Jiménez y Daniel Quiroz",
+    "docente_a_cargo": "Andrea Jiménez y Daniel Quiroz",
+    "version": "Abril de 2026"
+  },
+  "metodologias": [
+    "En esta asignatura los métodos de enseñanza y aprendizaje son: Clases expositivas (4,5 horas semanales)",
+    "Ejercitación grupal, confección de informes, implementación de algoritmos y/o exposiciones por los estudiantes (1,5 horas semanales)",
+    "Además, se exige e incentiva, el uso de recursos tecnológicos para la Educación (TIC) en la implementación de algoritmos y exposiciones"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "descripcion_narrativa",
+      "porcentaje": "",
+      "texto": "la asignatura grafos se encuentra adscrita al tercer nivel de dominio del plan curricular, corresponde al área de ingeniería aplicada, y se imparte en el noveno semestre del plan de estudios de la carrera de ingeniería civil matemática. su modalidad de enseñanza es presencial con clases teóricas (3 horas semanales) y prácticas (1,5 taller). en esta asignatura se presenta a los estudiantes una visión general de la teoría de grafos, una rama fundamental de la matemática discreta, por medio de conceptos y técnicas fundamentales que abarcan desde la combinatoria hasta los algoritmos. el estudiante que apruebe este curso es capaz de aplicar la teoría de grafos y más generalmente la matemática discreta para resolver problemas reales de mediana complejidad y a la vez, de demostrar afirmaciones de la matemática discreta de nivel avanzado. además, el estudiante que aprueba esta asignatura tiene el conocimiento suficiente para cursar un seminario avanzado y específico en algún tópico de matemática discreta."
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CE1, N3, RA1",
+        "CE2, N3, RA1",
+        "CE2, N3, RA4"
+      ],
+      "unidad_y_contenidos": "Estructuras fundamentales. Caminos y ciclos. Árboles y bosques. Grafos bipartitos. Circuitos Eulerianos.",
+      "indicador_logro": "Identificar y utilizar conceptos fundamentales de grafos, como caminos, ciclos, árboles y bosques. Caracterizar grafos bipartitos, reconociendo sus propiedades estructurales. Determinar la existencia de circuitos eulerianos, aplicando criterios teóricos. Resolver problemas básicos de modelación mediante grafos, interpretando estructuras discretas."
+    },
+    {
+      "ras": [
+        "CE1, N3, RA1",
+        "CE2, N3, RA1",
+        "CE2, N3, RA4"
+      ],
+      "unidad_y_contenidos": "Emparejamientos. Emparejamientos en grafos bipartitos. Teorema de Konig. Teorema de Hall. Emparejamientos en grafos generales. Teorema de Tutte.",
+      "indicador_logro": "Analizar emparejamientos en grafos bipartitos, aplicando resultados clásicos como el teorema de Teorema de Hall y el teorema de Teorema de König. Resolver problemas de asignación y cobertura, modelados mediante emparejamientos. Extender el estudio a grafos generales, utilizando resultados como el teorema de Teorema de Tutte. Evaluar condiciones de existencia de emparejamientos perfectos, justificando formalmente los resultados."
+    },
+    {
+      "ras": [
+        "CE1, N3, RA1",
+        "CE2, N3, RA1",
+        "CE2, N3, RA4"
+      ],
+      "unidad_y_contenidos": "Conexidad. 2-conexidad y descomposición por orejas. Estructura de grafos 3-conexos. Teorema de Menger. Conexión de vértices.",
+      "indicador_logro": "Analizar la conectividad en grafos, incluyendo conectividad, 2-conectividad y 3-conectividad. Aplicar descomposición por orejas, para estudiar la estructura de grafos conexos. Utilizar el teorema de Teorema de Menger para caracterizar la conexión entre vértices. Interpretar la estructura de grafos altamente conexos, relacionando propiedades locales y globales."
+    },
+    {
+      "ras": [
+        "CE1, N3, RA1",
+        "CE2, N3, RA1",
+        "CE2, N3, RA4"
+      ],
+      "unidad_y_contenidos": "Grafos planares. Grafos planos y Fórmula de Euler. Teorema de Kuratowski. Dualidad.",
+      "indicador_logro": "Identificar y caracterizar grafos planares, distinguiendo entre grafos planos y no planares. Aplicar la fórmula de Euler en el análisis de grafos planares. Determinar la planaridad de un grafo, utilizando resultados como el teorema de Teorema de Kuratowski. Analizar la dualidad en grafos planos, interpretando su estructura."
+    },
+    {
+      "ras": [
+        "CE1, N3, RA1",
+        "CE2, N3, RA1",
+        "CE2, N3, RA4"
+      ],
+      "unidad_y_contenidos": "Coloreo. Coloreo de grafos planares. Coloreo de vértices. Teorema de Brooks. Coloreo de aristas. Teorema de Konig. Teorema de Vizing. Coloreo por listas. Conjetura de Hadwiger.",
+      "indicador_logro": "Aplicar técnicas de coloreo de vértices y aristas, en distintos tipos de grafos. Analizar grafos planares desde la perspectiva del coloreo, utilizando resultados clásicos. Utilizar teoremas fundamentales, como el teorema de Teorema de Brooks y el teorema de Teorema de Vizing, para acotar números cromáticos. Explorar variantes avanzadas, como el coloreo por listas y problemas abiertos como la conjetura de Conjetura de Hadwiger."
+    }
+  ],
+  "semestre": 9
+}

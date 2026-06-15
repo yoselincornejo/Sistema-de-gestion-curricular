@@ -1,0 +1,54 @@
+{
+  "archivo": "IMAT222 Evaluación de Proyectos.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Evaluación de Proyectos",
+    "codigo": "IMAT222",
+    "nivel": "V Semestre",
+    "duracion": "Semestral",
+    "requisitos": "MAT122 Álgebra IMAT212 Economía"
+  },
+  "responsables": {
+    "responsable": "Héctor Olivero",
+    "docente_a_cargo": "Esteban Sefair",
+    "version": "Marzo de 2026"
+  },
+  "metodologias": [
+    "idea => preinversión => inversión => operación Ciclo de vida de un proyecto Etapas en la evaluación de proyecto Generación y análisis de la idea de proyecto Estudio en el nivel de perfil Estudio de prefactibilidad Estudio de factibilidad Tipos de evaluación Para quien se evalúa Momento en que se realice Finalidad de la inversión Forma de evaluar Etapas en la formulación de un proyecto: Formulación y preparación Evaluación Pautas para la presentación de un proyecto CG3, N2, D2",
+    "CG4, N2, D1",
+    "CG4, N2, UNIDAD 2 – INDENTIFICACIÓN DE OPORTUNIDADES Y ESTUDIO DE MERCADO Identificación de oportunidades de proyectos Proceso de preparación y evaluación de proyectos Estudio de mercado: técnicas de proyección de demanda",
+    "Estudio técnico del proyecto: localización, tecnología, inversión, impacto",
+    "Estructura organizacional",
+    "Aspectos legales de un proyecto",
+    "D3 UNIDAD 2 – INDENTIFICACIÓN DE OPORTUNIDADES Y ESTUDIO DE MERCADO Identificación de oportunidades de proyectos Proceso de preparación y evaluación de proyectos Estudio de mercado: técnicas de proyección de demanda",
+    "Estudio técnico del proyecto: localización, tecnología, inversión, impacto",
+    "Estructura organizacional",
+    "Aspectos legales de un proyecto",
+    "CL1, N2, RA2",
+    "CG3, N2, D2",
+    "CG4, N2, D1",
+    "CG4, N2, D3",
+    "UNIDAD 3– MATEMÁTICAS FINANCIERAS E INDICADORES DE PROYECTOS Matemáticas financieras básicas Tipos de interés: simple y compuesto Inflación Tasa de interés nominal Tasa de interés real Conversión de tasas Valor presente y valor futuro Anualidades y perpetuidades Amortización de créditos Depreciación de activos Indicadores de Proyectos VPN o VAN Valor Presente Neto o Valor Actual Neto TIR Tasa interna de retorno PRC Período de recuperación de capital IR Índice de rentabilidad BAUE Beneficio anual uniforme equivalente CAUE Costo anual uniforme equivalente"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "descripcion_narrativa",
+      "porcentaje": "",
+      "texto": "facultad: ingeniería ingeniería carrera: ingeniería civil matemática ingeniería civil matemática nombre: evaluación de proyectos evaluación de proyectos código: imat222 imat222 nivel: v semestre v semestre duración: semestral semestral requisito(s): mat122 álgebra imat212 economía mat122 álgebra imat212 economía mat122 álgebra imat212 economía mat122 álgebra imat212 economía mat122 álgebra imat212 economía horas cronológicas semanales horas cronológicas semanales horas cronológicas semanales n° de semanas total de horas semestrales n° de créditos docencia directa trabajo autónomo total n° de semanas total de horas semestrales n° de créditos (a) (b) (c=a+b) (d) (e=c*d) (f=e/27) 3 3 6 18 108 4"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [],
+      "unidad_y_contenidos": "UNIDAD 1 – MARCO CONCEPTUAL DE EVALUACION DE PROYECTOS",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [],
+      "unidad_y_contenidos": "1. Proyectos y su evaluación",
+      "indicador_logro": ""
+    }
+  ],
+  "semestre": 5
+}

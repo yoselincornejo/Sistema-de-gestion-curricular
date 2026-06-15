@@ -1,0 +1,74 @@
+{
+  "archivo": "IMAT 422 Procesos Estocásticos.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Procesos Estocásticos",
+    "codigo": "IMAT422",
+    "nivel": "8º Semestre",
+    "duracion": "Semestral",
+    "requisitos": "IMAT322 Cálculo de Probabilidades IMAT411 Teoría de la Medida"
+  },
+  "responsables": {
+    "responsable": "Héctor Olivero.",
+    "docente_a_cargo": "Soledad Torres, Héctor Olivero",
+    "version": "Abril 2026"
+  },
+  "metodologias": [
+    "Aprendizaje Basado en Equipos  Estudio de casos  Aprendizaje Basado en Indagación  Experimentos de Laboratorio  Aprendizaje Basado en Problemas  Juego de roles  Aprendizaje Basado en Proyectos  Prácticas de laboratorio  Aprendizaje Entre Pares  Salida a terreno  Aprendizaje Colaborativo  Seminario investigativo  Aprendizaje Servicio X Simulación x Clase Expositiva Participativa  Tutorías  Clase Invertida  Visitas a empresas  Conferencias (visitas de expertos) x Otra metodología (indique cual): Talleres prácticos y computacionales"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Sumativa 1",
+      "porcentaje": "25% de la nota final"
+    },
+    {
+      "tipo": "Sumativa 2",
+      "porcentaje": "30% de la nota final"
+    },
+    {
+      "tipo": "Sumativa 3",
+      "porcentaje": "30% de la nota final"
+    },
+    {
+      "tipo": "Talleres y otras actividades complementarias.",
+      "porcentaje": "15% de la nota final"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CL2,N2,RA2",
+        "CE1, N2,RA1",
+        "CE1, N2,RA6",
+        "CE1, N2,RA6",
+        "CE2, N2,RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 1: Cadenas de Markov Definición Propiedades Básicas. Estructura de clases Tiempos de llegada y probabilidades de absorción. Propiedad de Markov fuerte. Recurrencia y transiencia. Distribuciones invariantes Convergencia hacia el equilibrio. Tiempo revertido. Teorema ergódico.",
+      "indicador_logro": "Identificar una cadena de Markov a tiempo discreto. Calcular la distribución marginal de la cadena en un tiempo dado. Probar que una variable aleatoria dada es un tiempo de parada. Aplicar la propiedad de Markov fuerte. Aplicar teoremas de convergencia de cadenas de Markov. Encontrar distribuciones invariantes."
+    },
+    {
+      "ras": [
+        "CL1,N2,RA2",
+        "CL2,N2,RA2",
+        "CE1, N2,RA6",
+        "CE1, N2,RA6",
+        "CE2, N2,RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 2: Cadenas de Markov a tiempo continuo Q-matrices y sus exponenciales. Procesos estocásticos a tiempo continuo Proceso de Poisson Cadena de saltos asociada y tiempos de espera. Explosiones. Ecuaciones Forward y Backward Cadenas no minimales.",
+      "indicador_logro": "Identificar una cadena de Markov a tiempo continuo. Implementar computacionalmente modelos clásicos: colas, Proceso de Poisson y Proceso de nacimiento y muerte, para utilizarlos en aplicaciones y responder preguntas simplificadas de ingeniería."
+    },
+    {
+      "ras": [
+        "CL1,N2,RA2",
+        "CL2,N2,RA2",
+        "CE1, N2,RA6",
+        "CE1, N2,RA6",
+        "CE2, N2,RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 3: Propiedades de Cadenas de Markov a tiempo continuo. Propiedades Básicas. Estructura de clases Tiempos de llegada y probabilidades de absorción. Recurrencia y transiencia. Distribuciones invariantes Convergencia hacia el equilibrio. Tiempo revertido. Teorema ergódico.",
+      "indicador_logro": "Aplicar la propiedad de Markov fuerte. Aplicar teoremas de convergencia de cadenas de Markov a tiempo continuo. Encontrar distribuciones invariantes."
+    }
+  ],
+  "semestre": 8
+}

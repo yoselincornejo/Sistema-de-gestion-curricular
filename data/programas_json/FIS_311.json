@@ -1,0 +1,72 @@
+{
+  "archivo": "FIS 311 Física Electromagnetismo.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Biomédica Ingeniería Civil Oceánica Ingeniería Civil Ambiental Ingeniería Civil Industrial Ingeniería Civil Ingeniería Civil Matemática Ingeniería Civil Informática",
+    "nombre": "Física Electromagnetismo",
+    "codigo": "FIS 311",
+    "nivel": "V Semestre del 1° Ciclo",
+    "duracion": "Semestral",
+    "requisitos": "FIS 211 Física Mecánica MAT 211 Cálculo Integral y Series"
+  },
+  "responsables": {
+    "responsable": "Coordinación de Física FACING, Coordinador (a) de Docencia FACING",
+    "docente_a_cargo": "",
+    "version": "V1.1 2026"
+  },
+  "metodologias": [
+    "Clases expositivas combinadas con aprendizaje colaborativo Resolución de ejercicios en clase, a través de guías de enseñanza a cargo del/la docente",
+    "Resolución de problemas relacionados con su especialidad",
+    "Uso de software para el aprendizaje activo",
+    "Se permitirá el uso de herramientas de Inteligencia Artificial (IA) generativa como apoyo en las actividades de aprendizaje",
+    "Su utilización estará autorizada y condicionada a las indicaciones expresas que entregue el o la docente para cada actividad, debiendo los estudiantes declarar siempre la herramienta empleada y el tipo de apoyo recibido, enmarcando su uso en los principios institucionales de transparencia y responsabilidad"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Prueba Sumativa 1",
+      "porcentaje": "20%"
+    },
+    {
+      "tipo": "Prueba Sumativa 2",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Prueba Sumativa 3",
+      "porcentaje": "30%"
+    },
+    {
+      "tipo": "Evaluaciones de Laboratorio: Evaluación 1 5% Evaluación 2 10% Evaluación 3 10%",
+      "porcentaje": "Promedio de Evaluaciones de Laboratorio 25% de la Nota Semestral"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CL1, N2, RA1",
+        "CL1, N2, RA2",
+        "CL2, N2, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 1 Electrostática Contenidos: Carga eléctrica Fuerza eléctrica y Ley de Coulomb Campo eléctrico Flujo eléctrico y Ley de Gauss Potencial eléctrico Conductores en equilibrio electrostático Capacitancia Energía y densidad de energía almacenada en un condensador",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N2, RA1",
+        "CL1, N2, RA2",
+        "CL2, N2, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 2: Circuitos eléctricos Contenidos: Circuitos capacitivos Teoría de conducción eléctrica Corriente y densidad de corriente Ley de Ohm Potencia eléctrica Circuitos resistivos Leyes de Kirchhoff Circuito RC",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N2, RA1",
+        "CL1, N2, RA2",
+        "CL2, N2, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 3 Magnetismo Contenidos: Campo magnético Movimiento de cargas en campos magnéticos Fuerza de Lorentz Ley de Biot-Savart Ley de Ampère Fuerza entre conductores Torque magnético Ley de Faraday-Lenz Inductancia Circuito RL y LC Circuito RLC en serie",
+      "indicador_logro": ""
+    }
+  ],
+  "semestre": 5
+}

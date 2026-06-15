@@ -1,0 +1,25 @@
+{
+  "archivo": "IMAT 324 TIPE SELLO UV I.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "TIPE I",
+    "codigo": "IMAT324",
+    "nivel": "5to. semestre",
+    "duracion": "Semestral",
+    "requisitos": "120 créditos"
+  },
+  "responsables": {
+    "docente_a_cargo": "Andrea Jimenez, Daniel Quiroz"
+  },
+  "metodologias": [],
+  "evaluaciones": [
+    {
+      "tipo": "descripcion_narrativa",
+      "porcentaje": "",
+      "texto": "resultados de aprendizaje (ra) y desempeños claves (dc) contenidos cg1-nd2-; cg2-nd2-dc1; cg2-nd2-dc2; cg2-nd2-dc3; cg3-nd2-dc1; cg3-nd2-dc2; cg3-nd2-dc3; cg4-nd2-dc3 actividad curricular 1: “introducción a las asignaturas tipe y lineamientos para ejecución de proyectos” contexto asignaturas tipe. conceptos de ética y responsabilidad social importancia del trabajo en equipo contexto método de trabajo: aprendizaje y servicio. cg1-nd2-; cg2-nd2-dc1; cg2-nd2-dc2; cg2-nd2-dc3; cg3-nd2-dc1; cg3-nd2-dc2; cg3-nd2-dc3; cg4-nd2-dc3 actividad curricular 2: “diagnóstico y presentación del problema”. herramientas para el diagnóstico e identificación de problemas en el entorno. descripción y planteamiento del problema. socialización del diagnóstico. diseño de objetivos generales y específicos. cg1-nd2-; cg2-nd2-dc1; cg2-nd2-dc2; cg2-nd2-dc3; cg3-nd2-dc1; cg3-nd2-dc2; cg3-nd2-dc3; cg4-nd2-dc3 actividad curricular 3: “proyectos de servicio comunitario y herramientas para la propuesta” aspectos teóricos de proyectos de intervención social: tipos y características de los proyectos de intervención comunitaria ciclo de vida del proyecto: componentes operacionales, actores y etapas: ejecución, seguimiento y evaluación. modelos de formulación de proyectos sociales: esquema básico de formulación de proyectos metodología general: técnicas de recolección de información, diagnóstico y sistematización de la información obtenida. herramientas para la implementación de la propuesta: talleres formativos para la ejecución del proyecto tipe. a ser dictados por expertos externos."
+    }
+  ],
+  "unidades": [],
+  "semestre": 5
+}

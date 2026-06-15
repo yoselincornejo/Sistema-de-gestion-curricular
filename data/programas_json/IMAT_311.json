@@ -1,0 +1,67 @@
+{
+  "archivo": "IMAT 311 Cálculo_Avanzado.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Cálculo Avanzado",
+    "codigo": "IMAT 311",
+    "nivel": "5to Semestre",
+    "duracion": "Semestral",
+    "requisitos": "MAT 221 Cálculo en varias variables; MAT222 Ecuaciones Diferenciales Ordinarias"
+  },
+  "responsables": {
+    "responsable": "Gerardo Honorato",
+    "docente_a_cargo": "Instituto de Ingeniería Matemática",
+    "version": "Abril 2026"
+  },
+  "metodologias": [
+    "Clases expositivas y talleres",
+    "Aprendizaje basado en problemas, trabajo semestral Resolución de problemas",
+    "Estudio personal y colaborativo"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Certamen 1",
+      "porcentaje": "20%"
+    },
+    {
+      "tipo": "Certamen 2",
+      "porcentaje": "20%"
+    },
+    {
+      "tipo": "Certamen 3",
+      "porcentaje": "20%"
+    },
+    {
+      "tipo": "Talleres y trabajo semestral: Informes, tarea y exposición. (20% Talleres)",
+      "porcentaje": "40%"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "ND2, RA1",
+        "CE1, N2, RA4"
+      ],
+      "unidad_y_contenidos": "Unidad 1: CALCULO VECTORIAL: INTEGRALES DE LÍNEA Y SUPERFICIES Sistemas de coordenadas cilíndricas y esféricas Funciones vectoriales y curvas en el espacio. Derivadas e integrales de funciones vectoriales. Longitud de arco y curvatura. Campos vectoriales. Integrales de línea. Teorema fundamental de las integrales de línea. Integral de flujo a través de superficies orientables. Definición e interpretación física. Cálculos de circulaciones y flujos por definición. Teorema de la divergencia de Gauss. Demostración para un cubo. Aplicaciones elementales: cálculo de volúmenes y flujos. Aplicaciones del teorema de la divergencia: Ecuación del calor. Teorema de Green en el plano. Teorema de Stokes. Demostración en un cubo e idea de la demostración general. Aplicaciones elementales del Teorema de Stokes: cálculo de áreas y circulaciones.",
+      "indicador_logro": "Representar y manipular funciones vectoriales en distintas coordenadas (cartesianas, cilíndricas y esféricas). Calcular derivadas e integrales de funciones vectoriales, así como determinar la longitud de arco y la curvatura de curvas en el espacio. Evaluar integrales de línea y de flujo, aplicando el teorema fundamental de las integrales de línea y el teorema de Gauss para resolver problemas físicos y de ingeniería. Aplicar los teoremas de Green y de Stokes para calcular circulaciones y flujos en regiones del plano y el espacio tridimensional."
+    },
+    {
+      "ras": [
+        "ND2, RA1",
+        "CE1, N2, RA4"
+      ],
+      "unidad_y_contenidos": "Unidad 2: MÉTODOS DE FOURIER: SERIES Y TRANSFORMADA . Series de Fourier: definición, propiedades y ejemplos. Transformada de Fourier: Definición, propiedades y ejemplos.",
+      "indicador_logro": "Expresar funciones periódicas en términos de series de Fourier, identificando sus propiedades y aplicaciones. Utilizar la transformada de Fourier para analizar señales y resolver problemas en ciencias e ingeniería. Implementar las propiedades de las series y transformadas de Fourier para modelar fenómenos físicos como la difusión del calor o la propagación de ondas."
+    },
+    {
+      "ras": [
+        "ND2, RA1",
+        "CE1, N2, RA4"
+      ],
+      "unidad_y_contenidos": "Unidad 3: INTRODUCCIÓN A LAS ECUACIONES DIFERENCIALES PARCIALES Modelo para la difusión del calor. Modelo para fenómenos oscilatorios. Condiciones iniciales y de borde. Separación de variables: Ecuación del Calor Separación de variables: Ecuación de Ondas Soluciones vía transformada de Fourier: Ecuación del Calor. Soluciones vía transformada de Fourier: Ecuación de ondas.",
+      "indicador_logro": "Modelar problemas físicos mediante ecuaciones diferenciales parciales, como la ecuación del calor y la ecuación de ondas. Resolver ecuaciones diferenciales parciales utilizando el método de separación de variables. Aplicar la transformada de Fourier en la solución de ecuaciones diferenciales parciales en distintos contextos."
+    }
+  ],
+  "semestre": 5
+}

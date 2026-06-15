@@ -1,0 +1,89 @@
+{
+  "archivo": "IMAT412 Inferencia Estadística.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Inferencia Estadística",
+    "codigo": "IMAT 412",
+    "nivel": "VII Semestre del 2° Ciclo",
+    "duracion": "Semestral",
+    "requisitos": "IMAT 322 Cálculo de Probabilidades"
+  },
+  "responsables": {
+    "responsable": "Cristian Meza, Lisandro Fermin, Karine Bertin",
+    "docente_a_cargo": "Cristian Meza, Lisandro Fermin, Karine Bertin, Soledad Torres",
+    "version": "Marzo de 2026"
+  },
+  "metodologias": [
+    "Clases expositivas y talleres",
+    "Resolución de problemas",
+    "Estudio personal y colaborativo"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "· Sumativa 1 · Sumativa 2 · Sumativa 3",
+      "porcentaje": "25% 30% 30%"
+    },
+    {
+      "tipo": "· Talleres",
+      "porcentaje": "15%"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "ND2, RA2",
+        "CE1, N2, RA1",
+        "CE1, N2, RA6"
+      ],
+      "unidad_y_contenidos": "Unidad 1: Complementos de probabilidades Contenidos Independencia de variables aleatorias. Función generadora de momentos. Momentos muestrales y sus propiedades. Distribuciones muestrales de la normal.",
+      "indicador_logro": "Comprender y aplicar los conceptos de independencia de variables aleatorias. Comprender y calcular la función generadora de momentos. Comprender y calcular los momentos muestrales. Analizar sus propiedades Analizar y aplicar las distribuciones muestrales de la normal."
+    },
+    {
+      "ras": [
+        "ND2, RA2",
+        "CE1, N2, RA1",
+        "CE1, N2, RA6"
+      ],
+      "unidad_y_contenidos": "Unidad 2: Modelo estadístico Contenidos Población y muestras aleatorias. Noción de modelos estadístico Estadísticos.",
+      "indicador_logro": "Comprender y aplicar los conceptos de población y muestras aleatorias. Comprender y aplicar noción de modelos estadístico Comprender, analizar y construir estadísticos."
+    },
+    {
+      "ras": [
+        "ND2, RA2",
+        "CE1, N2, RA1",
+        "CE1, N2, RA6"
+      ],
+      "unidad_y_contenidos": "Unidad 3: Estimación puntual. contenidos Estimadores. Estimadores de maximaverosimilitud y método de los momentos. Propiedades de estimadores. Suficiencia, Teorema de factorización, Familia exponencial, Cramer Rao, Lehman Scheffe. Estimadores Bayesiano",
+      "indicador_logro": "Comprender, construir y aplicar los conceptos de estimadores Comprender y aplicar noción de modelos estadístico maximaverosimilitud y método de los momentos. Estudiar las propiedades de estimadores. Comprender y aplicar los conceptos de suficiencia, familia exponencial. Comprender, construir y aplicar los Teorema de factorización, Cramer Rao, Lehman Scheffe. Comprender, construir y aplicar los estimadores Bayesianos."
+    },
+    {
+      "ras": [
+        "ND2, RA2",
+        "CE1, N2, RA1",
+        "CE1, N2, RA6"
+      ],
+      "unidad_y_contenidos": "Unidad 4: Estimación por intervalo. Contenidos 4.1 Definiciones. Cantidad pivotal. Métodos estadísticos para construcción de intervalo de confianza. Intervalos de confianza clasicos.",
+      "indicador_logro": "Comprender y aplicar los conceptos de estimadores por intervalo y cantidad pivotal. Construir intervalo de confianza. Aplicar y ejemplificar intervalos de confianza clásicos."
+    },
+    {
+      "ras": [
+        "ND2, RA2",
+        "CE1, N2, RA1",
+        "CE1, N2, RA6"
+      ],
+      "unidad_y_contenidos": "Unidad 5: Test de hipótesis. Contenidos Introducción a los test de hipótesis. Criterios de optimalidad para tests estadisticos. Métodos para fabricar tests. Tests clásicos para media, varianza y proporciones. Test de bondad de ajuste. Test de independencia.",
+      "indicador_logro": "Comprender y aplicar el concepto de test de hipótesis. Analizar los criterios de optimalidad para tests estadísticos. Construir y aplicar tests de hipótesis. Aplicar y ejemplificar tests de hipótesis clásicos. Aplicar y ejemplificar test de independencia."
+    },
+    {
+      "ras": [
+        "ND2, RA2",
+        "CE1, N2, RA1",
+        "CE1, N2, RA6"
+      ],
+      "unidad_y_contenidos": "Unidad 6: Tópicos de Series de Tiempo. Contenidos 6.1 Introducción. Conceptos fundamentales: media, varianza, covarianza, autocovarianza y auto-correlación, procesos estacionarios y no estacionarios, ruido blanco (estadísticos de Box- Pierce, Ljung-Box), tendencias lineales y estacionales. Estimadores ingenuos. 6.2 Modelos ARMA. Estimación de parámetros, Ecuaciones de Yule-Walker, métodos de selección del orden de los parámetros, predicción",
+      "indicador_logro": "Comprender y aplicar conceptos de media, varianza, covarianza, autocovarianza y auto-correlación, procesos estacionarios y no estacionarios, ruido blanco (estadísticos de Box- Pierce, Ljung-Box), tendencias lineales y estacionales. Construir y aplicar estimadores ingenuos. Comprender y aplicar modelos ARMA. Construir y aplicar métodos de estimación. Construir y aplicar método Yule-Walker. Analizar y aplicar métodos de selección del orden de los parámetros. Analizar y aplicar métodos de predicción. Programar y aplicar métodos estadísticos a datos reales de series de tiempo."
+    }
+  ],
+  "semestre": 7
+}

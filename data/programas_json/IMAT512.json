@@ -1,0 +1,68 @@
+{
+  "archivo": "IMAT 512 Modelación Estocástica.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Modelación Estocástica",
+    "codigo": "IMAT512",
+    "nivel": "9º Semestre del 3° Ciclo",
+    "duracion": "Semestral",
+    "requisitos": "IMAT422 Procesos Estocásticos IMAT412 Inferencia Estadística"
+  },
+  "responsables": {
+    "responsable": "Héctor Olivero.",
+    "docente_a_cargo": "Lisandro Fermín, Héctor Olivero, Soledad Torres.",
+    "version": "V. 1.0.0 Enero 2025"
+  },
+  "metodologias": [
+    "Aprendizaje Basado en Equipos  Estudio de casos  Aprendizaje Basado en Indagación  Experimentos de Laboratorio  Aprendizaje Basado en Problemas  Juego de roles  Aprendizaje Basado en Proyectos  Prácticas de laboratorio  Aprendizaje Entre Pares  Salida a terreno  Aprendizaje Colaborativo  Seminario investigativo  Aprendizaje Servicio X Simulación x Clase Expositiva Participativa  Tutorías  Clase Invertida  Visitas a empresas  Conferencias (visitas de expertos) x Otra metodología (indique cual): Talleres prácticos y computacionales"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Sumativa 1",
+      "porcentaje": "25% de la nota final"
+    },
+    {
+      "tipo": "Sumativa 2",
+      "porcentaje": "30% de la nota final"
+    },
+    {
+      "tipo": "Sumativa 3",
+      "porcentaje": "30% de la nota final"
+    },
+    {
+      "tipo": "Talleres y otras actividades complementarias.",
+      "porcentaje": "15% de la nota final"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CE1,N3,RA1",
+        "CE1,N3,RA3",
+        "CE2,N3,RA6"
+      ],
+      "unidad_y_contenidos": "Unidad 1: Movimiento Browniano e Integral Estocástica: 1. Esperanza condicional y martingalas. 2. Movimiento Browniano. 3. Integral de Itô 4. Fórmula de Itô.",
+      "indicador_logro": "Aplicar propiedades de la esperanza condicional para realizar cálculos que involucren martingalas. Reconocer y aplicar propiedades del del movimiento Browniano. Aplicar la fórmula de Itô en distintos contextos."
+    },
+    {
+      "ras": [
+        "CE1,N3,RA1",
+        "CE1,N3,RA3",
+        "CE2,N3,RA6"
+      ],
+      "unidad_y_contenidos": "Unidad 2: Ecuaciones diferenciales estocásticas (EDE): 1. Noción de solución y teoremas de existencia y unicidad. 2. Soluciones a partir del Lema de Itô. 3. Ecuación Lineal general 4. Métodos numéricos para EDE 5. Inferencia Estadística para EDE",
+      "indicador_logro": "Diferenciar las distintas nociones de soluciones para EDE. Aplicar resultados clásicos de la existencia de soluciones para EDE. Implementar computacionalmente métodos numéricos para una EDE. Implementar computacionalmente métodos de inferencia para parámetros de una EDE."
+    },
+    {
+      "ras": [
+        "CE1,N3,RA1",
+        "CE1,N3,RA3",
+        "CE2,N3,RA6"
+      ],
+      "unidad_y_contenidos": "Unidad 3: Modelos estocásticos clásicos 1. Modelo de Black- Scholes para opciones. 2. Modelos tipo Lotka Volterra para poblaciones. 3. Modelo SIR para la la propagación de enfermedades. 4.Modelos estocásticos de Depredador-Presa. * Estos modelos podrían ser reemplazados por otros de acuerdo a lo que estime el docente.",
+      "indicador_logro": "Reconocer el tipo de fenómenos que puede ser modelado a través de una EDE. Proponer modelos simplificados para fenómenos físicos, biológicos, etc. Realizar implementaciones computacionales para los modelos propuestos. Realizar inferencia estadística sobre modelos simples."
+    }
+  ],
+  "semestre": 9
+}

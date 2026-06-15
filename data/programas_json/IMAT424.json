@@ -1,0 +1,74 @@
+{
+  "archivo": "IMAT 424 TIPE ICM.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Taller de Integración al Perfil de Egreso Ingeniería Civil Matemática (TIPE ICM)",
+    "codigo": "IMAT424",
+    "nivel": "8º Semestre",
+    "duracion": "Semestral",
+    "requisitos": "IMAT323 Optimización IMAT412 Inferencia Estadística"
+  },
+  "responsables": {
+    "responsable": "Héctor Olivero.",
+    "docente_a_cargo": "Cristian Meza",
+    "version": "Abril 2026"
+  },
+  "metodologias": [
+    "Aprendizaje Basado en Equipos  Estudio de casos  Aprendizaje Basado en Indagación  Experimentos de Laboratorio  Aprendizaje Basado en Problemas  Juego de roles  Aprendizaje Basado en Proyectos  Prácticas de laboratorio  Aprendizaje Entre Pares  Salida a terreno  Aprendizaje Colaborativo  Seminario investigativo  Aprendizaje Servicio X Simulación x Clase Expositiva Participativa  Tutorías  Clase Invertida  Visitas a empresas  Conferencias (visitas de expertos) x Otra metodología (indique cual): Talleres prácticos y computacionales"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Exposición 1",
+      "porcentaje": "25% de la nota final"
+    },
+    {
+      "tipo": "Exposición 2",
+      "porcentaje": "30% de la nota final"
+    },
+    {
+      "tipo": "Exposición 3",
+      "porcentaje": "30% de la nota final"
+    },
+    {
+      "tipo": "Otras actividades complementarias.",
+      "porcentaje": "15% de la nota final"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CL2,N2,RA2",
+        "CE1, N2,RA1",
+        "CE1, N2,RA6",
+        "CE1, N2,RA6",
+        "CE2, N2,RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 1: Modelos Lineales Generalizados Recuerdo de la familia exponencial Modelos para datos no normales Función de enlace y su interpretación Métodos de estimación en Modelos Lineales Generalizados (GLM) Métodos numéricos iterativos: Algoritmo de Mínimos Cuadrados Ponderados Iterativamente (IRLS); Fisher Scoring Inferencia en GLM Diagnóstico de modelos y análisis de residuos Selección de modelos Aplicación y análisis de datos reales usando R",
+      "indicador_logro": "Como modelar datos no normales Estudiar métodos numéricos iterativos Aplicar y analizar datos reales con R Exponer casos de estudio"
+    },
+    {
+      "ras": [
+        "CL1,N2,RA2",
+        "CL2,N2,RA2",
+        "CE1, N2,RA6",
+        "CE1, N2,RA6",
+        "CE2, N2,RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 2: Modelos Mixtos Datos correlacionados y estructuras jerárquicas Modelos lineales mixtos (LMM): efectos fijos y aleatorios Supuestos y estructura de covarianza Estimación por Máxima Verosimilitud (ML) y Máxima Verosimilitud Restringida (REML) Predicción de efectos aleatorios (BLUPs) Inferencia en modelos mixtos Extensión a modelos lineales generalizados mixtos (GLMM) Métodos de estimación en GLMM (aproximaciones: Laplace, cuadratura gaussiana) Diagnóstico y validación de modelos Aplicación con software estadístico (R: lme4, nlme)",
+      "indicador_logro": "Como modelar datos no normales Estudiar métodos numéricos iterativos Aplicar y analizar datos reales con R Exponer casos de estudio"
+    },
+    {
+      "ras": [
+        "CL1,N2,RA2",
+        "CL2,N2,RA2",
+        "CE1, N2,RA6",
+        "CE1, N2,RA6",
+        "CE2, N2,RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 3: Métodos MCMC Iinferencia bayesiana y limitaciones de métodos clásicos Fundamentos de inferencia bayesiana Algoritmos MCMC: Metropolis-Hastings Gibbs Sampling Propiedades de las cadenas de Markov (convergencia, ergodicidad) Diagnóstico de convergencia Implementación práctica de MCMC Aplicación a modelos jerárquicos y GLMM bayesianos Uso de software (R: rstan, JAGS, nimble)",
+      "indicador_logro": "Entender la utilidad de los métodos MCMC Estudiar diferentes métodos MCMC Aplicar y analizar datos reales con R Exponer casos de estudio"
+    }
+  ],
+  "semestre": 8
+}

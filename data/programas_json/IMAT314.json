@@ -1,0 +1,64 @@
+{
+  "archivo": "IMAT 314 Estructuras Algebraícas.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Estructuras Algebraicas",
+    "codigo": "IMAT314",
+    "nivel": "4º Semestre",
+    "requisitos": "MAT212 Algebra Lineal IMAT 221 Taller de deducción Matemática"
+  },
+  "responsables": {
+    "responsable": "Gerardo Honorato.",
+    "docente_a_cargo": "Gerardo Honorato.",
+    "version": "Abril 2026"
+  },
+  "metodologias": [
+    "Aprendizaje Basado en Equipos  Estudio de casos  Aprendizaje Basado en Indagación  Experimentos de Laboratorio X Aprendizaje Basado en Problemas  Juego de roles X Aprendizaje Basado en Proyectos  Prácticas de laboratorio X Aprendizaje Entre Pares  Salida a terreno  Aprendizaje Colaborativo  Seminario investigativo  Aprendizaje Servicio  Simulación x Clase Expositiva Participativa  Tutorías  Clase Invertida  Visitas a empresas  Conferencias (visitas de expertos)  Otra metodología (indique cual):  Debate"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Certamen 1",
+      "porcentaje": "20% de la nota final"
+    },
+    {
+      "tipo": "Certamen 2",
+      "porcentaje": "20% de la nota final"
+    },
+    {
+      "tipo": "Certamen 3",
+      "porcentaje": "20% de la nota final"
+    },
+    {
+      "tipo": "Talleres y trabajo semestral: Informes, tarea y exposición.",
+      "porcentaje": "40% de la nota final"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "ND1, RA2",
+        "CE1, N1, RA3"
+      ],
+      "unidad_y_contenidos": "Unidad 1 NÚMEROS ENTEROS Contenidos: Teoría de conjuntos y relación de equivalencia Buena ordenación, Algoritmo de la división y Algoritmo de Euclides Ideales y M.C.D. en Z Números primos e ideales maximales en Z Factorización única en Z Anillos Z_n",
+      "indicador_logro": "En cada unidad se enfatiza la formulación y validación de argumentos matemáticos mediante demostraciones formales, así como el uso de ejemplos y contraejemplos para comprender el alcance de los resultados. Comprender y aplicar los conceptos fundamentales de teoría de conjuntos, relaciones y clases de equivalencia, y resolver problemas que impliquen estas nociones en contextos matemáticos y de ingeniería. Explicar el principio de buena ordenación y aplicarlo en pruebas matemáticas: Utilizar el Algoritmo de la división en Z y el Algoritmo de Euclides para hallar divisores comunes en contextos algebraicos. Identificar y trabajar con ideales en el anillo de los enteros, y calcular el máximo común divisor utilizando herramientas algebraicas. Describir las propiedades de los números primos y reconocer los ideales maximales en el contexto del anillo de los enteros, relacionándolos con estructuras algebraicas más complejas. Aplicar el teorema de factorización única en el anillo de los enteros y otros anillos afines, utilizando este conocimiento en la resolución de problemas.​ Explicar las propiedades de los anillos, anillos de enteros módulo y aplicar operaciones en estos anillos para resolver problemas algebraicos prácticos."
+    },
+    {
+      "ras": [
+        "ND1, RA2",
+        "CE1, N1, RA3"
+      ],
+      "unidad_y_contenidos": "Unidad 2 TEORIA DE ANILLOS Contenidos: Definición de grupos y anillos. Ejemplos. Subanillos, ideales y anillos cuocientes Homomorfismos y automorfismos de anillos El cuerpo cuociente de un dominio de integridad Anillos de polinomios: Algoritmo de la división Ideales principales y máximo común divisor Polinomios irreducibles e ideales maximales Factorización única Criterio de Eisenstein",
+      "indicador_logro": "Comprender y definir las estructuras de grupo y anillo. Identificar subanillos y entender la construcción de anillos cuocientes y su relación con los ideales. Aplicar estas nociones para resolver problemas relacionados con la estructura de los anillos. Describir estos conjuntos en el contexto de los anillos, comprendiendo cómo estas funciones preservan la estructura algebraica. Construir y analizar el cuerpo cuociente de un dominio de integridad, comprendiendo su relevancia en la resolución de problemas algebraicos. Comprender la estructura y propiedades de los anillos de polinomios y aplicar estos conocimientos para trabajar en la resolución de ecuaciones y otros problemas algebraicos. Utilizar el Algoritmo de la división en el contexto de los anillos de polinomios, aplicando el método en la descomposición de polinomios. Identificar y trabajar con ideales principales y calcular el máximo común divisor en diferentes contextos algebraicos. Identificar polinomios irreducibles y su relación con ideales maximales, aplicando esta comprensión en la construcción de anillos cuocientes. Aplicar el concepto de factorización única en el contexto de los polinomios y otros anillos, resolviendo problemas de descomposición en factores primos. Utilizar el criterio de Eisenstein para identificar polinomios irreducibles, comprendiendo su importancia en la factorización y análisis de polinomios en dominios de integridad."
+    },
+    {
+      "ras": [
+        "ND1, RA2",
+        "CE1, N1, RA3"
+      ],
+      "unidad_y_contenidos": "Unidad 3 TEORIA DE GRUPOS Contenidos: Definición y ejemplos de grupo Subgrupos, clases laterales, Teorema de Lagrange. Subgrupos normales y grupos cociente Homomorfismos y Automorfismos.",
+      "indicador_logro": "Comprender la definición formal de un grupo y reconocer ejemplos de grupos en diversos contextos, incluyendo aplicaciones en matemática e ingeniería. Identificar subgrupos y analizar clases laterales, aplicando el Teorema de Lagrange para estudiar las propiedades del orden de los elementos y su relevancia en la estructura del grupo. Reconocer subgrupos normales y construir grupos cociente, aplicando estos conceptos en la simplificación de problemas algebraicos y en el análisis de la estructura de los grupos. Comprender y aplicar homomorfismos y automorfismos en grupos, interpretando cómo estas funciones conservan la estructura del grupo y facilitando la resolución de problemas de isomorfismo y equivalencia entre grupos."
+    }
+  ],
+  "semestre": 4
+}

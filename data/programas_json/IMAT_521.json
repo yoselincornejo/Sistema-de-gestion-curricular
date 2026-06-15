@@ -1,0 +1,66 @@
+{
+  "archivo": "IMAT 521 Optimizacion Combinatorial.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Optimización Combinatorial",
+    "codigo": "IMAT 521",
+    "nivel": "VIII Semestre, 2° Ciclo",
+    "duracion": "Semestral",
+    "requisitos": "IMAT 313 Combinatoria y Algoritmos; IMAT 323 Optimización"
+  },
+  "responsables": {
+    "responsable": "Andrea Jiménez y Daniel Quiroz",
+    "docente_a_cargo": "Daniel Quiroz",
+    "version": "V2.0 / abril de 2026"
+  },
+  "metodologias": [
+    "En esta asignatura los métodos de enseñanza y aprendizaje son: Clases expositivas (3 horas semanales)",
+    "Ejercitación grupal, confección de informes, implementación de algoritmos y/o exposiciones por los estudiantes (1",
+    "5 horas semanales)"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "descripcion_narrativa",
+      "porcentaje": "",
+      "texto": "en esta asignatura hay 4 evaluaciones individuales que se distinguen de la siguiente forma: 3 evaluaciones corresponden a pruebas de desarrollo (dos con valor de 30% de la nota final y una con valor de 20%). 1 evaluación corresponde a informes, tareas o exposiciones (con valor de 20% sobre la nota final). sistema de calificación y requisitos de aprobación según el reglamento de estudios de la facultad."
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CL4, RA1",
+        "CE1, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 1: Árbol generador de costo mínimo Algoritmo de Kruskal Algoritmo de Prim",
+      "indicador_logro": "Entender las condiciones de optimalidad que nos ayudan a verificar que un árbol generador es de costo mínimo. Utilizar las condiciones de optimalidad para, dado un digrafo con árbol generador mínimo conocido, conocer cuál será el árbol generador mínimo al realizar cambios en la digrafo original. Ser capaz de implementar los algoritmos estudiados en problemas de input pequeño."
+    },
+    {
+      "ras": [
+        "CL4, RA1",
+        "CE1, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 2: Problema de camino más corto Algoritmo de Dijkstra Algoritmo de Moore-Bellman-Ford",
+      "indicador_logro": "Entender el principio de Bellman, como ejemplo central de la programación dinámica. Apreciar las potencialidades y limitaciones de cada algoritmo propuesto, y ser capaz de implementarlos en problemas con input pequeño."
+    },
+    {
+      "ras": [
+        "CL4, RA1",
+        "CE1, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 3: Problemas de flujo Problema de flujo máximo: teoremas de Ford y Fulkerson, Algoritmo de Edmonds y Karp Problema del flujo de costo mínimo",
+      "indicador_logro": "Reproducir y utilizar las ideas centrales de la demostración del Teorema de Ford-Fulkerson (Flujo máximo – corte mínimo). Aplicar el Teorema de Ford-Fulkerson en distintos proble. Apreciar las potencialidades y limitaciones de cada algoritmo propuesto, y ser capaz de implementarlos en problemas con input pequeño."
+    },
+    {
+      "ras": [
+        "CL1, RA1",
+        "CL4, RA1",
+        "CL5, RA1",
+        "CE1, RA3"
+      ],
+      "unidad_y_contenidos": "Unidad 4: Problemas NP-duros y algoritmos de aproximación Algoritmos polinomiales Problemas de decisión versus problemas de optimización NP-completitud y problemas NP-duros Algoritmos de aproximación: ilustración con los problemas vertex cover y traveling salesman.",
+      "indicador_logro": "Demostrar que algunos problemas clásicos son NP-completos Conocer algoritmos de aproximación para el problema del vendedor viajero métrico (TSP métrico). Ser capaz de implementarlos en problemas de input pequeño. Probar que algunos algoritmos clásicos son de aproximación."
+    }
+  ],
+  "semestre": 8
+}

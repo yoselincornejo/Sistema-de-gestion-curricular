@@ -1,0 +1,25 @@
+{
+  "archivo": "IMAT 414 TIPE sello UV II.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "TIPE II",
+    "codigo": "IMAT 414",
+    "nivel": "7mo. semestre",
+    "duracion": "Semestral",
+    "requisitos": "IMAT 324"
+  },
+  "responsables": {
+    "docente_a_cargo": "Andrea Jiménez, Daniel Quiroz"
+  },
+  "metodologias": [],
+  "evaluaciones": [
+    {
+      "tipo": "descripcion_narrativa",
+      "porcentaje": "",
+      "texto": "resultados de aprendizaje (ra) y desempeños claves (dc) contenidos cg1-nd2-; cg2-nd2-dc1; cg2-nd2-dc2; cg2-nd2-dc3; cg3-nd2-dc1; cg3-nd2-dc2; cg3-nd2-dc3; cg4-nd2-dc3 actividad curricular 1: “proyectos de servicio comunitario” repaso de aspectos de manejo de proyectos, revisados en tipe i entre ellos: proyectos de intervención social tipos y características de los proyectos de intervención comunitaria ciclo de vida del proyecto: componentes operacionales, actores y etapas: ejecución, seguimiento y evaluación. metodología general: técnicas de recolección de información, diagnóstico y sistematización de la información obtenida. cg1-nd2-; cg2-nd2-dc1; cg2-nd2-dc2; cg2-nd2-dc3; cg3-nd2-dc1; cg3-nd2-dc2; cg3-nd2-dc3; cg4-nd2-dc3 actividad curricular 2: “implementación del proyecto de servicio”. herramientas para la implementación de la propuesta: talleres formativos para la ejecución del proyecto tipe. a ser dictados por expertos externos. ejecución de propuesta en terreno cg1-nd2-; cg2-nd2-dc1; cg2-nd2-dc2; cg2-nd2-dc3; cg3-nd2-dc1; cg3-nd2-dc2; cg3-nd2-dc3; cg4-nd2-dc3 actividad curricular 3: “evaluación de resultados de la implementación”. presentación de resultados obtenidos. evaluación y reflexión sobre alternativas de mejora de la propuesta."
+    }
+  ],
+  "unidades": [],
+  "semestre": 7
+}

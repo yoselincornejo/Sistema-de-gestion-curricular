@@ -1,0 +1,70 @@
+{
+  "archivo": "IMAT 423 Sistemas Dinámicos Continuos.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Sistemas Dinámicos Continuos",
+    "codigo": "IMAT 423",
+    "nivel": "VI Semestre del 2° Ciclo",
+    "duracion": "Semestral",
+    "requisitos": "MAT 222 Ecuaciones Diferenciales ; IMAT 321 Análisis"
+  },
+  "responsables": {
+    "responsable": "Pierre Guiraud, Gerardo Honorato",
+    "docente_a_cargo": "Pierre Guiraud, Gerardo Honorato",
+    "version": "Abril 2026"
+  },
+  "metodologias": [
+    "Aprendizaje Basado en Equipos  Estudio de casos  Aprendizaje Basado en Indagación  Experimentos de Laboratorio X Aprendizaje Basado en Problemas  Juego de roles  Aprendizaje Basado en Proyectos  Prácticas de laboratorio  Aprendizaje Entre Pares  Salida a terreno X Aprendizaje Colaborativo X Seminario investigativo  Aprendizaje Servicio X Simulación X Clase Expositiva Participativa X Tutorías  Clase Invertida  Visitas a empresas  Conferencias (visitas de expertos)  Otra metodología (indique cual):  Debate"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "descripcion_narrativa",
+      "porcentaje": "",
+      "texto": "evaluaciones sumativas porcentaje (%) que corresponde evaluación 1 25% evaluación 2 25% evaluación 3 25% talleres, trabajo semestral, exposiciones 25%"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "ND2, RA1",
+        "ND2, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 1: Definición y ejemplos de ecuaciones diferenciales ordinarias Contenidos: Definición y ejemplos de ecuaciones diferenciales en Rn. Teorema de Picard. Teorema de Peano. Soluciones máximas. Dependencia continua sobre las condiciones iniciales y los parámetros. Desigualdad de Gronwall.",
+      "indicador_logro": "Demostrar la existencia y unicidad de las soluciones de una Ecuación Diferencial Ordinaria (EDO) en Rn bajo ciertas condiciones. Hacer uso de los teoremas de Picard y Peano para el problema de Cauchy en una EDO dada. Encontrar la solución máxima al problema de Cauchy de una EDO dada. Hacer uso de la desigualdad de Gronwall."
+    },
+    {
+      "ras": [
+        "ND2, RA1",
+        "ND2, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 2: Sistemas de ecuaciones lineales Contenidos: Exponencial de operadores y teorema fundamental para sistemas lineales. Diagonalización. Formas canónicas de Jordan. Sistemas lineales en el plano. Retrato de fase de sistemas lineales en el plano. Autovalores complejos. Autovalores múltiples.",
+      "indicador_logro": "Resolver EDO lineales de primer orden a coeficientes constantes, no homogéneas, usando el teorema fundamental. En particular: Saber manejar las formas de Jordan y sus exponenciales para resolver la parte homogénea. Usar el método de variación de parámetros para ecuaciones no homogéneas. Utilizar las condiciones dadas para encontrar soluciones particulares a ecuaciones. Interpretar/representar (a mano y/o numéricamente) las soluciones como trayectorias en el retrato de fase del problema físico o real asociado."
+    },
+    {
+      "ras": [
+        "ND2, RA1",
+        "ND2, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 3: Estabilidad en sistemas lineales Contenidos: Sistemas bidimensionales. Estabilidad de Lyapunov Conjugación topológica. Clasificación de sistemas lineales hiperbólicos.",
+      "indicador_logro": "Representar el campo vectorial de un sistema lineal en el plano y relacionarlo con las soluciones /trayectorias del sistema. Manejar la noción de flujo. Determinar la estabilidad de las soluciones de un sistema lineal mediante el análisis del punto fijo. Establecer clases de equivalencia de flujos de sistemas distintos bajo criterio de estabilidad."
+    },
+    {
+      "ras": [
+        "ND2, RA1",
+        "ND2, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 4: Teoría local de sistemas no lineales Contenidos: El péndulo simple. Dependencia sobre las condiciones iniciales en el caso autónomo. Flujos. Teorema de la variedad estable. Teorema de Hartman-Grobman. Criterio de Lyapunov. Funciones de Lyapunov cuadráticas para sistemas lineales. Aplicaciones: modelos de población, modelos epidemiológicos y osciladores físicos",
+      "indicador_logro": "Hacer uso del teorema de Hartman-Grobman y del estudio de los sistemas lineales hiperbólicos para determinar la estabilidad local de las soluciones de un sistema no-lineal. Relacionar los retratos de fases en torno a distintos puntos fijos. Usar las funciones de Lyapunov como herramienta cualitativa alternativa para el estudio de la estabilidad."
+    },
+    {
+      "ras": [
+        "ND2, RA1",
+        "ND2, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 5: Teoría cualitativa Contenidos: Conjuntos α−límite y ω−límite. Teorema del flujo tubular. Teorema de Poincaré-Bendixson. Aplicaciones.",
+      "indicador_logro": "Abordar problemas de dinámica en EDO no lineales vía objetos más complejos que los puntos fijos. Determinar la existencia de un ciclo límite (trayectoria periódica) en el plano. Estudiar variedad de retratos de fases de sistemas no lineales en el plano."
+    }
+  ],
+  "semestre": 6
+}

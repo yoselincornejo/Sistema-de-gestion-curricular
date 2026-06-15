@@ -1,0 +1,91 @@
+{
+  "archivo": "IMAT 411 Teoría de la Medida.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Teoría de la Medida",
+    "codigo": "IMAT 411",
+    "nivel": "VI Semestre",
+    "duracion": "Semestral",
+    "requisitos": "IMAT321"
+  },
+  "responsables": {
+    "responsable": "Rolando Rebolledo, Pierre Guiraud",
+    "docente_a_cargo": "Rolando Rebolledo",
+    "version": "Marzo 2026"
+  },
+  "metodologias": [
+    "Aprendizaje Basado en Equipos  Estudio de casos  Aprendizaje Basado en Indagación  Experimentos de Laboratorio  Aprendizaje Basado en Problemas  Juego de roles X Aprendizaje Basado en Proyectos  Prácticas de laboratorio: Talleres de resolución de problemas  Aprendizaje Entre Pares  Salida a terreno  Aprendizaje Colaborativo  Seminario investigativo  Aprendizaje Servicio  Simulación x Clase Expositiva Participativa  Tutorías  Clase Invertida  Visitas a empresas  Conferencias (visitas de expertos)  Otra metodología (indique cual): Estudio personal y colaborativo  Debate"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Evaluación sumativa 1",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Evaluación sumativa 2",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Evaluación sumativa 3",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Nota de evaluación continua",
+      "porcentaje": "25%"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CL2, N2, RA1",
+        "CL2, N2, RA2",
+        "CE1, N2, RA1",
+        "CE1, N2, RA4"
+      ],
+      "unidad_y_contenidos": "Unidad I: Introducción. Estructuras básicas Contenidos: La integral de Riemann y sus limitaciones Semi-álgebras, álgebras, clases monótonas y sigma-álgebras de conjuntos La sigma-álgebra de Borel en un espacio topológico Teorema de Clases Monótonas Funciones y aplicaciones medibles Espacios de funciones: Riesz, Banach, Hilbert",
+      "indicador_logro": "Comprobar las limitaciones de la integral de Riemann y la necesidad de extender su teoría; Analizar en forma más completa la aplicación de la Teoría de Conjuntos y de la lógica matemática en la búsqueda de soluciones a las limitaciones de la integral de Riemann. Analizar la importancia del concepto de medibilidad de funciones."
+    },
+    {
+      "ras": [
+        "CL2, N2, RA1",
+        "CL2, N2, RA2",
+        "CE1, N2, RA1",
+        "CE1, N2, RA4"
+      ],
+      "unidad_y_contenidos": "Unidad II: Medidas positivas e integral Contenidos: Noción de medida. Espacios medibles. Conjuntos despreciables. Ejemplos Extensión y construcción de medidas. Teorema de Carathéodory La integral de funciones simples. La integral en general. Propiedades generales Ejemplos: La medida de Lebesgue, la integración de Lebesgue y su relación con la integral de Riemann. Teoremas de convergencia de integrales: Lema de Fatou, Lema de Beppo-Levi, Teorema de convergencia dominada de Lebesgue, uniforme integrabilidad Producto de medidas. Teorema de Fubini",
+      "indicador_logro": "Aplicar y ejemplificar los conceptos de medida y de espacio medible; Inferir la relación de estos conceptos con otras disciplinas: probabilidades, estadística. Aplicar el concepto de integral más general en problemas de física, ingeniería, ecuaciones diferenciales Resolver problemas en que se requiera trabajar con convergencia de integrales Comprobará la utilidad de las hipótesis de monotonía (clases monótonas) que permiten probar el Teorema de Construcción de Medidas de Carathéodory. Comprender la forma de construir medidas en un producto de espacios y evaluar integrales múltiples."
+    },
+    {
+      "ras": [
+        "CL2, N2, RA1",
+        "CL2, N2, RA2",
+        "CE1, N2, RA1",
+        "CE1, N2, RA4"
+      ],
+      "unidad_y_contenidos": "Unidad III: Cambios de medida en la integral Contenidos: Imagen de una medida por una función medible Absoluta continuidad. Descomposición de Jordan-Hahn. Teorema de Radon-Nikodym. Cambio de variables en la integral de Lebesgue en R^n. Convolución de medidas",
+      "indicador_logro": "Analizar cómo hacer cambios de espacios de medida Formular relaciones entre medidas a través de los Teoremas de Jordan-Hahn y de Lebesgue-Radon Nikodym Aplicar cambios de variables en integrales múltiples de Lebesgue, aplicables en múltiples problemas de física e ingeniería."
+    },
+    {
+      "ras": [
+        "CL2, N2, RA1",
+        "CL2, N2, RA2",
+        "CE1, N2, RA1",
+        "CE1, N2, RA4"
+      ],
+      "unidad_y_contenidos": "Unidad IV: Espacios de Banach y de Hilbert. Los espacios L^p Contenidos: Espacios normados. El caso de los espacios de dimensión finita. Espacios de Banach. El ejemplo de las funciones continuas sobre un compacto. Los espacios L^p. Desigualdades de Hölder, Minkowski. Completitud de los espacios L^p (Riesz-Fischer). Dualidad en los espacios de Banach. El caso de los espacios L^p (Riesz) Convergencia en los espacios L^p Espacios de Hilbert. Ejemplos. Espacio L^2 Dualidad en los espacios de Hilbert Bases ortonormales. Series de Fourier en un espacio de Hilbert. La transformación de Fourier en L2.",
+      "indicador_logro": "Clasificar diferentes espacios de funciones Aplicar desigualdades básicas del Análisis Funcional: Hölder, Minkowski en el estudio de espacios normados Verificar completitud de espacios Analizar distintos tipos de convergencia en los espacios funcionales de Lebesgue Analizar la dualidad en espacios de Banach y en particular en los espacios de Hilbert"
+    },
+    {
+      "ras": [
+        "CL2, N2, RA1",
+        "CL2, N2, RA2",
+        "CE1, N2, RA1",
+        "CE1, N2, RA4"
+      ],
+      "unidad_y_contenidos": "Unidad V: Transformación de Fourier. Contenidos: Transformación de Fourier de una medida. El caso de medidas en R^n. Aplicaciones a ecuaciones diferenciales.",
+      "indicador_logro": "Calcular transformaciones de Fourier a medidas Aplicar lo anterior a ecuaciones diferenciales y probabilidades"
+    }
+  ],
+  "semestre": 6
+}

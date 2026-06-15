@@ -1,0 +1,21 @@
+{
+  "archivo": "IMAT 514 Electivo de formación profesional I.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Electivo de Ingeniería I",
+    "codigo": "IMAT 514",
+    "nivel": "IX Semestre del 3° Ciclo",
+    "duracion": "Semestral",
+    "requisitos": "IMAT 311, IMAT 312"
+  },
+  "responsables": {
+    "responsable": "Comité Curricular Permanente",
+    "docente_a_cargo": "",
+    "version": "Marzo de 2026"
+  },
+  "metodologias": [],
+  "evaluaciones": [],
+  "unidades": [],
+  "semestre": 9
+}

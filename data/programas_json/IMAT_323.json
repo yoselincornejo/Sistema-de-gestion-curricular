@@ -1,0 +1,67 @@
+{
+  "archivo": "IMAT 323 Optimización.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Optimización",
+    "codigo": "IMAT 323",
+    "nivel": "VII Semestre del 2do Ciclo",
+    "duracion": "Semestral",
+    "requisitos": "MAT 221 Cálculo en Varias Variables; IMAT 313 Combinatoria y Algoritmos"
+  },
+  "responsables": {
+    "responsable": "Daniel Quiroz",
+    "docente_a_cargo": "Daniel Quiroz",
+    "version": "marzo 2026"
+  },
+  "metodologias": [
+    "Clases expositivas y talleres",
+    "Resolución de problemas",
+    "Desarrollo de laboratorios computacionales",
+    "Desarrollo de proyecto",
+    "Estudio personal y colaborativo"
+  ],
+  "evaluaciones": [],
+  "unidades": [
+    {
+      "ras": [
+        "ND2, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 1: Introducción a la optimización en varias variables. Contenidos: Modelamiento de problemas de optimización en la gestión de recursos, la gestión de riesgo y la economía.",
+      "indicador_logro": "Modelar problemas sencillos de optimización provenientes de distintas aplicaciones."
+    },
+    {
+      "ras": [
+        "ND1, RA2",
+        "ND2, RA2",
+        "CE1, N2, RA1",
+        "CE1, N2, RA3",
+        "CE2, N2, RA3"
+      ],
+      "unidad_y_contenidos": "Unidad 2: Problemas de minimización sin restricción. Contenidos: El problema de la existencia y unicidad de un punto extremo. Condición necesaria y suficiente de optimalidad. Algoritmos iterativos de resolución: métodos de gradiente, método de Newton, métodos de gradiente conjugado.",
+      "indicador_logro": "Aplicar métodos iterativos para resolver problemas de optimización sin restricciones, tanto de forma manual como de forma computacional. Entender la relación entre un vector obtenido por un método iterativo y el siguiente vector a ser obtenido por el mismo método. Entender cuándo un método iterativo ha alcanzado su objetivo. Anticipar si un método iterativo convergerá o no, y cuán rápido, en casos sencillos. Demostrar propiedades de los métodos iterativos estudiados o de métodos construídos de manera similar."
+    },
+    {
+      "ras": [
+        "ND1, RA1",
+        "ND2, RA2",
+        "CE1, N2, RA3",
+        "CE2, N2, RA3"
+      ],
+      "unidad_y_contenidos": "Unidad 3: Programación Lineal Contenidos: Método Simplex. Problema dual Análisis de sensibilidad. Limitaciones en el caso de programación entera.",
+      "indicador_logro": "Utilizar el método simplex para resolver problemas de programación lineal, tanto de forma manual como de forma computacional. Encontrar el problema dual de un problema de programación lineal y entender su relación con el problema original. Utilizar resultados, como el teorema de Holgura Complementaria, para decidir si un vector es o no solución de un programa lineal (sin necesidad de resolver el programa)."
+    },
+    {
+      "ras": [
+        "ND1, RA1",
+        "ND1, RA2",
+        "CE1, N2, RA1",
+        "CE1, N2, RA3",
+        "CE2, N2, RA3"
+      ],
+      "unidad_y_contenidos": "Unidad 4: Problemas de optimización con restricción. Contenidos: Problema de la existencia y unicidad de un punto extremo. Condición de Lagrange. Condición de Karush-Kuhn-Tucker. Algoritmos de resolución: métodos de gradiente proyectado, el algoritmo de Lagrange, métodos de penalización, programación cuadrática.",
+      "indicador_logro": "Confirmar si un vector cumple o no la Condición de Lagrange o la condición de Karush-Kuhn-Tucker. Usar condiciones necesarias y suficientes de segundo orden para decidir si un vector es un punto óptimo. Aplicar algoritmos de resolución de problemas de optimización con restricciones."
+    }
+  ],
+  "semestre": 7
+}

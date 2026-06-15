@@ -1,0 +1,38 @@
+{
+  "archivo": "IMAT212 ECONOMÍA.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil",
+    "codigo": "IMAT 212",
+    "nivel": "Cuarto Semestre",
+    "duracion": "Semestral",
+    "requisitos": "MAT121 Cálculo Diferencial"
+  },
+  "responsables": {
+    "docente_a_cargo": "",
+    "version": "Marzo 2026"
+  },
+  "metodologias": [
+    "Clase expositiva X Clase expositiva participativa X Aprendizaje Basado en Equipos  Estudio de casos X Aprendizaje Basado en Indagación X Experimentos de Laboratorio  Aprendizaje Basado en Problemas X Juego de roles  Aprendizaje Basado en Proyectos  Prácticas de laboratorio  Aprendizaje Entre Pares  Salida a terreno  Aprendizaje Colaborativo X Seminario investigativo  Aprendizaje Servicio  Simulación  Clase Invertida X Tutorías x Conferencias (visitas de expertos)  Visitas a empresas (vinculación con la empresa)  Desarrollo de proyectos  Estrategias de organización de información (mapas, esquemas, organizadores avanzados)  WebQuest  Foros en aula virtual  Resolución de problemas  Otra metodología (indique aquí cual): ______________________________"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "descripcion_narrativa",
+      "porcentaje": "",
+      "texto": "evaluación diagnóstica seleccionar con una x prueba escrita x interrogación oral  encuesta con aplicaciones tics x encuesta x quiz x otro tipo de evaluación diagnóstica (indique aquí cual): _______________________________________________ "
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [],
+      "unidad_y_contenidos": "Unidad 1: Microeconomía 1. Introducción a la economía; 2. Teoría del Consumidor, función de demanda. 3. Función de oferta. 4. Equilibrio de mercado, impuestos y excedentes. 5. Producción y costos de la empresa. 6. Análisis de Mercados: Competencia perfecta, Oligopolio, Competencia Monopolistica, Monopolio. 7. Mercados de factores productivos. 8. Externalidades de mercado.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [],
+      "unidad_y_contenidos": "Unidad 2: Macroeconomía 1. Magnitudes Macroeconómicas 2. Consumo y Ahorro a nivel macroeconómico. 3. Multiplicador de la Inversión. 4. Sistema Monetario. 5. Demanda y Oferta a nivel agregado. 6. Inflación y Desempleo. 7. Comercio Internacional.",
+      "indicador_logro": ""
+    }
+  ],
+  "semestre": 4
+}

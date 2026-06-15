@@ -1,0 +1,82 @@
+{
+  "archivo": "FIS 211 Física Mecánica.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Biomédica Ingeniería Civil Ambiental Ingeniería Civil Informática Ingeniería Civil Industrial Ingeniería Civil Oceánica Ingeniería Civil Ingeniería Civil Matemática",
+    "nombre": "Física Mecánica",
+    "codigo": "FIS 211",
+    "nivel": "III Semestre del 1° Ciclo",
+    "duracion": "Semestral",
+    "requisitos": "Cálculo Diferencial (MAT 121) Fundamentos de Física (FIS 111)"
+  },
+  "responsables": {
+    "responsable": "Coordinación Física FACING, Coordinador(a) de Docencia FACING",
+    "docente_a_cargo": "",
+    "version": "V1.1 2026"
+  },
+  "metodologias": [
+    "Clase Expositiva Participativa Análisis de casos Experiencias de Laboratorio Se permitirá el uso de herramientas de Inteligencia Artificial (IA) generativa como apoyo en las actividades de aprendizaje",
+    "Su utilización estará autorizada y condicionada a las indicaciones expresas que entregue el o la docente para cada actividad, debiendo los estudiantes declarar siempre la herramienta empleada y el tipo de apoyo recibido, enmarcando su uso en los principios institucionales de transparencia y responsabilidad"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Prueba sumativa 1",
+      "porcentaje": "20%"
+    },
+    {
+      "tipo": "Prueba sumativa 2",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Prueba sumativa 3",
+      "porcentaje": "30%"
+    },
+    {
+      "tipo": "Entrega de 4 informes de laboratorio (40% de la nota total del laboratorio) Prueba final de laboratorio (60% de la nota total del laboratorio)",
+      "porcentaje": "25%"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 1: MOVIMIENTO EN DOS DIMENSIONES Contenidos: Movimiento en 2 dimensiones Movimiento parabólico Movimiento Circular",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 2: LEYES DE NEWTON Contenidos: Leyes de Newton. Fuerzas de gravedad y de contacto entre superficies planas. Aplicación de las leyes de Newton. Dinámica del movimiento circular.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 3: TRANSFERENCIA DE ENERGÍA POR ACCIÓN DE FUERZAS. Contenidos: Definición de trabajo mecánico Trabajo neto y energía cinética Fuerza elástica Fuerzas conservativas Energía potencial Teorema del trabajo y la energía Potencia.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 4: SISTEMA DE PARTÍCULAS Contenidos: Centro de masas Momentum Lineal Conservación del Momentum Lineal Colisiones",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 5: MOVIMIENTO ROTACIONAL Contenidos: Torque Momento de Inercia Equilibrio estático Teorema de Steiner Dinámica de rotación de un cuerpo rígido en torno a un eje fijo. Trabajo, energía y potencia en el movimiento rotacional. Movimiento de Rodadura Momento angular Conservación del Momentum Angular Colisiones",
+      "indicador_logro": ""
+    }
+  ],
+  "semestre": 3
+}

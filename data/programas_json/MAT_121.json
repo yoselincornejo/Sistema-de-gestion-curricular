@@ -1,0 +1,66 @@
+{
+  "archivo": "MAT 121 Cálculo Diferencial.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Plan Común Ingeniería Civil Biomédica (CBM) Ingeniería Civil Oceánica (ICO) Ingeniería Civil Ambiental (ICA) Ingeniería Civil Industrial (EII) Ingeniería Civil (EIC) Ingeniería Civil Matemática (ICM) Ingeniería Civil Informática (ICI)",
+    "nombre": "Cálculo Diferencial",
+    "codigo": "MAT 121",
+    "nivel": "II Semestre del 1° Año",
+    "duracion": "Semestral",
+    "requisitos": "Fundamentos de Matemática (MAT 111)"
+  },
+  "responsables": {
+    "responsable": "Coordinador(a) General Matemática FACING, Coordinador(a) de Docencia FACING.",
+    "docente_a_cargo": "",
+    "version": "V1.1 2026"
+  },
+  "metodologias": [
+    "Clases expositivas participativas Trabajos grupales Guías de ejercicios y resolución de problemas Se permitirá el uso de herramientas de Inteligencia Artificial (IA) generativa como apoyo en las actividades de aprendizaje",
+    "Su utilización estará autorizada y condicionada a las indicaciones expresas que entregue el o la docente para cada actividad, debiendo los estudiantes declarar siempre la herramienta empleada y el tipo de apoyo recibido, enmarcando su uso en los principios institucionales de transparencia y responsabilidad"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Prueba Sumativa 1",
+      "porcentaje": "20%"
+    },
+    {
+      "tipo": "Prueba Sumativa 2",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Prueba Sumativa 3",
+      "porcentaje": "30%"
+    },
+    {
+      "tipo": "Evaluaciones de Taller: Evaluación 1 5% Evaluación 2 10% Evaluación 3 10%",
+      "porcentaje": "Promedio de Evaluaciones de Taller 25% de la Nota Semestral"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 1: Límites y Continuidad Contenidos: Razón de cambio y límites. Álgebra de límites La definición formal de límite Límites laterales Límites al infinito Límites infinitos y asíntotas verticales Continuidad: definición y primeras propiedades Extensión continua para un punto, Teorema del valor intermedio.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 2: Derivadas Contenidos: Rectas tangentes y derivadas Razones de cambio: derivada en un punto La derivada como una función Álgebra de derivadas La derivada como una función Derivadas de funciones trigonométricas Regla de la cadena Derivación implícita y paramétrica Aproximaciones lineales",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 3: Aplicaciones de las derivadas Contenidos: Valores extremos de una función El teorema del valor medio Crecimiento: criterio de la primera derivada. Convexidad: criterio de la segunda derivada Problemas de optimización aplicada Formas indeterminadas y la regla de L'Hôpital Polinomios de Taylor Antiderivada",
+      "indicador_logro": ""
+    }
+  ],
+  "semestre": 2
+}

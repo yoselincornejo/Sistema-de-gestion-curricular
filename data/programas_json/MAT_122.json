@@ -1,0 +1,92 @@
+{
+  "archivo": "MAT 122 Álgebra.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Plan Común Ingeniería Civil Ingeniería Civil Ambiental Ingeniería Civil Biomédica Ingeniería Civil Industrial Ingeniería Civil Informática Ingeniería Civil Matemática Ingeniería Civil Oceánica",
+    "nombre": "Álgebra",
+    "codigo": "MAT 122",
+    "nivel": "II Semestre del 1° Año",
+    "duracion": "Semestral"
+  },
+  "responsables": {
+    "responsable": "Coordinador General de Matemática FACING, Coordinador(a) de Docencia FACING",
+    "docente_a_cargo": "",
+    "version": "V1.1 2026"
+  },
+  "metodologias": [
+    "Clases expositivas combinadas con aprendizaje colaborativo Resolución de ejercicios en clase, a través de guías de enseñanza a cargo del/la docente",
+    "Resolución de problemas relacionados con su especialidad",
+    "Uso de software para el aprendizaje activo",
+    "Se permitirá el uso de herramientas de Inteligencia Artificial (IA) generativa como apoyo en las actividades de aprendizaje",
+    "Su utilización estará autorizada y condicionada a las indicaciones expresas que entregue el o la docente para cada actividad, debiendo los estudiantes declarar siempre la herramienta empleada y el tipo de apoyo recibido, enmarcando su uso en los principios institucionales de transparencia y responsabilidad"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Prueba Sumativa 1",
+      "porcentaje": "20%"
+    },
+    {
+      "tipo": "Prueba Sumativa 2",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Prueba Sumativa 3",
+      "porcentaje": "30%"
+    },
+    {
+      "tipo": "Evaluaciones de Taller: Evaluación 1 5% Evaluación 2 10% Evaluación 3 10%",
+      "porcentaje": "Promedio de Evaluaciones de Taller 25% de la Nota Semestral"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 1: Lógica Contenidos: Nociones básicas: proposiciones, valor de verdad, conectivos y tablas de verdad. Tautologías, Álgebra proposicional y cuantificadores. Uso de la lógica simbólica y sus propiedades para realizar demostraciones.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 2: Conjuntos Contenidos: Idea de conjunto, igualdad, inclusión. Operaciones: Unión, intersección, diferencia. Diferencia simétrica, propiedades. Conjunto potencia, Cuantificadores y conjuntos.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 3: Funciones Contenidos: Par ordenado y producto cartesiano. Definiciones: Conjunto de partida, de llegada, igualdad. Ejemplos. Inyectividad, Sobreyectividad y Biyectividad Composición e inversa Conjuntos Imagen y sus propiedades. Conjuntos Pre imagen y sus propiedades.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 4: Inducción y Sumatorias Contenidos: Recurrencias Definición de los naturales y Principio de inducción. Inducción usando toda la información previa. Definición inductiva de sumatorias, propiedades generales. Propiedad telescópica de sumas. Sumas de los primeros n naturales, sus cuadrados, cubos, geométrica y sumas dobles. Coeficientes binomiales: Mención de la interpretación combinatoria, relación con el Triángulo de Pascal. Teorema del binomio de Newton y sumatorias relacionadas.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 5: Números Complejos Contenidos: Construcción de C. Estructura de cuerpo. Propiedades algebraicas y de los conjugados y módulos (incluyendo la desigualdad triangular). Forma polar de un complejo, multiplicación en forma polar. Interpretación geométrica. Continuación forma polar de un complejo, multiplicación en forma polar. Ley De Moivre. Raíces n-ésimas de complejos y sus propiedades.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 6: Polinomios Contenidos: Definición de polinomios a coeficientes en R o C, igualdad de polinomios, grado, suma y multiplicación. Propiedades de la suma y multiplicación de polinomios. Teorema de la división, divisibilidad, raíces. Teorema Fundamental del álgebra, Factorizaciones en R[X] y C[X] Fracciones Parciales",
+      "indicador_logro": ""
+    }
+  ],
+  "semestre": 2
+}

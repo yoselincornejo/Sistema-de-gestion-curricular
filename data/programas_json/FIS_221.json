@@ -1,0 +1,69 @@
+{
+  "archivo": "FIS 221 Física Calor y Ondas.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Biomédica Ingeniería Civil Oceánica Ingeniería Civil Ambiental Ingeniería Civil Industrial Ingeniería Civil Ingeniería Civil Matemática Ingeniería Civil Informática",
+    "nombre": "Física Calor y Ondas",
+    "codigo": "FIS 221",
+    "nivel": "IV Semestre del 1° Ciclo",
+    "duracion": "Semestral",
+    "requisitos": "FIS 211 Física Mecánica MAT 211 Cálculo Integral y Series"
+  },
+  "responsables": {
+    "responsable": "Coordinación de Física FACING, Coordinador (a) de Docencia FACING",
+    "docente_a_cargo": "",
+    "version": "V1.1 2026"
+  },
+  "metodologias": [
+    "Clases expositivas combinadas con aprendizaje colaborativo Resolución de ejercicios en clase, a través de guías de enseñanza a cargo del/la docente",
+    "Resolución de problemas relacionados con su especialidad",
+    "Uso de software para el aprendizaje activo",
+    "Se permitirá el uso de herramientas de Inteligencia Artificial (IA) generativa como apoyo en las actividades de aprendizaje",
+    "Su utilización estará autorizada y condicionada a las indicaciones expresas que entregue el o la docente para cada actividad, debiendo los estudiantes declarar siempre la herramienta empleada y el tipo de apoyo recibido, enmarcando su uso en los principios institucionales de transparencia y responsabilidad"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Prueba Sumativa 1",
+      "porcentaje": "20%"
+    },
+    {
+      "tipo": "Prueba Sumativa 2",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Prueba Sumativa 3",
+      "porcentaje": "30%"
+    },
+    {
+      "tipo": "Evaluaciones de Laboratorio: Evaluación 1 5% Evaluación 2 10% Evaluación 3 10%",
+      "porcentaje": "Promedio de Evaluaciones de Laboratorio 25% de la Nota Semestral"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CL1, RA1",
+        "CL1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 1 Termodinámica Contenidos: Temperatura y Calor Ley Cero de la Termodinámica Dilatación térmica Calorimetría Transferencia de calor Gas Ideal Teoría cinética de los gases Primera ley de la termodinámica Procesos termodinámicos Calores específicos Segunda Ley de la Termodinámica Máquinas Térmicas Entropía",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, RA1",
+        "CL1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 2: Oscilaciones Contenidos: Movimiento Armónico Simple, MAS Energía del MAS Oscilaciones pequeñas Oscilaciones amortiguadas Oscilaciones forzadas y resonancia",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, RA1",
+        "CL1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 3 Ondas mecánicas Contenidos: Ondas mecánicas Ondas en cuerda y en gases Solución de modos normales Ondas estacionarias Energía y potencia de una oda Transición entre dos medios Intensidad Interferencia Efecto Doppler",
+      "indicador_logro": ""
+    }
+  ],
+  "semestre": 4
+}

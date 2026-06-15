@@ -1,0 +1,61 @@
+{
+  "archivo": "ING 111 Desafíos de Ingeniería v1.1.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Plan Común Ingeniería Civil Ingeniería Civil Ambiental Ingeniería Civil Biomédica Ingeniería Civil Industrial Ingeniería Civil Informática Ingeniería Civil Matemática Ingeniería Civil Oceánica",
+    "nombre": "Desafíos de Ingeniería",
+    "codigo": "ING 111",
+    "nivel": "I Semestre del 1° Año",
+    "duracion": "Semestral"
+  },
+  "responsables": {
+    "responsable": "Coordinador(a) de Docencia FACING",
+    "docente_a_cargo": "",
+    "version": "V1.1 2026"
+  },
+  "metodologias": [
+    "Clases expositivas combinadas con aprendizaje colaborativo Resolución de ejercicios en clase, a través de guías de enseñanza a cargo del/la docente",
+    "Resolución de problemas relacionados con su especialidad",
+    "Uso de software para el aprendizaje activo",
+    "Se permitirá el uso de herramientas de Inteligencia Artificial (IA) generativa como apoyo en las actividades de aprendizaje",
+    "Su utilización estará autorizada y condicionada a las indicaciones expresas que entregue el o la docente para cada actividad, debiendo los estudiantes declarar siempre la herramienta empleada y el tipo de apoyo recibido, enmarcando su uso en los principios institucionales de transparencia y responsabilidad"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Evaluación Sumativa 1",
+      "porcentaje": "10%"
+    },
+    {
+      "tipo": "Evaluación Sumativa 2",
+      "porcentaje": "10%"
+    },
+    {
+      "tipo": "Evaluación Sumativa 3 - Desafíos*",
+      "porcentaje": "80%"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CL1, N1, RA1"
+      ],
+      "unidad_y_contenidos": "I UNIDAD: Introducción a la Ingeniería Contenidos: Ingeniería - Origen, Sentido y Responsabilidad. La Ingeniería en la Historia – Problemas, Territorios y Soluciones. Desafíos Actuales de la Ingeniería. Ética en Ingeniería y Responsabilidad del Diseño. Sesgos en Ingeniería y Diseño con Perspectiva de Género. Cuando el Diseño Falla.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "II UNIDAD: Metodologías y Herramientas para Resolución de Problemas en Ingeniería Contenidos: Método Científico y Ejercicio de la Ingeniería. Identificación y Delimitación del Problema en Ingeniería. Generación de Alternativas y Matrices de Decisión. Design Thinking. De Design Thinking a Agile-Lean. Gestión del Proceso.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "III UNIDAD: Desafíos de Ingeniería Contenidos: Desarrollo de proyectos desafiantes de ingeniería en equipos. Aplicación de las metodologías y herramientas aprendidas en proyectos reales. Resolución de problemas prácticos en el contexto de la ingeniería. Presentación de proyectos y resultados. Autoevaluación y mejora continua de soluciones.",
+      "indicador_logro": ""
+    }
+  ],
+  "semestre": 1
+}

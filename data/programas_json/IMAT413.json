@@ -1,0 +1,81 @@
+{
+  "archivo": "IMAT 413 Analisis Complejo.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Análisis Complejo",
+    "codigo": "IMAT413",
+    "nivel": "7º Semestre",
+    "duracion": "Semestral",
+    "requisitos": "IMAT321 Análisis"
+  },
+  "responsables": {
+    "responsable": "Gerardo Honorato.",
+    "docente_a_cargo": "Gerardo Honorato.",
+    "version": "Marzo 2026"
+  },
+  "metodologias": [
+    "Aprendizaje Basado en Equipos  Estudio de casos  Aprendizaje Basado en Indagación  Experimentos de Laboratorio  Aprendizaje Basado en Problemas  Juego de roles  Aprendizaje Basado en Proyectos  Prácticas de laboratorio  Aprendizaje Entre Pares  Salida a terreno  Aprendizaje Colaborativo  Seminario investigativo  Aprendizaje Servicio  Simulación x Clase Expositiva Participativa  Tutorías  Clase Invertida  Visitas a empresas  Conferencias (visitas de expertos)  Otra metodología (indique cual):  Debate"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Certamen 1",
+      "porcentaje": "20% de la nota final"
+    },
+    {
+      "tipo": "Certamen 2",
+      "porcentaje": "20% de la nota final"
+    },
+    {
+      "tipo": "Certamen 3",
+      "porcentaje": "20% de la nota final"
+    },
+    {
+      "tipo": "Talleres y trabajo semestral: Informes, tarea y exposición.",
+      "porcentaje": "40% de la nota final"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "ND2, RA2",
+        "CE2, N2, RA3",
+        "CG1, N2, RA2",
+        "CG4, N2, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 1: El sistema de los números complejos Contenidos: El cuerpo de los números complejos El plano complejo como espacio métrico Representación polar y raíces de números complejos Fórmula de Moivre Rectas y semiplanos en el plano complejo El plano extendido y su representación esférica",
+      "indicador_logro": "Comprender el cuerpo de los números complejos. Manejar el plano complejo como espacio métrico. Aplicar la representación polar y raíces de números complejos. Utilizar la fórmula de Moivre. Identificar rectas y semiplanos en el plano complejo. Comprender el plano extendido y su representación esférica."
+    },
+    {
+      "ras": [
+        "ND2, RA2",
+        "CE2, N2, RA3",
+        "CG1, N2, RA2",
+        "CG4, N2, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 2: Propiedades elementales y ejemplos de funciones analíticas Contenidos: Serie de potencias Funciones analíticas Funciones analíticas como funciones, transformaciones de Möbius.",
+      "indicador_logro": "Comprender y trabajar con series de potencias. Identificar funciones analíticas. Aplicar transformaciones de Möbius en funciones analíticas."
+    },
+    {
+      "ras": [
+        "ND2, RA2",
+        "CE2, N2, RA3",
+        "CG1, N2, RA2",
+        "CG4, N2, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 3: Integración compleja Contenidos: Integral de Riemann-Stieltjes Representación en serie de potencias de las funciones analíticas Ceros de una función analítica Índice de una curva cerrada Teorema de Cauchy y la Fórmula Integral y aplicaciones. Teorema de Liouville, Teorema fundamental del álgebra Teorema del Módulo Máximo, Principio de la identidad. Cálculo de ceros; teorema de la aplicación abierta",
+      "indicador_logro": "Calcular integrales de Riemann-Stieltjes. Representar funciones analíticas en series de potencias. Identificar y trabajar con ceros de funciones analíticas. Determinar el índice de una curva cerrada. Aplicar el Teorema de Cauchy y la Fórmula Integral en problemas. Comprender los teoremas de Liouville, del módulo máximo y del álgebra fundamental. Calcular ceros y aplicar el teorema de la aplicación abierta."
+    },
+    {
+      "ras": [
+        "ND2, RA2",
+        "CE2, N2, RA3",
+        "CG1, N2, RA2",
+        "CG4, N2, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 4: Singularidades Contenidos: Clasificación de las singularidades. Residuos. El principio del argumento.",
+      "indicador_logro": "Clasificar las singularidades de funciones complejas. Trabajar con residuos en funciones complejas. Aplicar el principio del argumento en problemas específicos."
+    }
+  ],
+  "semestre": 7
+}

@@ -1,0 +1,71 @@
+{
+  "archivo": "IMAT 322 CALCULO DE PROBABILIDADES.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Cálculo de Probabilidades",
+    "codigo": "IMAT322",
+    "nivel": "6º Semestre",
+    "duracion": "Semestral",
+    "requisitos": "MAT221 Cálculo en Varias Variables."
+  },
+  "responsables": {
+    "responsable": "Héctor Olivero.",
+    "docente_a_cargo": "Héctor Olivero.",
+    "version": "Enero 2025"
+  },
+  "metodologias": [
+    "Aprendizaje Basado en Equipos  Estudio de casos  Aprendizaje Basado en Indagación  Experimentos de Laboratorio  Aprendizaje Basado en Problemas  Juego de roles  Aprendizaje Basado en Proyectos  Prácticas de laboratorio  Aprendizaje Entre Pares  Salida a terreno  Aprendizaje Colaborativo  Seminario investigativo  Aprendizaje Servicio X Simulación x Clase Expositiva Participativa  Tutorías  Clase Invertida  Visitas a empresas  Conferencias (visitas de expertos) x Otra metodología (indique cual): Talleres prácticos y computacionales"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Sumativa 1",
+      "porcentaje": "25% de la nota final"
+    },
+    {
+      "tipo": "Sumativa 2",
+      "porcentaje": "30% de la nota final"
+    },
+    {
+      "tipo": "Sumativa 3",
+      "porcentaje": "30% de la nota final"
+    },
+    {
+      "tipo": "Talleres y otras actividades complementarias.",
+      "porcentaje": "15% de la nota final"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CL1,N2,RA1",
+        "CE1, N2, RA1",
+        "CE1, N2, RA6",
+        "CE2, N2, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad I: Probabilidad Definición, Axiomas y Propiedades Básicas. Probabilidad Condicional Independencia Teorema de Bayes",
+      "indicador_logro": "Realizar cálculos de probabilidades basados en principios combinatorios. Realizar demostraciones simples basadas en los axiomas de probabilidades. Calcular probabilidades aplicando la regla de probabilidades totales y la definición de probabilidad condicional. Aplicar la definición de independencia para calcular probabilidades de eventos complejos. (e.g. intersecciones múltiples de eventos) Aplicar el teorema de Bayes para calcular probabilidades a posteriori. (e.g. calcular la probabilidad de tener una enfermedad dado que el test sale positivo.)"
+    },
+    {
+      "ras": [
+        "CL1,N2,RA1",
+        "CE1, N2, RA1",
+        "CE1, N2, RA6",
+        "CE2, N2, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad II : Variables y vectores aleatorios Variables aleatorias Discretas Variables aleatorias Continuas Variables Aleatorias clásicas: Bernoulli, Binomial, Poisson, Geométrica, Uniforme, Exponencial, Normal Función de variables aleatorias Esperanza, varianza: Propiedades, cuantiles Función generadora de momentos Independencia de variables Vectores aleatorios",
+      "indicador_logro": "Calcular la función de distribución de una variable aleatoria definida a partir de otras variables aleatorias o vectores aleatorios. Calcular la esperanza de variables aleatorias de forma directa o a través de sus propiedades. Reconocer la distribución de una variable aleatoria a partir de su función generadora de momentos. Aplicar propiedades conocidas para variables aleatorias y vectores aleatorios clásicos. (e.g. La suma de v.a. binomiales independientes es binomial, el mínimo de exponenciales independientes tiene ley exponencial, transformaciones lineales de vectores normales multivariados tienen ley normal multivariada, etc.)."
+    },
+    {
+      "ras": [
+        "CL1,N2,RA1",
+        "CE1, N2, RA1",
+        "CE1, N2, RA6",
+        "CE2, N2, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad III: Teoremas Límites Convergencia de variables aleatorias: Convergencia en probabilidad, en distribución y casi segura. Desigualdades clásicas: Markov y Chebyshev Ley de los grandes números: versión débil y fuerte. Método de Montecarlo Teorema del Límite Central.",
+      "indicador_logro": "Diferenciar los distintos tipos de convergencia de variables aleatorias. Aplicar desigualdades clásicas para estimar probabilidades. (Markov, Chebyshev) Realizar simulaciones computacionales que muestren la Ley de los Grandes Números y el Teorema del límite central. Aplicar la ley de los grandes números para estimar integrales. Aplicar el método de Montecarlo para estimar parámetros de distribuciones clásicas. Aplicar el Teorema del Límite Central para estimar un intervalo de confianza para parámetros de distribuciones clásicas."
+    }
+  ],
+  "semestre": 6
+}

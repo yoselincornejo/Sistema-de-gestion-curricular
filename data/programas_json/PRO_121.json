@@ -1,0 +1,66 @@
+{
+  "archivo": "PRO 121 Programación.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Plan Común Ingeniería Civil Biomédica Ingeniería Civil Oceánica Ingeniería Civil Ambiental Ingeniería Civil Industrial Ingeniería Civil Ingeniería Civil Matemática Ingeniería Civil Informática",
+    "nombre": "Programación",
+    "codigo": "PRO 121",
+    "nivel": "II Semestre del 1° Año",
+    "duracion": "Semestral",
+    "requisitos": "Fundamentos de Programación (PRO 111)"
+  },
+  "responsables": {
+    "responsable": "Coordinación General Programación FACING, Coordinador (a) de Docencia FACING.",
+    "docente_a_cargo": "Rodrigo Olivares",
+    "version": "V1.1.|/2026"
+  },
+  "metodologias": [
+    "Clases expositivas participativas Prácticas en Laboratorio Guías de ejercicios y resolución de problemas Aprendizaje basado en problemas Se permitirá el uso de herramientas de Inteligencia Artificial (IA) generativa como apoyo en las actividades de aprendizaje",
+    "Su utilización estará autorizada y condicionada a las indicaciones expresas que entregue el o la docente para cada actividad, debiendo los estudiantes declarar siempre la herramienta empleada y el tipo de apoyo recibido, enmarcando su uso en los principios institucionales de transparencia y responsabilidad"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Prueba Sumativa 1",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Prueba Sumativa 2",
+      "porcentaje": "30%"
+    },
+    {
+      "tipo": "Prueba Sumativa 3",
+      "porcentaje": "30%"
+    },
+    {
+      "tipo": "Evaluaciones de Taller: Evaluación 1 5% Evaluación 2 5% Evaluación 3 5%",
+      "porcentaje": "Promedio de Evaluaciones de Taller 15% de la Nota Semestral"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 1: Estructuras de datos Contenidos: Tipos de datos primitivos, arreglos y matrices Definición y utilidad. Representación en memoria y operaciones básicas. Accesos y manipulación de estructuras de datos Aplicaciones en programación. Estructuras de datos lineales Listas Aplicación de listas en pilas Aplicación de listas en colas Estructuras de datos asociativas Diccionarios. Conjuntos.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 2: Algoritmos Contenidos: Algoritmos de Ordenamiento Introducción a algoritmos de ordenamiento Importancia y aplicaciones de los algoritmos de ordenamiento. Métodos de ordenamiento Algoritmos de Búsqueda Introducción a algoritmos de búsqueda. Importancia y aplicaciones de los algoritmos de búsqueda. Métodos de búsqueda Algoritmos de Resolución Fuerza bruta. Conteo y sumatoria. Búsqueda de patrones y subsecuencias.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 3: Visualización, Procesamiento y Análisis de Datos Contenidos: Visualización de datos Principios básicos de visualización. Herramientas y bibliotecas para gráficos y visualizaciones (como Matplotlib). Representación de datos complejos: gráficos, mapas de calor, entre otros. Preparación y Transformación de Datos Exploración y limpieza de datos: identificación de datos faltantes, outliers y normalización. Codificación de variables categóricas (ejemplo: one-hot encoding). Identificación de relaciones para identificar patrones y tendencias. Procesamiento y análisis básico de datos Ciclo de vida del análisis de datos. Estadísticas descriptivas: media, mediana, moda, etc. Herramientas y bibliotecas específicas como Pandas y Numpy. Operaciones comunes: agrupación, filtrado, ordenación, etc.",
+      "indicador_logro": ""
+    }
+  ],
+  "semestre": 2
+}

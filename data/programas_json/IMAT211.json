@@ -1,0 +1,60 @@
+{
+  "archivo": "IMAT211 - Programación para Ingeniería.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Programación para Ingeniería",
+    "codigo": "IMAT211",
+    "nivel": "Semestre 3",
+    "duracion": "Semestral",
+    "requisitos": "Programación (PRO 121)"
+  },
+  "responsables": {
+    "responsable": "Héctor Olivero",
+    "docente_a_cargo": "Héctor Olivero"
+  },
+  "metodologias": [
+    "- Clases expositivas participativas - Prácticas en Laboratorio"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "- Prueba Sumativa 1",
+      "porcentaje": "30%"
+    },
+    {
+      "tipo": "- Prueba Sumativa 2",
+      "porcentaje": "35%"
+    },
+    {
+      "tipo": "- Prueba Sumativa 3",
+      "porcentaje": "35%"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 1: Estructuras de datos Introducción a la programación orientada a objetos. Listas enlazadas. Árboles Grafos",
+      "indicador_logro": "Implementar computacionalmente la clase de un objeto a partir de su descripción."
+    },
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 2: Algoritmos Algoritmos de Ordenamiento Algoritmos de Búsqueda Introducción a algoritmos en grafos. Conceptos básicos de análisis de algoritmos.",
+      "indicador_logro": "Implementar algoritmos clásicos a partir de su descripción en pseudocódigo. Estimar el costo de un algoritmo a partir de experimentos computacionales."
+    },
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 3: Introducción a las Bases de Datos Estructuradas Introducción a las bases de datos relacionales Lenguaje SQL",
+      "indicador_logro": "Acceder a una base de datos desde una aplicación en Python. Realizar búsquedas en una base de datos a partir de la sentencia SELECT que involucren a más de una tabla y filtrando resultados. Actualizar una base de datos a partir de las sentencias UPDATE, INSERT y DELETE."
+    }
+  ],
+  "semestre": 3
+}

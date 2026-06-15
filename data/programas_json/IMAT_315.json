@@ -1,0 +1,40 @@
+{
+  "archivo": "IMAT 315 Idioma II.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Idioma II",
+    "codigo": "IMAT 315",
+    "nivel": "6º Semestre del 2° Ciclo",
+    "duracion": "Semestral",
+    "requisitos": "IMAT 223"
+  },
+  "responsables": {
+    "responsable": "Coordinación de Docencia FACING- Asesor pedagógico Inglés APPA",
+    "docente_a_cargo": "Gillian Ord",
+    "version": "Marzo 2026"
+  },
+  "metodologias": [
+    "Clase expositiva  Clase expositiva participativa X Aprendizaje Basado en Equipos  Estudio de casos  Aprendizaje Basado en Indagación  Experimentos de Laboratorio  Aprendizaje Basado en Problemas  Juego de roles X Aprendizaje Basado en Proyectos  Prácticas de laboratorio  Aprendizaje Entre Pares  Salida a terreno  Aprendizaje Colaborativo X Seminario investigativo  Aprendizaje Servicio  Simulación  Clase Invertida  Tutorías  Conferencias (visitas de expertos)  Visitas a empresas (vinculación con la empresa)  Desarrollo de proyectos  Estrategias de organización de información (mapas, esquemas, organizadores avanzados)  WebQuest  Foros en aula virtual  Resolución de problemas  Otra metodología (indique aquí cual): PPP – Presentación, practica y producción"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "descripcion_narrativa",
+      "porcentaje": "",
+      "texto": "evaluación diagnóstica seleccionar con una x prueba escrita  interrogación oral  encuesta con aplicaciones tics x encuesta  quiz  otro tipo de evaluación diagnóstica (indique aquí cual): _______________________________________________ "
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [],
+      "unidad_y_contenidos": "Unit 1: Family, routine and free time Vocabulary: Family Free time activities Daily routine activities Places in a town and geographical features Grammar: Present simple with adverbs of frequency and time expressions There is/There are + quantifiers Present continuous Be going for future plans and intentions Listening and reading comprehension: Related to the vocabulary and grammar areas Written expression: Daily routine, free time and future plans Oral expression: Communicate ideas using specific grammar when talking Speak about one’s daily routine, free time activities and future plans.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [],
+      "unidad_y_contenidos": "Unit 2: Travel, education and work Vocabulary: Holiday activities Past simple and participles for common irregular verbs Life experiences Future activities Grammar : Past simple with regular and irregular verbs Present perfect with regular verbs for life experiences Expressions with will and won’t for future degrees of certainty Listening and reading comprehension: Related to the vocabulary and grammar areas Written expression: Holidays and travel experiences Education and work Oral expression: Communicate ideas using specific grammar when talking Speak about one’s experiences with travelling, education and make prediction about one’s future employment.",
+      "indicador_logro": ""
+    }
+  ],
+  "semestre": 6
+}

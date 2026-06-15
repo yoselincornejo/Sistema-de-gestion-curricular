@@ -1,0 +1,61 @@
+{
+  "archivo": "IMAT 523 Proyecto de Ingeniería.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Proyecto de Ingeniería",
+    "codigo": "IMAT 523",
+    "nivel": "X Semestre del 3° Ciclo",
+    "duracion": "Semestral",
+    "requisitos": "IMAT 421, IMAT 422, IMAT424"
+  },
+  "responsables": {
+    "responsable": "Comité Ingeniería Matemática",
+    "docente_a_cargo": "Claustro Ingeniería Matemática",
+    "version": "Marzo de 2026"
+  },
+  "metodologias": [
+    "El curso Proyecto de Ingeniería considera la realización de dos presentaciones de avance de proyecto y la entrega del documento final “Proyecto de Título”",
+    "Sobre la primera presentación de avance: Debe contemplar los objetivos (generales y específicos), hipótesis de trabajo, revisión bibliográfica, metodología a emplear y plan de trabajo (presentación de carta Gantt)",
+    "Esta será una presentación pública, evaluada por una comisión compuesta por tres académicos y/o expertos designados por la jefatura de carrera de Ingeniería Civil Matemática",
+    "Fecha de presentación: un mes después del inicio del semestre",
+    "Duración: 20 minutos",
+    "Sobre la segunda presentación de avance: Incluirá los puntos anteriores junto con los avances realizados durante el semestre",
+    "Esta será una presentación pública, evaluada por una comisión compuesta por tres académicos y/o expertos designados por la jefatura de carrera de Ingeniería Civil Matemática",
+    "Fecha de presentación: un mes antes del final del semestre",
+    "Duración: 20 minutos",
+    "Sobre el documento “Proyecto de Título”: Fecha de entrega: dos semanas antes del final del semestre",
+    "El documento debe tener un máximo de 15 páginas",
+    "El formato del escrito debe seguir el modelo propuesto por la carrera, el cual se encuentra disponible para descarga",
+    "Evaluación: La evaluación de las dos presentaciones de avance se hará según la rúbrica disponible para descarga",
+    "La nota de cada presentación se obtendrá como promedio de las notas dadas por los académicos y/o expertos de la comisión",
+    "El estudiante obtendrá una primera nota N1 a la primera presentación y una segunda nota a la segunda presentación N2",
+    "El/los académico(s) con quien inscribe la asignatura evaluarán el desempeño del estudiante a lo largo del semestre y el documento “Proyecto de Título” con una nota N3",
+    "La nota final a la asignatura será: Nota Final = 0"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "descripcion_narrativa",
+      "porcentaje": "",
+      "texto": "el curso proyecto de ingeniería considera la realización de dos presentaciones de avance de proyecto y la entrega del documento final “proyecto de título”. sobre la primera presentación de avance: debe contemplar los objetivos (generales y específicos), hipótesis de trabajo, revisión bibliográfica, metodología a emplear y plan de trabajo (presentación de carta gantt). esta será una presentación pública, evaluada por una comisión compuesta por tres académicos y/o expertos designados por la jefatura de carrera de ingeniería civil matemática. fecha de presentación: un mes después del inicio del semestre. duración: 20 minutos. sobre la segunda presentación de avance: incluirá los puntos anteriores junto con los avances realizados durante el semestre. esta será una presentación pública, evaluada por una comisión compuesta por tres académicos y/o expertos designados por la jefatura de carrera de ingeniería civil matemática. fecha de presentación: un mes antes del final del semestre. duración: 20 minutos. sobre el documento “proyecto de título”: fecha de entrega: dos semanas antes del final del semestre. el documento debe tener un máximo de 15 páginas. el formato del escrito debe seguir el modelo propuesto por la carrera, el cual se encuentra disponible para descarga. evaluación: la evaluación de las dos presentaciones de avance se hará según la rúbrica disponible para descarga. la nota de cada presentación se obtendrá como promedio de las notas dadas por los académicos y/o expertos de la comisión. el estudiante obtendrá una primera nota n1 a la primera presentación y una segunda nota a la segunda presentación n2. el/los académico(s) con quien inscribe la asignatura evaluarán el desempeño del estudiante a lo largo del semestre y el documento “proyecto de título” con una nota n3. la nota final a la asignatura será: nota final = 0.2*n1 + 0.3*n2 + 0.5*n3"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CE1, N3, RA1",
+        "CE1, N3, RA2",
+        "CE1, N3, RA3",
+        "CE2, N3, RA1",
+        "CE2, N3, RA2",
+        "CE2, N3, RA3",
+        "CE2, N3, RA4",
+        "CE2, N3, RA5",
+        "CE2, N3, RA6"
+      ],
+      "unidad_y_contenidos": "Unidad I: Formulación de un proyecto de titulación 1. La formulación de un problema. 2. La formulación de un objetivo general y de objetivos específicos 3. Las hipótesis de trabajo 4. La revisión bibliográfica y la construcción de un marco teórico. 5. La elaboración de una metodología 6. La construcción de un plan de trabajo",
+      "indicador_logro": ""
+    }
+  ],
+  "semestre": 10
+}

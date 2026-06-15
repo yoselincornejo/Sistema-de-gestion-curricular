@@ -1,0 +1,123 @@
+{
+  "archivo": "IMAT 321 ANALISIS.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Análisis",
+    "codigo": "IMAT321",
+    "nivel": "V Semestre",
+    "duracion": "Semestral",
+    "requisitos": "MAT221: Cálculo en varias variables; IMAT221: Taller de deducción matemática"
+  },
+  "responsables": {
+    "responsable": "Rolando Rebolledo, Pierre Guiraud.",
+    "docente_a_cargo": "Instituto de Ingeniería Matemática",
+    "version": "Marzo 2026"
+  },
+  "metodologias": [
+    "Clases expositivas y talleres",
+    "Resolución de problemas",
+    "Estudio personal y colaborativo"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Evaluación sumativa con prueba de desarrollo 1",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Evaluación sumativa con prueba de desarrollo 2",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Evaluación sumativa con prueba de desarrollo 3",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Promedio de tareas realizadas en grupos, en donde se medirá el aprendizaje aplicado de la asignatura",
+      "porcentaje": "25%"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CL2, N2, RA1",
+        "CL2, N2, RA2",
+        "CE1, N2, RA1",
+        "CE1, N2, RA4"
+      ],
+      "unidad_y_contenidos": "Unidad 1: Introducción a los Espacios Métricos Definición de espacio métrico. Ejemplos de espacios métricos (espacio euclidiano, espacio de funciones, etc.). Normas, propiedades básicas: simetría, desigualdad triangular",
+      "indicador_logro": "Analizar la forma de medir distancias y distinguir entre espacios de dimensión finita e infinita"
+    },
+    {
+      "ras": [
+        "CL2, N2, RA1",
+        "CL2, N2, RA2",
+        "CE1, N2, RA1",
+        "CE1, N2, RA4"
+      ],
+      "unidad_y_contenidos": "Unidad 2: Topología de los Espacios Métricos - Esferas abiertas y cerradas. - Conjuntos abiertos y cerrados. -Interiores, puntos de acumulación, adherencias y fronteras. - Ejemplos y contraejemplos.",
+      "indicador_logro": "Manipular nociones topológicas y geométricas básicas."
+    },
+    {
+      "ras": [
+        "CL2, N2, RA1",
+        "CL2, N2, RA2",
+        "CE1, N2, RA1",
+        "CE1, N2, RA4"
+      ],
+      "unidad_y_contenidos": "Unidad 3: Convergencia y Continuidad - Sucesiones en espacios métricos. - Convergencia de sucesiones. - Funciones continuas: definiciones y propiedades. - Caracterizaciones de continuidad.",
+      "indicador_logro": "Asociar los conceptos de convergencia y continuidad vistos en Cálculo, en el contexto topológico general."
+    },
+    {
+      "ras": [
+        "CL2, N2, RA1",
+        "CL2, N2, RA2",
+        "CE1, N2, RA1",
+        "CE1, N2, RA4"
+      ],
+      "unidad_y_contenidos": "Unidad 4: Espacios Completos - Definición de espacios completos. Sucesiones de Cauchy. - Teorema de completitud de Cantor. - Ejemplos y aplicaciones: espacios métricos polacos, espacios de Banach.",
+      "indicador_logro": "Comprobar que los espacios completos proporcionan un marco ventajoso para el estudio de la convergencia de sucesiones y el estudio de la continuidad (ver esto en particular en los espacios citados en los ejemplos)."
+    },
+    {
+      "ras": [
+        "CL2, N2, RA1",
+        "CL2, N2, RA2",
+        "CE1, N2, RA1",
+        "CE1, N2, RA4"
+      ],
+      "unidad_y_contenidos": "Unidad 5: Compacidad - Definición de compacidad. - Teorema de Heine-Borel. - Compacidad secuencial. - Propiedades de los conjuntos compactos.",
+      "indicador_logro": "Inferir el sentido general de la compacidad en un espacio topológico como una extensión de la propiedad vista en Cálculo."
+    },
+    {
+      "ras": [
+        "CL2, N2, RA1",
+        "CL2, N2, RA2",
+        "CE1, N2, RA1",
+        "CE1, N2, RA4"
+      ],
+      "unidad_y_contenidos": "Unidad 6: Conectividad - Conjuntos conexos y sus propiedades. - Conexión por trayectorias. - Componentes conexas. - Ejemplos y aplicaciones",
+      "indicador_logro": "Comprobar en particular, que una función continua en un conjunto conexo no puede tener saltos o interrupciones. Asimismo, inferir una forma general del Teorema del Valor Intermedio."
+    },
+    {
+      "ras": [
+        "CL2, N2, RA1",
+        "CL2, N2, RA2",
+        "CE1, N2, RA1",
+        "CE1, N2, RA4"
+      ],
+      "unidad_y_contenidos": "Unidad 7: Teorema del punto fijo de Banach y Aplicaciones - Contracciones y el principio del punto fijo de Banach. Teorema de Schauder. - Aplicaciones del teorema del punto fijo. - Ejemplos en ecuaciones diferenciales ordinarias.",
+      "indicador_logro": "Comprobar la importancia de estas aplicaciones para el estudio de sistemas dinámicos."
+    },
+    {
+      "ras": [
+        "CL2, N2, RA1",
+        "CL2, N2, RA2",
+        "CE1, N2, RA1",
+        "CE1, N2, RA4"
+      ],
+      "unidad_y_contenidos": "Unidad 8: El espacio de las funciones continuas sobre un compacto - Completitud del espacio C(K). - Equicontinuidad. - Caracterización de subconjuntos compactos en C(K): Teorema de Arzelà-Ascoli.",
+      "indicador_logro": "Analizar la forma específica que adquieren los compactos en el espacio de las funciones continuas y aplicarlo a ecuaciones diferenciales, por ejemplo."
+    }
+  ],
+  "semestre": 5
+}

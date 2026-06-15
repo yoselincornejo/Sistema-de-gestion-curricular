@@ -1,0 +1,538 @@
+{
+  "total_archivos": 53,
+  "exitos": 53,
+  "fallidos": 0,
+  "detalle_exitos": [
+    {
+      "archivo": "CFG 111 Desarrollo Personal.docx",
+      "semestre": 1,
+      "codigo": "CFG 111",
+      "nombre": "Desarrollo Personal",
+      "unidades": 3,
+      "evaluaciones": 5,
+      "metodologias": 13,
+      "ras_totales": 0
+    },
+    {
+      "archivo": "ING 111 Desafíos de Ingeniería v1.1.docx",
+      "semestre": 1,
+      "codigo": "ING 111",
+      "nombre": "Desafíos de Ingeniería",
+      "unidades": 3,
+      "evaluaciones": 3,
+      "metodologias": 5,
+      "ras_totales": 3
+    },
+    {
+      "archivo": "MAT 111 Fundamentos de Matemática.docx",
+      "semestre": 1,
+      "codigo": "MAT 111",
+      "nombre": "Fundamentos de Matemática",
+      "unidades": 6,
+      "evaluaciones": 4,
+      "metodologias": 5,
+      "ras_totales": 12
+    },
+    {
+      "archivo": "PRO 111 Fundamentos de Programación.docx",
+      "semestre": 1,
+      "codigo": "PRO 111",
+      "nombre": "Fundamentos de Programación",
+      "unidades": 3,
+      "evaluaciones": 4,
+      "metodologias": 2,
+      "ras_totales": 0
+    },
+    {
+      "archivo": "QUI 121 Química para Ingeniería - Laboratorios.docx",
+      "semestre": 1,
+      "codigo": "",
+      "nombre": "",
+      "unidades": 0,
+      "evaluaciones": 0,
+      "metodologias": 0,
+      "ras_totales": 0
+    },
+    {
+      "archivo": "QUI 121 Química para Ingeniería.docx",
+      "semestre": 1,
+      "codigo": "QUI 121",
+      "nombre": "Química para Ingeniería",
+      "unidades": 4,
+      "evaluaciones": 0,
+      "metodologias": 4,
+      "ras_totales": 12
+    },
+    {
+      "archivo": "IMAT 415 Idioma IV.docx",
+      "semestre": 10,
+      "codigo": "IMAT 415",
+      "nombre": "Idioma IV",
+      "unidades": 0,
+      "evaluaciones": 0,
+      "metodologias": 0,
+      "ras_totales": 0
+    },
+    {
+      "archivo": "IMAT 513 Electivo de formación profesional III.docx",
+      "semestre": 10,
+      "codigo": "IMAT 513",
+      "nombre": "Electivo de formación profesional III",
+      "unidades": 0,
+      "evaluaciones": 0,
+      "metodologias": 0,
+      "ras_totales": 0
+    },
+    {
+      "archivo": "IMAT 523 Proyecto de Ingeniería.docx",
+      "semestre": 10,
+      "codigo": "IMAT 523",
+      "nombre": "Proyecto de Ingeniería",
+      "unidades": 1,
+      "evaluaciones": 1,
+      "metodologias": 17,
+      "ras_totales": 9
+    },
+    {
+      "archivo": "IMAT 524 Electivo de formación profesional II.docx",
+      "semestre": 10,
+      "codigo": "IMAT 524",
+      "nombre": "Electivo de formación profesional II",
+      "unidades": 0,
+      "evaluaciones": 0,
+      "metodologias": 0,
+      "ras_totales": 0
+    },
+    {
+      "archivo": "IMAT 611 Taller de Titulo.docx",
+      "semestre": 11,
+      "codigo": "IMAT 611",
+      "nombre": "Taller de Título",
+      "unidades": 1,
+      "evaluaciones": 1,
+      "metodologias": 0,
+      "ras_totales": 9
+    },
+    {
+      "archivo": "IMAT 612 Practica Profesional 2025.docx",
+      "semestre": 11,
+      "codigo": "IMAT 612",
+      "nombre": "Práctica Profesional",
+      "unidades": 3,
+      "evaluaciones": 1,
+      "metodologias": 3,
+      "ras_totales": 4
+    },
+    {
+      "archivo": "FIS 111 Fundamentos de Física.docx",
+      "semestre": 2,
+      "codigo": "FIS 111",
+      "nombre": "Fundamentos de Física",
+      "unidades": 5,
+      "evaluaciones": 4,
+      "metodologias": 10,
+      "ras_totales": 10
+    },
+    {
+      "archivo": "ING 121 Ingeniería, Innovación y Emprendimiento v1.1.docx",
+      "semestre": 2,
+      "codigo": "ING 121",
+      "nombre": "Ingeniería, Innovación y Emprendimiento.",
+      "unidades": 4,
+      "evaluaciones": 5,
+      "metodologias": 5,
+      "ras_totales": 5
+    },
+    {
+      "archivo": "MAT 121 Cálculo Diferencial.docx",
+      "semestre": 2,
+      "codigo": "MAT 121",
+      "nombre": "Cálculo Diferencial",
+      "unidades": 3,
+      "evaluaciones": 4,
+      "metodologias": 2,
+      "ras_totales": 6
+    },
+    {
+      "archivo": "MAT 122 Álgebra.docx",
+      "semestre": 2,
+      "codigo": "MAT 122",
+      "nombre": "Álgebra",
+      "unidades": 6,
+      "evaluaciones": 4,
+      "metodologias": 5,
+      "ras_totales": 12
+    },
+    {
+      "archivo": "PRO 121 Programación.docx",
+      "semestre": 2,
+      "codigo": "PRO 121",
+      "nombre": "Programación",
+      "unidades": 3,
+      "evaluaciones": 4,
+      "metodologias": 2,
+      "ras_totales": 6
+    },
+    {
+      "archivo": "FIS 211 Física Mecánica.docx",
+      "semestre": 3,
+      "codigo": "FIS 211",
+      "nombre": "Física Mecánica",
+      "unidades": 5,
+      "evaluaciones": 4,
+      "metodologias": 2,
+      "ras_totales": 10
+    },
+    {
+      "archivo": "IMAT 221 Taller de Deducción Matemática.docx",
+      "semestre": 3,
+      "codigo": "IMAT 221",
+      "nombre": "Taller de Deducción Matemática",
+      "unidades": 3,
+      "evaluaciones": 4,
+      "metodologias": 3,
+      "ras_totales": 6
+    },
+    {
+      "archivo": "IMAT211 - Programación para Ingeniería.docx",
+      "semestre": 3,
+      "codigo": "IMAT211",
+      "nombre": "Programación para Ingeniería",
+      "unidades": 3,
+      "evaluaciones": 3,
+      "metodologias": 1,
+      "ras_totales": 6
+    },
+    {
+      "archivo": "MAT 211 Cálculo Integral y Series.docx",
+      "semestre": 3,
+      "codigo": "MAT 211",
+      "nombre": "Cálculo Integral y Series",
+      "unidades": 4,
+      "evaluaciones": 4,
+      "metodologias": 2,
+      "ras_totales": 8
+    },
+    {
+      "archivo": "MAT 212 Álgebra Lineal.docx",
+      "semestre": 3,
+      "codigo": "MAT 212",
+      "nombre": "Álgebra Lineal",
+      "unidades": 4,
+      "evaluaciones": 4,
+      "metodologias": 5,
+      "ras_totales": 8
+    },
+    {
+      "archivo": "FIS 221 Física Calor y Ondas.docx",
+      "semestre": 4,
+      "codigo": "FIS 221",
+      "nombre": "Física Calor y Ondas",
+      "unidades": 3,
+      "evaluaciones": 4,
+      "metodologias": 5,
+      "ras_totales": 6
+    },
+    {
+      "archivo": "IMAT 223 Idioma I.docx",
+      "semestre": 4,
+      "codigo": "IMAT 223",
+      "nombre": "Idioma I",
+      "unidades": 3,
+      "evaluaciones": 4,
+      "metodologias": 0,
+      "ras_totales": 0
+    },
+    {
+      "archivo": "IMAT 314 Estructuras Algebraícas.docx",
+      "semestre": 4,
+      "codigo": "IMAT314",
+      "nombre": "Estructuras Algebraicas",
+      "unidades": 3,
+      "evaluaciones": 4,
+      "metodologias": 1,
+      "ras_totales": 6
+    },
+    {
+      "archivo": "IMAT212 ECONOMÍA.docx",
+      "semestre": 4,
+      "codigo": "IMAT 212",
+      "nombre": "",
+      "unidades": 2,
+      "evaluaciones": 1,
+      "metodologias": 1,
+      "ras_totales": 0
+    },
+    {
+      "archivo": "MAT 221 Cálculo en Varias Variables.docx",
+      "semestre": 4,
+      "codigo": "MAT 221",
+      "nombre": "Cálculo en Varias Variables",
+      "unidades": 2,
+      "evaluaciones": 4,
+      "metodologias": 5,
+      "ras_totales": 4
+    },
+    {
+      "archivo": "MAT 222 Ecuaciones Diferenciales Ordinarias.docx",
+      "semestre": 4,
+      "codigo": "MAT 222",
+      "nombre": "Ecuaciones Diferenciales Ordinarias",
+      "unidades": 2,
+      "evaluaciones": 4,
+      "metodologias": 5,
+      "ras_totales": 4
+    },
+    {
+      "archivo": "FIS 311 Física Electromagnetismo.docx",
+      "semestre": 5,
+      "codigo": "FIS 311",
+      "nombre": "Física Electromagnetismo",
+      "unidades": 3,
+      "evaluaciones": 4,
+      "metodologias": 5,
+      "ras_totales": 9
+    },
+    {
+      "archivo": "IMAT 311 Cálculo_Avanzado.docx",
+      "semestre": 5,
+      "codigo": "IMAT 311",
+      "nombre": "Cálculo Avanzado",
+      "unidades": 3,
+      "evaluaciones": 4,
+      "metodologias": 3,
+      "ras_totales": 6
+    },
+    {
+      "archivo": "IMAT 312 Métodos Numéricos.docx",
+      "semestre": 5,
+      "codigo": "IMAT 312",
+      "nombre": "Métodos Numéricos",
+      "unidades": 3,
+      "evaluaciones": 4,
+      "metodologias": 1,
+      "ras_totales": 15
+    },
+    {
+      "archivo": "IMAT 321 ANALISIS.docx",
+      "semestre": 5,
+      "codigo": "IMAT321",
+      "nombre": "Análisis",
+      "unidades": 8,
+      "evaluaciones": 4,
+      "metodologias": 3,
+      "ras_totales": 32
+    },
+    {
+      "archivo": "IMAT 324 TIPE SELLO UV I.docx",
+      "semestre": 5,
+      "codigo": "IMAT324",
+      "nombre": "TIPE I",
+      "unidades": 0,
+      "evaluaciones": 1,
+      "metodologias": 0,
+      "ras_totales": 0
+    },
+    {
+      "archivo": "IMAT222 Evaluación de Proyectos.docx",
+      "semestre": 5,
+      "codigo": "IMAT222",
+      "nombre": "Evaluación de Proyectos",
+      "unidades": 2,
+      "evaluaciones": 1,
+      "metodologias": 15,
+      "ras_totales": 0
+    },
+    {
+      "archivo": "IMAT 313 Combinatoria y Algoritmos.docx",
+      "semestre": 6,
+      "codigo": "IMAT313",
+      "nombre": "Combinatoria y Algoritmos",
+      "unidades": 4,
+      "evaluaciones": 4,
+      "metodologias": 1,
+      "ras_totales": 16
+    },
+    {
+      "archivo": "IMAT 315 Idioma II.docx",
+      "semestre": 6,
+      "codigo": "IMAT 315",
+      "nombre": "Idioma II",
+      "unidades": 2,
+      "evaluaciones": 1,
+      "metodologias": 1,
+      "ras_totales": 0
+    },
+    {
+      "archivo": "IMAT 322 CALCULO DE PROBABILIDADES.docx",
+      "semestre": 6,
+      "codigo": "IMAT322",
+      "nombre": "Cálculo de Probabilidades",
+      "unidades": 3,
+      "evaluaciones": 4,
+      "metodologias": 1,
+      "ras_totales": 12
+    },
+    {
+      "archivo": "IMAT 411 Teoría de la Medida.docx",
+      "semestre": 6,
+      "codigo": "IMAT 411",
+      "nombre": "Teoría de la Medida",
+      "unidades": 5,
+      "evaluaciones": 4,
+      "metodologias": 1,
+      "ras_totales": 20
+    },
+    {
+      "archivo": "IMAT 423 Sistemas Dinámicos Continuos.docx",
+      "semestre": 6,
+      "codigo": "IMAT 423",
+      "nombre": "Sistemas Dinámicos Continuos",
+      "unidades": 5,
+      "evaluaciones": 1,
+      "metodologias": 1,
+      "ras_totales": 10
+    },
+    {
+      "archivo": "IMAT 323 Optimización.docx",
+      "semestre": 7,
+      "codigo": "IMAT 323",
+      "nombre": "Optimización",
+      "unidades": 4,
+      "evaluaciones": 0,
+      "metodologias": 5,
+      "ras_totales": 15
+    },
+    {
+      "archivo": "IMAT 413 Analisis Complejo.docx",
+      "semestre": 7,
+      "codigo": "IMAT413",
+      "nombre": "Análisis Complejo",
+      "unidades": 4,
+      "evaluaciones": 4,
+      "metodologias": 1,
+      "ras_totales": 16
+    },
+    {
+      "archivo": "IMAT 414 TIPE sello UV II.docx",
+      "semestre": 7,
+      "codigo": "IMAT 414",
+      "nombre": "TIPE II",
+      "unidades": 0,
+      "evaluaciones": 1,
+      "metodologias": 0,
+      "ras_totales": 0
+    },
+    {
+      "archivo": "IMAT412 Inferencia Estadística.docx",
+      "semestre": 7,
+      "codigo": "IMAT 412",
+      "nombre": "Inferencia Estadística",
+      "unidades": 6,
+      "evaluaciones": 2,
+      "metodologias": 3,
+      "ras_totales": 18
+    },
+    {
+      "archivo": "IMAT 325 Idioma III.docx",
+      "semestre": 8,
+      "codigo": "IMAT 325",
+      "nombre": "Idioma III",
+      "unidades": 0,
+      "evaluaciones": 1,
+      "metodologias": 0,
+      "ras_totales": 0
+    },
+    {
+      "archivo": "IMAT 422 Procesos Estocásticos.docx",
+      "semestre": 8,
+      "codigo": "IMAT422",
+      "nombre": "Procesos Estocásticos",
+      "unidades": 3,
+      "evaluaciones": 4,
+      "metodologias": 1,
+      "ras_totales": 15
+    },
+    {
+      "archivo": "IMAT 424 TIPE ICM.docx",
+      "semestre": 8,
+      "codigo": "IMAT424",
+      "nombre": "Taller de Integración al Perfil de Egreso Ingeniería Civil Matemática (TIPE ICM)",
+      "unidades": 3,
+      "evaluaciones": 4,
+      "metodologias": 1,
+      "ras_totales": 15
+    },
+    {
+      "archivo": "IMAT 521 Optimizacion Combinatorial.docx",
+      "semestre": 8,
+      "codigo": "IMAT 521",
+      "nombre": "Optimización Combinatorial",
+      "unidades": 4,
+      "evaluaciones": 1,
+      "metodologias": 3,
+      "ras_totales": 10
+    },
+    {
+      "archivo": "IMAT421-Análisis Funcional.docx",
+      "semestre": 8,
+      "codigo": "IMAT421",
+      "nombre": "Análisis Funcional",
+      "unidades": 3,
+      "evaluaciones": 1,
+      "metodologias": 3,
+      "ras_totales": 12
+    },
+    {
+      "archivo": "IMAT 511 Grafos.docx",
+      "semestre": 9,
+      "codigo": "IMAT 511",
+      "nombre": "Grafos",
+      "unidades": 5,
+      "evaluaciones": 1,
+      "metodologias": 3,
+      "ras_totales": 15
+    },
+    {
+      "archivo": "IMAT 512 Modelación Estocástica.docx",
+      "semestre": 9,
+      "codigo": "IMAT512",
+      "nombre": "Modelación Estocástica",
+      "unidades": 3,
+      "evaluaciones": 4,
+      "metodologias": 1,
+      "ras_totales": 9
+    },
+    {
+      "archivo": "IMAT 514 Electivo de formación profesional I.docx",
+      "semestre": 9,
+      "codigo": "IMAT 514",
+      "nombre": "Electivo de Ingeniería I",
+      "unidades": 0,
+      "evaluaciones": 0,
+      "metodologias": 0,
+      "ras_totales": 0
+    },
+    {
+      "archivo": "IMAT 515 Practica Basica.docx",
+      "semestre": 9,
+      "codigo": "IMAT 515",
+      "nombre": "Práctica Básica",
+      "unidades": 3,
+      "evaluaciones": 1,
+      "metodologias": 3,
+      "ras_totales": 1
+    },
+    {
+      "archivo": "IMAT522 Ecuaciones en Derivadas Parciales.docx",
+      "semestre": 9,
+      "codigo": "IMAT522",
+      "nombre": "Ecuaciones en Derivadas Parciales",
+      "unidades": 2,
+      "evaluaciones": 1,
+      "metodologias": 3,
+      "ras_totales": 4
+    }
+  ],
+  "detalle_fallidos": []
+}

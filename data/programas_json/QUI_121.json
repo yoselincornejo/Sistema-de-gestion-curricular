@@ -1,0 +1,62 @@
+{
+  "archivo": "QUI 121 Química para Ingeniería.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Plan Común Ingeniería Civil Ingeniería Civil Ambiental Ingeniería Civil Biomédica Ingeniería Civil Industrial Ingeniería Civil Informática Ingeniería Civil Matemática Ingeniería Civil Oceánica",
+    "nombre": "Química para Ingeniería",
+    "codigo": "QUI 121",
+    "nivel": "1er semestre 1er año",
+    "duracion": "Semestral"
+  },
+  "responsables": {
+    "responsable": "Coordinador(a) de Docencia FACING",
+    "docente_a_cargo": "",
+    "version": "V1.2 2026"
+  },
+  "metodologias": [
+    "1 EXPERIENCIAS DE LABORATORIO 3",
+    "1 EXPERIENCIAS DE LABORATORIO Unidad 0: NORMAS Y ELEMENTOS DE SEGURIDAD EN UN LABORATORIO Y MATERIAL GENERAL E INSTRUMENTACIÓN BÁSICA DE LABORATORIO Lab 01-A: Taller de Diseño de una Bodega de Sustancias Peligrosas (DS 43/16 Decreto de Almacenamiento de Sustancias Peligrosos) Lab 01-B: Reconocimiento de Material y Equipos de Laboratorio",
+    "Unidad 1: SUSTANCIAS QUÍMICAS Y SU ESTADO DE AGREGACIÓN Lab 01: Filtración por Gravedad y Vacío",
+    "Unidad 2: ESTEQUIOMETRÍA Y ANÁLISIS GRAVIMÉTRICO Lab 02: Reacción de Precipitación Unidad 3: EQUILIBRIO QUÍMICO Lab 03: Reacción de óxido reducción (cromato) Unidad 4: REACCIONES DE TRANSFERENCIA DE PROTONES Lab 04: Volumetría Ácido/Base (NaOH/HCl)"
+  ],
+  "evaluaciones": [],
+  "unidades": [
+    {
+      "ras": [
+        "CL1, RA1",
+        "CL1, RA2",
+        "CL2, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 1 NATURALEZA QUÍMICA DE LA MATERIA Contenidos: Composición de la Materia Sustancias puras y mezclas Estados de agregación de la materia El estado gaseoso (Ley de Boyle-Mariotte, Ley de Charles y Gay Lussac, Ley de Avogadro, Ecuación estado gases ideales, Ley de Dalton) Teoría cinético molecular de la materia Unidades de concentración de las disoluciones Átomos Constituyentes básicos del átomo Orígenes de la teoría cuántica Teoría cuántica de Planck Teoría corpuscular de la luz de Einstein Modelo atómico de Bohr Modelo mecánico cuántico del átomo Niveles energéticos de los electrones Electrones de valencia Configuraciones electrónicas y diagramas de orbitales Tabla periódica de los elementos Propiedades periódicas de los elementos: radio atómico, radio iónico, energía de ionización, afinidad electrónica, electronegatividad, carácter metálico y no metálico Química y Medioambiente: La Química del Calentamiento Global Enlaces Químicos Tipos de enlaces químicos: enlace iónico, enlace covalente y enlace metálico Fuerzas intermoleculares (Van der Waals, enlace de hidrógeno) Teoría de Lewis y Teoría de orbitales atómicos o de enlace de valencia. Propiedades de las sustancias iónicas, covalentes, metálicas Formulación y nomenclatura química Nomenclatura Inorgánica (IUPAC) Fórmula empírica y molecular. Masa molecular, composición porcentual Química y Medioambiente: Paneles Fotovoltaicos",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, RA1",
+        "CL1, RA2",
+        "CL2, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 2 REACCIONES QUIMICAS Y ESTEQUIOMETRIA Contenidos Tipos de reacciones químicas Ecuaciones químicas Métodos de balanceo o igualación de ecuaciones químicas Cálculos de moles en base a ecuaciones químicas Reactivo limitante. Volumen molar. Rendimiento. Grado de pureza de sustancias. Química y Medioambiente: Huella de Carbono",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, RA1",
+        "CL1, RA2",
+        "CL2, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 3 CINÉTICA Y EQUILIBRIO QUÍMICO Contenidos Velocidad de reacción • Teoría de las reacciones químicas • Ecuación de velocidad • Factores que influyen en la velocidad de reacción Equilibrio químico (Reacciones reversibles) • Constante de equilibrio y energía libre de una reacción. • Formas de expresión de la constante de equilibrio. • Desplazamiento del equilibrio: principio de Le Chatelier. • Cociente de reacción (Q) Química y Medioambiente: NOx",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, RA1",
+        "CL1, RA2",
+        "CL2, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 4 REACCIONES QUÍMICAS EN DISOLUCIÓN ACUOSA Contenidos Reacciones de transferencia de protones (Reacciones Ácido-base) • Definición clásica de Arrhenius • Definición protónica de Brönsted y Lowry • Fuerza relativa de ácidos y bases • Ionización del agua • Determinación del pH y pOH • Disoluciones amortiguadoras • Indicadores ácido-base Química y Medioambiente: Lluvia Ácida Reacciones de transferencia de electrones (Reacciones de oxidación reducción) • Concepto de oxidación-reducción • Ajuste de ecuaciones redox • Pilas voltaicas • Electrolisis Química y Medioambiente: Producción de Hidrógeno Reacciones de precipitación • Solubilidad de los compuestos iónicos • Reglas de solubilidad • Producto de solubilidad • Relación entre la solubilidad y Ks • Precipitación fraccionada • Disolución de precipitados Química y Medioambiente: Metales Pesado",
+      "indicador_logro": ""
+    }
+  ],
+  "semestre": 1
+}

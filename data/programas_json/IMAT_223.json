@@ -1,0 +1,54 @@
+{
+  "archivo": "IMAT 223 Idioma I.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Idioma I",
+    "codigo": "IMAT 223",
+    "nivel": "4to semestre",
+    "duracion": "Semestral",
+    "requisitos": "CFG111"
+  },
+  "responsables": {
+    "responsable": "Taller de Nivelación de Inglés",
+    "docente_a_cargo": "",
+    "version": "1er semestre 2026"
+  },
+  "metodologias": [],
+  "evaluaciones": [
+    {
+      "tipo": "Unidad Nº1",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Unidad Nº2",
+      "porcentaje": "30%"
+    },
+    {
+      "tipo": "Unidad Nº3",
+      "porcentaje": "35%"
+    },
+    {
+      "tipo": "Evaluaciones Formativas",
+      "porcentaje": "10%"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [],
+      "unidad_y_contenidos": "Unidad 1: “Aproximación a las estrategias de comprensión lectora” Contenidos: Etapas de la comprensión lectora: Pre lectura, lectura, post lectura. Vocabulario: cognados y falsos cognados. Idea principal e ideas secundarias, tópico y párrafo.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [],
+      "unidad_y_contenidos": "Unidad 2: “Aplicación de las estrategias de comprensión lectora” Contenidos: Skimming and Scanning (barrida de texto y búsqueda de información específica) Vocabulario: Inferir el significado de vocabulario desconocido en contexto. Cómo organizar el vocabulario nuevo. Tipos de texto",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [],
+      "unidad_y_contenidos": "Unidad 3: “Consolidación de las estrategias de comprensión lectora” Contenidos: Estructura del texto Vocabulario: Prefijos y sufijos Sinónimos y antónimos Hechos y opiniones",
+      "indicador_logro": ""
+    }
+  ],
+  "semestre": 4
+}

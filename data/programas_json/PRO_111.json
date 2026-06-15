@@ -1,0 +1,56 @@
+{
+  "archivo": "PRO 111 Fundamentos de Programación.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Plan Común Ingeniería Civil Ingeniería Civil Ambiental Ingeniería Civil Biomédica Ingeniería Civil Industrial Ingeniería Civil Informática Ingeniería Civil Matemática Ingeniería Civil Oceánica",
+    "nombre": "Fundamentos de Programación",
+    "codigo": "PRO 111",
+    "nivel": "I Semestre del 1° Año",
+    "duracion": "Semestral"
+  },
+  "responsables": {
+    "responsable": "Coordinación General Programación, Coordinador (a) de Docencia FACING",
+    "docente_a_cargo": "Rodrigo Olivares",
+    "version": "V1.1/2026"
+  },
+  "metodologias": [
+    "Clases expositivas participativas Prácticas en Laboratorio Guías de ejercicios y resolución de problemas Aprendizaje basado en problemas Se permitirá el uso de herramientas de Inteligencia Artificial (IA) generativa como apoyo en las actividades de aprendizaje",
+    "Su utilización estará autorizada y condicionada a las indicaciones expresas que entregue el o la docente para cada actividad, debiendo los estudiantes declarar siempre la herramienta empleada y el tipo de apoyo recibido, enmarcando su uso en los principios institucionales de transparencia y responsabilidad"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Prueba Sumativa 1",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Prueba Sumativa 2",
+      "porcentaje": "30%"
+    },
+    {
+      "tipo": "Prueba Sumativa 3",
+      "porcentaje": "30%"
+    },
+    {
+      "tipo": "Evaluaciones de Taller: Evaluación 1 5% Evaluación 2 5% Evaluación 3 5%",
+      "porcentaje": "Promedio de Evaluaciones de Taller 15% de la Nota Semestral"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [],
+      "unidad_y_contenidos": "Unidad 1: Bases de la Programación Contenidos: Variables, tipos de datos y operadores Definición y propósito de variables y constantes. Diferentes tipos de datos: numéricos (enteros, reales), caracteres (cadenas de texto, caracteres individuales) y booleanos (verdadero o falso). Declaración, inicialización y asignación de valores a variables. Operadores aritméticos: suma, resta, multiplicación, división, módulo, etc. Operadores lógicos: AND, OR, NOT. Tablas de verdad. Operadores de relación: igualdad, desigualdad, menor que, mayor que, etc. Precedencia de operadores y uso de paréntesis para clarificar expresiones. Entrada y salida de datos Métodos y funciones para obtener datos del usuario. Métodos y funciones para mostrar datos al usuario. Formateo de la salida de datos. Representación de algoritmos Propósito y utilidad de los diagramas de flujo en la planificación y diseño de programas. Símbolos estándar y su significado: óvalo (inicio/final), rectángulo (proceso), paralelogramo (entrada/salida), diamante (decisión), etc. Conexión y flujo entre símbolos: flechas de dirección. Ruteo de soluciones. Ejemplos prácticos de representación de programas simples mediante diagramas de flujo.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [],
+      "unidad_y_contenidos": "Unidad 2: Control de Flujo Contenidos: Estructuras selectivas Uso y propósito de las estructuras condicionales. La sentencia if y sus variantes else y elif (o equivalentes en diferentes lenguajes). La estructura switch (o su equivalente en distintos lenguajes, como las estructuras basadas en diccionarios o funciones en Python). Aplicación práctica y ejemplos de decisiones basadas en condiciones. Estructuras repetitivas Propósito y uso de los bucles en programación. Bucle for: sintaxis e iteraciones determinadas. Bucle while: sintaxis, condiciones de salida, precauciones para evitar bucles indeterminados. Bucle do-while (o su equivalente en distintos lenguajes): sintaxis, diferencia principal con el bucle while. Control del flujo dentro de bucles: break, continue, y etiquetas de bucle (en lenguajes que las soporten). Aplicación práctica y ejemplos de repetición de tareas y operaciones.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [],
+      "unidad_y_contenidos": "Unidad 3: Funciones y almacenamiento Contenidos: Funciones Definición y propósito de las funciones en programación. Ventajas del uso de funciones: modularidad, reusabilidad y organización del código. Declaración y Llamado de Funciones Diferencia entre parámetros y argumentos. Retorno de Funciones Almacenamiento Métodos para abrir y cerrar archivos. Modos de apertura: lectura, escritura, agregación, etc. Manipulación de datos. Gestión de errores y excepciones al trabajar con archivos",
+      "indicador_logro": ""
+    }
+  ],
+  "semestre": 1
+}

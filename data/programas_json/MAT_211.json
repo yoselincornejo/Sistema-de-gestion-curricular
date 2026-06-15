@@ -1,0 +1,74 @@
+{
+  "archivo": "MAT 211 Cálculo Integral y Series.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Biomédica Ingeniería Civil Oceánica Ingeniería Civil Ambiental Ingeniería Civil Industrial Ingeniería Civil Ingeniería Civil Matemática Ingeniería Civil Informática",
+    "nombre": "Cálculo Integral y Series",
+    "codigo": "MAT 211",
+    "nivel": "III Semestre del 2° Año",
+    "duracion": "Semestral",
+    "requisitos": "Cálculo Diferencial (MAT 121)"
+  },
+  "responsables": {
+    "responsable": "Coordinador General Matemática FACING, Coordinador(a) de Docencia FACING.",
+    "docente_a_cargo": "",
+    "version": "V1.1 2026"
+  },
+  "metodologias": [
+    "Clases expositivas participativas Trabajos grupales Guías de ejercicios y resolución de problemas Se permitirá el uso de herramientas de Inteligencia Artificial (IA) generativa como apoyo en las actividades de aprendizaje",
+    "Su utilización estará autorizada y condicionada a las indicaciones expresas que entregue el o la docente para cada actividad, debiendo los estudiantes declarar siempre la herramienta empleada y el tipo de apoyo recibido, enmarcando su uso en los principios institucionales de transparencia y responsabilidad"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Prueba Sumativa 1",
+      "porcentaje": "20%"
+    },
+    {
+      "tipo": "Prueba Sumativa 2",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Prueba Sumativa 3",
+      "porcentaje": "30%"
+    },
+    {
+      "tipo": "Evaluaciones de Taller: Evaluación 1 5% Evaluación 2 10% Evaluación 3 10%",
+      "porcentaje": "Promedio de Evaluaciones de Taller 25% de la Nota Semestral"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 1: Integración y Aplicaciones Estimación con sumas finitas. Límites de sumas finitas La integral definida El teorema fundamental del cálculo Las integrales indefinidas y el teorema de cambio de variables. Área entre curvas Cálculo de volumen por secciones transversales, Cálculo de volúmenes de sólidos de revolución. Método del disco. Cálculo de volúmenes de sólidos de revolución. Método del casquete Longitud de curvas planas Área de superficies de revolución",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 2: Técnicas de Integración Fórmulas básicas de integración. Integración por partes Integrales por Fracciones parciales Integrales trigonométricas Integrales impropias",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 3: Sucesiones y series infinitas Contenidos: Axioma del supremo Sucesiones Sucesiones y Teorema de Convergencia Series infinitas Criterio de la integral Criterio de la raíz y de la razón Series alternantes, convergencia absoluta y condicional. Series de potencias",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 4: Series de Taylor y Maclaurin Convergencia de series de Taylor, estimación de errores. Aplicaciones de series de potencia",
+      "indicador_logro": ""
+    }
+  ],
+  "semestre": 3
+}

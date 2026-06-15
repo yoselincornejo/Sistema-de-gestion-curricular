@@ -1,0 +1,27 @@
+{
+  "archivo": "IMAT 325 Idioma III.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Idioma III",
+    "codigo": "IMAT 325",
+    "nivel": "VIII Semestre del 2° Ciclo",
+    "duracion": "Semestral",
+    "requisitos": "IMAT 315"
+  },
+  "responsables": {
+    "responsable": "Coordinación de Docencia FACING- Asesor pedagógico Inglés APPA",
+    "docente_a_cargo": "Gillian Ord",
+    "version": "Marzo 2026"
+  },
+  "metodologias": [],
+  "evaluaciones": [
+    {
+      "tipo": "descripcion_narrativa",
+      "porcentaje": "",
+      "texto": "evaluación diagnóstica seleccionar con una x prueba escrita  interrogación oral  encuesta con aplicaciones tics x encuesta  quiz  otro tipo de evaluación diagnóstica (indique aquí cual): _______________________________________________ "
+    }
+  ],
+  "unidades": [],
+  "semestre": 8
+}

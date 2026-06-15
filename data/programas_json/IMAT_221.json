@@ -1,0 +1,67 @@
+{
+  "archivo": "IMAT 221 Taller de Deducción Matemática.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Taller de Deducción Matemática",
+    "codigo": "IMAT 221",
+    "nivel": "3er Semestre",
+    "duracion": "Semestral",
+    "requisitos": "MAT121 Cálculo diferencial; MAT122 Algebra"
+  },
+  "responsables": {
+    "responsable": "Gerardo Honorato, Andrea Jiménez",
+    "docente_a_cargo": "Instituto de Ingeniería Matemática",
+    "version": "Abril 2026"
+  },
+  "metodologias": [
+    "Clases expositivas y talleres",
+    "Aprendizaje basado en problemas, trabajo semestral Resolución de problemas",
+    "Estudio personal y colaborativo"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Certamen 1",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Certamen 2",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Certamen 3",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Talleres y trabajo semestral: Informes, tarea y exposición. (20% Talleres Evaluados+5% Exposición Oral)",
+      "porcentaje": "25%"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "ND1, RA1",
+        "CE1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 1: Fundamentos de la demostración matemática Elementos de lógica proposicional y de predicados aplicados a la deducción matemática. Tipos de demostraciones: Directa Contrarrecíproco Indirecta o por contradicción Principio de inducción matemática y variantes (simple, fuerte, estructural). Ejemplos y contraejemplos en contextos diversos (e.g. derivadas, continuidad enteros, álgebra, combinatoria, teoría de grafos). Redacción formal de hipótesis y tesis; identificación de la estructura lógica de un enunciado.",
+      "indicador_logro": "Identificar y formalizar enunciados matemáticos, reconociendo hipótesis, tesis y su estructura lógica. Aplicar métodos de demostración básicos (directo, contrarrecíproco y contradicción) en problemas guiados. Utilizar el principio de inducción matemática en contextos estructurados. Distinguir entre afirmaciones verdaderas y falsas, mediante la construcción de ejemplos y contraejemplos simples."
+    },
+    {
+      "ras": [
+        "ND1, RA1",
+        "CE1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 2: Estrategias y estructura de una demostración Descomposición de enunciados en definiciones, lemas, proposiciones y teoremas. Métodos auxiliares: análisis por casos, construcción de ejemplos extremos, uso de invariantes y argumentos por reducción. Traducción entre lenguaje natural y formal; uso correcto de cuantificadores y conectores lógicos. Criterios de rigor, claridad y coherencia en la escritura matemática.",
+      "indicador_logro": "Descomponer demostraciones en sus componentes (definiciones, lemas, proposiciones y teoremas), comprendiendo su función. Aplicar estrategias auxiliares de demostración (casos, invariantes, ejemplos extremos, reducción) en diversos contextos. Traducir entre lenguaje natural y formal, utilizando correctamente cuantificadores y conectores lógicos. Redactar demostraciones con mayor rigor y coherencia, siguiendo estándares de escritura matemática."
+    },
+    {
+      "ras": [
+        "ND1, RA1",
+        "CE1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 3: Análisis de problemas y comunicación matemática Identificación de hipótesis y conclusiones en problemas abiertos. Selección y aplicación del método de demostración más apropiado al contexto. Validación de resultados mediante razonamiento crítico y revisión por pares. Comunicación escrita y oral de argumentos matemáticos: organización, estilo y soporte visual (diagramas, tablas, representaciones gráficas).",
+      "indicador_logro": "Analizar problemas matemáticos abiertos, identificando hipótesis, conclusiones y estrategias posibles. Seleccionar y justificar el método de demostración más adecuado según el contexto. Evaluar la validez de argumentos matemáticos, mediante razonamiento crítico y revisión por pares. Comunicar demostraciones de manera efectiva, en forma escrita y oral, utilizando recursos visuales pertinentes."
+    }
+  ],
+  "semestre": 3
+}

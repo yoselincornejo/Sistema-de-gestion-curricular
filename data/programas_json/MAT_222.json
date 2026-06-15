@@ -1,0 +1,61 @@
+{
+  "archivo": "MAT 222 Ecuaciones Diferenciales Ordinarias.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Ingeniería Civil Ambiental Ingeniería Civil Biomédica Ingeniería Civil Industrial Ingeniería Civil Informática Ingeniería Civil Matemática Ingeniería Civil Oceánica",
+    "nombre": "Ecuaciones Diferenciales Ordinarias",
+    "codigo": "MAT 222",
+    "nivel": "IV Semestre del 1° Año",
+    "duracion": "Semestral",
+    "requisitos": "Cálculo Integral y Series (MAT 211) Álgebra Lineal (MAT 212)"
+  },
+  "responsables": {
+    "responsable": "Coordinador(a) General Matemática FACING, Coordinador(a) de Docencia FACING",
+    "docente_a_cargo": "",
+    "version": "V1.1 2026"
+  },
+  "metodologias": [
+    "Clases expositivas combinadas con aprendizaje colaborativo Resolución de ejercicios en clase, a través de guías de enseñanza a cargo del/la docente",
+    "Resolución de problemas relacionados con su especialidad",
+    "Uso de software para el aprendizaje activo",
+    "Se permitirá el uso de herramientas de Inteligencia Artificial (IA) generativa como apoyo en las actividades de aprendizaje",
+    "Su utilización estará autorizada y condicionada a las indicaciones expresas que entregue el o la docente para cada actividad, debiendo los estudiantes declarar siempre la herramienta empleada y el tipo de apoyo recibido, enmarcando su uso en los principios institucionales de transparencia y responsabilidad"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Prueba Sumativa 1",
+      "porcentaje": "20%"
+    },
+    {
+      "tipo": "Prueba Sumativa 2",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Prueba Sumativa 3",
+      "porcentaje": "30%"
+    },
+    {
+      "tipo": "Evaluaciones de Taller: Evaluación 1 5% Evaluación 2 10% Evaluación 3 10%",
+      "porcentaje": "Promedio de Evaluaciones de Taller 25% de la Nota Semestral"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 1: Ecuaciones de Primer Orden Contenidos: Definiciones básicas y noción de solución. Curvas integrales, campo de direcciones, ecuaciones autónomas. Teorema de Existencia y Unicidad (TEU) para el problema de valor inicial. Ecuaciones de Integración Directa. Ecuaciones de variables separables. Resolución de ecuaciones lineales de primer orden usando factor integrante. Reducción de orden. Ecuaciones homogéneas. Ecuaciones diferenciales Exactas. Introducción a modelación usando EDOs: Ley de enfriamiento de Newton, crecimiento de poblaciones, caída libre, desintegración radioactiva. Ecuación logística, modelo de Malthus, Quimiostato, modelo de Torricelli",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL1, N1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 2: Ecuaciones lineales de orden n Contenidos: EDO lineal de orden n y clasificación de EDOS. Teorema de existencia y unicidad. Estudio completo para el caso general: Espacio de soluciones homogéneas (H) y de soluciones no homogéneas (S). Wronskiano y fórmula de Abel. EDO de orden n a coeficientes constantes. Polinomio y valores característicos. Estudio completo para el caso n=2. EDO de orden n a coeficientes constantes. Método de coeficientes indeterminados. EDO de orden n a coeficientes variables. Método de variación de parámetros. Sistema masa resorte (subamortiguado, sobreamortiguado y críticamente amortiguado). Sistema RLC",
+      "indicador_logro": ""
+    }
+  ],
+  "semestre": 4
+}

@@ -1,0 +1,43 @@
+{
+  "archivo": "IMAT 611 Taller de Titulo.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Taller de Título",
+    "codigo": "IMAT 611",
+    "nivel": "XI Semestre",
+    "duracion": "Semestral",
+    "requisitos": "292 créditos aprobados"
+  },
+  "responsables": {
+    "responsable": "Comité Ingeniería Matemática",
+    "docente_a_cargo": "Claustro Ingeniería Matemática",
+    "version": "Marzo de 2026"
+  },
+  "metodologias": [],
+  "evaluaciones": [
+    {
+      "tipo": "descripcion_narrativa",
+      "porcentaje": "",
+      "texto": "el curso taller de título considera la realización de una presentación de avance de proyecto, la entrega del documento final “trabajo de título” y la defensa pública de este documento. sobre la presentación de avance: debe presentar los avances realizados durante el semestre en curso, en relación a lo planteado en el “proyecto de ingeniería”. en particular, el porcentaje de avance con respecto a la planificación. esta será una presentación pública, evaluada por una comisión compuesta por tres académicos y/o expertos designados por la jefatura de carrera de ingeniería civil matemática. fecha de presentación: dos meses después del inicio del semestre. duración: 30 minutos. sobre el documento “trabajo de título”: fecha de entrega: dos semanas antes del final del semestre. el formato del escrito debe seguir el modelo propuesto por la carrera, el cual se encuentra disponible para descarga. este documento será revisado por al menos un académico corrector designado por la jefatura de carrera bajo la recomendación de los académicos guías en un plazo no mayor a 15 días hábiles. sobre la defensa del “trabajo de título”: esta será una presentación pública, evaluada por una comisión de al menos tres integrantes, compuesta por los académicos guías y correctores. fecha de presentación: 10 días hábiles después de recibir el informe de los académicos correctores. duración: 45 minutos. evaluación la nota del trabajo escrito corresponderá al promedio simple entre la evaluación del académico guía y él o los profesores correctores. la nota de la defensa oral corresponderá al promedio de las calificaciones asignadas por los miembros de la comisión examinadora. la nota final de la asignatura taller de título corresponderá al promedio entre la nota del trabajo escrito y la nota de la defensa oral."
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CE1, N3, RA1",
+        "CE1, N3, RA2",
+        "CE1, N3, RA3",
+        "CE2, N3, RA1",
+        "CE2, N3, RA2",
+        "CE2, N3, RA3",
+        "CE2, N3, RA4",
+        "CE2, N3, RA5",
+        "CE2, N3, RA6"
+      ],
+      "unidad_y_contenidos": "Desarrollo del proyecto de título.",
+      "indicador_logro": ""
+    }
+  ],
+  "semestre": 11
+}

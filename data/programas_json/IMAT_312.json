@@ -1,0 +1,74 @@
+{
+  "archivo": "IMAT 312 Métodos Numéricos.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Métodos Numéricos",
+    "codigo": "IMAT 312",
+    "nivel": "V Semestre del 2° Ciclo",
+    "duracion": "Semestral",
+    "requisitos": "MAT 221 Cálculo en varias variables MAT 222 Ecuaciones Diferenciales"
+  },
+  "responsables": {
+    "responsable": "Gerardo Honorato",
+    "docente_a_cargo": "Gerardo Honorato, Rodrigo Meneses",
+    "version": "13 de abril de 2026"
+  },
+  "metodologias": [
+    "Aprendizaje Basado en Equipos  Estudio de casos  Aprendizaje Basado en Indagación  Experimentos de Laboratorio X Aprendizaje Basado en Problemas  Juego de roles X Aprendizaje Basado en Proyectos  Prácticas de laboratorio X Aprendizaje Entre Pares  Salida a terreno  Aprendizaje Colaborativo  Seminario investigativo  Aprendizaje Servicio  Simulación x Clase Expositiva Participativa  Tutorías  Clase Invertida  Visitas a empresas  Conferencias (visitas de expertos)  Otra metodología (indique cual):  Debate"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Prueba sumativa de desarrollo 1",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Prueba sumativa de desarrollo 2",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Laboratorio",
+      "porcentaje": "20%"
+    },
+    {
+      "tipo": "Informes, tarea o exposición, talleres",
+      "porcentaje": "30%"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CL1, N2, RA1",
+        "CL1, N2, RA2",
+        "CL2, N2, RA1",
+        "CL2, N2, RA2",
+        "CE2, N2, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 1: Aproximación de funciones Contenidos1.1 Nociones y conceptos básicas sobre error en las aproximaciones numéricas. Tipos de errores y números máquinas. 1.2 Nociones básicas de algoritmos. 1.3 Polinomios de Taylor Aproximaciones y control de error Aplicaciones: Derivadas numéricas y análisis de la exactitud en la aproximación. Interpolación polinomial Formulación de Lagrange; diferencias divididas Análisis de error en la aproximación Aplicaciones: Integración numérica tipo trapezoidal; regla de Simpson. Estudio de reglas compuestas y análisis de error en la aproximación.",
+      "indicador_logro": "• Cuantificar y distinguir distintos tipos de error (truncamiento, redondeo, absoluto y relativo) en aproximaciones numéricas. • Construir aproximaciones polinomiales (Taylor e interpolación) y evaluar su precisión mediante estimaciones de error. • Aplicar técnicas de interpolación para aproximar funciones y analizar la estabilidad de dichas aproximaciones. • Implementar y comparar métodos de integración numérica (regla del trapecio, Simpson y versiones compuestas), evaluando su orden de convergencia y eficiencia computacional. • Analizar la propagación del error en procedimientos numéricos básicos."
+    },
+    {
+      "ras": [
+        "CL1, N2, RA1",
+        "CL1, N2, RA2",
+        "CL2, N2, RA1",
+        "CL2, N2, RA2",
+        "CE2, N2, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 2: Sistemas de Ecuaciones Contenidos 2.1 Ecuaciones lineales ● Métodos directos. Pivote de Gauss Descomposición LU. ● Métodos Iterativos. Gauss-Jacobi; Gauss-Seidel 2.2 Ecuaciones no lineales ● Método de punto fijo. Newton-Rapshon",
+      "indicador_logro": "• Resolver sistemas lineales mediante métodos directos (eliminación de Gauss, factorización LU), evaluando su costo computacional y estabilidad numérica. • Aplicar métodos iterativos (Jacobi, Gauss-Seidel) y determinar condiciones de convergencia utilizando criterios matriciales básicos. • Resolver ecuaciones no lineales utilizando métodos iterativos (punto fijo, Newton-Raphson), estableciendo criterios de convergencia y de detención. • Comparar métodos numéricos en términos de rapidez de convergencia, robustez y sensibilidad a condiciones iniciales. • Implementar algoritmos numéricos para problemas algebraicos y analizar su desempeño en distintos escenarios."
+    },
+    {
+      "ras": [
+        "CL1, N2, RA1",
+        "CL1, N2, RA2",
+        "CL2, N2, RA1",
+        "CL2, N2, RA2",
+        "CE2, N2, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 3: Ecuaciones Diferenciales Contenidos 3.1 Problemas de valor Inicial Métodos integrales. Euler; Crank-Nicolson Métodos de Taylor. Runge-Kutta, Métodos Multipasos 3.2 Problemas de valor en la frontera Método de diferencias Finitas",
+      "indicador_logro": "• Aproximar soluciones de problemas de valor inicial mediante métodos numéricos (Euler, Runge-Kutta, métodos de Taylor), evaluando error local y global. • Analizar la estabilidad y precisión de distintos esquemas numéricos para ecuaciones diferenciales ordinarias. • Aplicar métodos multipaso y comparar su eficiencia respecto de métodos de un paso. • Resolver problemas de valor en la frontera mediante métodos de diferencias finitas, interpretando la discretización de problemas continuos. • Implementar y validar métodos numéricos para ecuaciones diferenciales, contrastando resultados con soluciones analíticas cuando sea posible."
+    }
+  ],
+  "semestre": 5
+}

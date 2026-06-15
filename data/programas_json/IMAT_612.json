@@ -1,0 +1,53 @@
+{
+  "archivo": "IMAT 612 Practica Profesional 2025.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Práctica Profesional",
+    "codigo": "IMAT 612",
+    "nivel": "XI Semestre del 3er Ciclo",
+    "duracion": "Temporada Estival",
+    "requisitos": "Práctica Básica IMAT 515 270 créditos aprobados"
+  },
+  "responsables": {
+    "responsable": "Daniel Quiroz",
+    "docente_a_cargo": "Daniel Quiroz",
+    "version": "Marzo de 2026"
+  },
+  "metodologias": [
+    "Aprendizaje Autónomo Tutoría personalizada: Estar a disposición del Supervisor, previo al inicio de la Práctica, por si fuese necesario recibir instrucciones de las tareas a desarrollar, aprender alguna herramienta a utilizar y conocer el ámbito de trabajo",
+    "Escritura de informes y mantenimiento de bitácora",
+    "Plenaria de socialización, diálogo y reflexión acerca de las experiencias vividas durante el desarrollo de la Práctica Básica con sus pares"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "descripcion_narrativa",
+      "porcentaje": "",
+      "texto": "en esta asignatura hay cuatro evaluaciones individuales que se distinguen de la siguiente forma: informe escrito: 40% evaluación del supervisor de práctica: 40% presentación oral: 10% bitácora: 10%"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [],
+      "unidad_y_contenidos": "ACTIVIDAD CURRICULAR I: La descripción de Tareas Charla inicial: Se indican las tareas que desarrollará el practicante, a las que tendrá acceso y con las que se relacionará en la empresa u organización, y las habilidades que aprenderá en cada área. Desarrollo del proceso de solicitud de práctica con carta de presentación. Entrega carta de aceptación para obtener información de la empresa y del tutor.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CE2, N3, RA1",
+        "CE2, N3, RA2",
+        "CE2, N3, RA3"
+      ],
+      "unidad_y_contenidos": "ACTIVIDAD CURRICULAR II: Plan de trabajo Cronograma: Se indica el tiempo que le insumirá el desarrollo de cada tarea asignada. Las tareas pueden ser procesos relacionados con la disciplina: Cooperar e involucrarse en la dinámica del quehacer de la empresa u organización en el proceso de producción o servicio en el área asignada. Ayudar en la organización o administración de actividades o insumos. Apoyar a la optimización de procesos o recursos al interior de la empresa Propiciar la observación crítica el trabajo que desarrolla y el entorno en que lo realiza Reconocer sus propias habilidades personales e incipientes capacidades profesionales para desempeñar su rol de Ingeniero (Desarrollo personal y autoconocimiento) Otras actividades",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CE1, N3, RA1"
+      ],
+      "unidad_y_contenidos": "ACTIVIDAD CURRICULAR III: Presentación de actividades desarrolladas Registro de los procedimientos desarrollados durante la ejecución de la práctica básica, a través de la generación de bitácoras diarias con reporte al tutor académico. Un informe final y una presentación oral con la descripción del trabajo realizado considerando los siguientes aspectos: Descripción del área de trabajo, cantidad de personas y la relación con el proceso productivo o de servicios. Trabajo asignado durante el periodo y su descripción Herramientas y técnicas utilizadas Problemas detectados en la empresa Proposición de mejoras que usted realizaría de acuerdo a lo observado. Conclusiones Generales: Aprendizaje obtenido durante la práctica realizada Fortalezas y Debilidades presentadas en su proceso de práctica.",
+      "indicador_logro": ""
+    }
+  ],
+  "semestre": 11
+}

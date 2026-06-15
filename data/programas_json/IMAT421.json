@@ -1,0 +1,62 @@
+{
+  "archivo": "IMAT421-Análisis Funcional.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Análisis Funcional",
+    "codigo": "IMAT421",
+    "nivel": "VIII Semestre",
+    "duracion": "Semestral",
+    "requisitos": "IMAT411: Teoría de la Medida"
+  },
+  "responsables": {
+    "responsable": "Rolando Rebolledo, Pierre Guiraud",
+    "docente_a_cargo": "Rolando Rebolledo",
+    "version": "Marzo 2026"
+  },
+  "metodologias": [
+    "• Clases expositivas y talleres",
+    "• Resolución de problemas",
+    "• Estudio personal y colaborativo"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "descripcion_narrativa",
+      "porcentaje": "",
+      "texto": "en esta asignatura hay 3 evaluaciones individuales que se distinguen de la siguiente forma: 3 evaluaciones corresponden a pruebas de desarrollo. la nota de cada evaluación tiene el mismo peso en la nota de presentación a examen. por esto, si x,y,z son las notas obtenidas en las 3 evaluaciones, la nota de presentación a examen será igual a (x+y+z)/3. sistema de calificación y requisitos de aprobación según el reglamento de estudios de la facultad."
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CL2, N2, RA1",
+        "CL2, N2, RA2",
+        "CE1, N2, RA1",
+        "CE1, N2, RA4"
+      ],
+      "unidad_y_contenidos": "Unidad 1: Espacios Normados y Espacios de Banach. Espacios vectoriales, normados y de Banach Compacidad y dimensión finita. El ejemplo de los espacios L^p. Operadores lineales, continuos y acotados. El Teorema de categorías de Baire. El Teorema de la aplicación abierta. El Teorema del grafo cerrado. Principio de acotación uniforme Funcionales lineales Espacio Dual. Teorema de Hahn-Banach. Operadores adjuntos Topologías débiles. Continuidad débil. El Teorema de separación de Hahn-Banach. La topología ultra-débil (o débil*). Los Teoremas de Alaglou y de Krein-Milman. Ejemplos de conjuntos extremales de un convexo.",
+      "indicador_logro": "Clasificar diferentes topologías sobre espacios vectoriales: fuertes, débiles Relacionar operadores lineales con fenómenos estudiados en física Ejemplificar conceptos abstractos del Análisis usando los espacios de Lebesgue L^p Aplicar el Teorema de Hahn-Banach en la construcción de operadores por el procedimiento de extensión Comprobar la utilidad del concepto de dualidad en ejemplos de la física Clasificar diferentes tipos de operadores lineales"
+    },
+    {
+      "ras": [
+        "CL2, N2, RA1",
+        "CL2, N2, RA2",
+        "CE1, N2, RA1",
+        "CE1, N2, RA4"
+      ],
+      "unidad_y_contenidos": "Unidad 2: Espacios de Hilbert y operadores acotados Producto interno y espacios de Hilbert. Complemento ortogonal y sumas directas. Conjuntos totales y sucesiones. Teorema de Representación de Riesz Operadores auto adjuntos, unitarios y normales. Isometrías parciales, descomposición polar. Operadores compactos. El Teorema espectral para operadores compactos y normales. La traza, definición y propriedades de invarianza de la traza. Operadores classe-traza y Hilbert-Schmidt. Dualidad entre álgebra de los operadores lineales acotados y el espacio de Banach de los operadores clase-traza.",
+      "indicador_logro": "Inferir propiedades geométricas en espacios de dimensión infinita, usando productos escalares Extender nociones de Álgebra Lineal a espacios de Hilbert Aplicar el Teorema de Representación de Riesz en ejemplos físicos Comparar diferentes tipos de operadores lineales acotados definidos sobre un espacio de Hilbert. Inferir la representación de magnitudes observables de un fenómeno físico con operadores lineales acotados autoadjuntos Inferir la representación de un estado en Mecánica Cuántica mediante operadores clase-traza Aplicar el Teorema de Representación Espectral en modelos de física cuántica."
+    },
+    {
+      "ras": [
+        "CL2, N2, RA1",
+        "CL2, N2, RA2",
+        "CE1, N2, RA1",
+        "CE1, N2, RA4"
+      ],
+      "unidad_y_contenidos": "Unidad 3: Operadores no acotados en un espacio de Hilbert Dominios, extensiones y grafos, operadores simétricos La Transformada de Cayley de un operador simétrico. La transformada inversa. Operadores afiliados. Espectro de operadores no acotados. Teoría Espectral general: el Teorema espectral para un operador auto-adjunto no acotado. Teorema de Stone. La descomposición polar.",
+      "indicador_logro": "Extender y aplicar resultados de Teoría Espectral en el estudio de operadores lineales no acotados que aparecen en el estudio de la física-matemática. Inferir métodos de extensión de operadores simétricos en operadores autoadjuntos, utilizando condiciones llamadas de frontera en sus dominios iniciales."
+    }
+  ],
+  "semestre": 8
+}

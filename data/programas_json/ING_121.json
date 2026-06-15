@@ -1,0 +1,78 @@
+{
+  "archivo": "ING 121 Ingeniería, Innovación y Emprendimiento v1.1.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Plan Común Ingeniería Civil Ingeniería Civil Ambiental Ingeniería Civil Biomédica Ingeniería Civil Industrial Ingeniería Civil Informática Ingeniería Civil Matemática Ingeniería Civil Oceánica",
+    "nombre": "Ingeniería, Innovación y Emprendimiento.",
+    "codigo": "ING 121",
+    "nivel": "Segundo Semestre del 1° Año",
+    "duracion": "Semestral",
+    "requisitos": "ING 111 Desafíos de Ingeniería"
+  },
+  "responsables": {
+    "responsable": "Coordinador(a) de Docencia FACING",
+    "docente_a_cargo": "Pablo Reyes, René Noël",
+    "version": "V1.2 2026"
+  },
+  "metodologias": [
+    "Clases expositivas combinadas con aprendizaje colaborativo Aprendizaje basado en proyectos Sesiones de trabajo colaborativo",
+    "Uso de software u otros materiales acordes para el aprendizaje activo",
+    "Interacción con mentores/as y/u organizaciones del entorno",
+    "Se permitirá el uso de herramientas de Inteligencia Artificial (IA) generativa como apoyo en las actividades de aprendizaje",
+    "Su utilización estará autorizada y condicionada a las indicaciones expresas que entregue el o la docente para cada actividad, debiendo los estudiantes declarar siempre la herramienta empleada y el tipo de apoyo recibido, enmarcando su uso en los principios institucionales de transparencia y responsabilidad"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Evaluación Sumativa 1",
+      "porcentaje": "20%"
+    },
+    {
+      "tipo": "Evaluación Sumativa 2",
+      "porcentaje": "20%"
+    },
+    {
+      "tipo": "Evaluación Sumativa 3",
+      "porcentaje": "20%"
+    },
+    {
+      "tipo": "Entregas semanales",
+      "porcentaje": "5%"
+    },
+    {
+      "tipo": "Jornada I+e",
+      "porcentaje": "35%"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CL1, N1, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 1: Inmersión en innovación y emprendimiento. Contenidos: Conceptos sobre Ingeniería, Innovación y Emprendimiento Startup Journey Factores Determinantes de éxito Proceso de ingeniería para el desarrollo de innovación Características Emprendedoras Personales (CEP) como base de equipos para la innovación Metodología de autoevaluación CEPS Equipos multidisciplinarios para la innovación Elementos claves para la cohesión de equipos Círculo Dorado Análisis FODA Problematización",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL2, N1, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 2: Design Thinking Contenidos: Introducción al Design Thinking y sus principios. Desarrollo de las etapas del proceso de Design Thinking: Empatía, Definición, Ideación, Prototipado y Pruebas. Técnicas de empatía y observación para comprender las necesidades de los usuarios. Generación de ideas y selección de conceptos innovadores. Creación de prototipos y pruebas iterativas. Aplicación de Design Thinking a un desafío de ingeniería. Análisis de actividad de testeo. Síntesis de retroalimentación recibida y acciones a realizar.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N1, RA1",
+        "CL2, N1, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 3: Hoja de ruta y Modelo de Negocio Contenidos: Hoja de ruta Nociones básicas de aspectos operacionales y financieros. Aspectos legales, medioambientales y éticos del emprendimiento en ingeniería. Diseño de modelo de negocio en el contexto de la ingeniería.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, N1, RA1"
+      ],
+      "unidad_y_contenidos": "Unidad 4: Presentación y Evaluación de Proyectos Contenidos: Preparación Jornada I + e. Habilidades de comunicación efectiva para presentar proyectos de innovación. Actividad práctica: Presentación final de proyectos de innovación en ingeniería.",
+      "indicador_logro": ""
+    }
+  ],
+  "semestre": 2
+}

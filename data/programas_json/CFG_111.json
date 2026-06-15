@@ -1,0 +1,72 @@
+{
+  "archivo": "CFG 111 Desarrollo Personal.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Plan Común Ingeniería Civil Ingeniería Civil Ambiental Ingeniería Civil Biomédica Ingeniería Civil Industrial Ingeniería Civil Informática Ingeniería Civil Matemática Ingeniería Civil Oceánica",
+    "nombre": "Desarrollo Personal",
+    "codigo": "CFG 111",
+    "nivel": "Primer Semestre del 1° Ciclo",
+    "duracion": "Semestral",
+    "requisitos": "Sin requisitos"
+  },
+  "responsables": {
+    "responsable": "Coordinadora CFG111",
+    "docente_a_cargo": "",
+    "version": "V 2.2 2026"
+  },
+  "metodologias": [
+    "Procedimiento de Pausas",
+    "Aprendizaje por descubrimiento",
+    "X Estudio de Casos",
+    "Aprendizaje basado en equipos",
+    "Juego de Roles",
+    "Clase expositiva activa",
+    "X Aprendizaje colaborativo o cooperativo",
+    "X Simulación",
+    "X Aprendizaje basado en Problemas (ABP)",
+    "Aprendizaje basado en Proyectos",
+    "Salidas a terreno",
+    "Aprendizaje Servicio",
+    "Otro, especifique: Otro, especifique: Aprendizaje Invertido"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Evaluaciones formativas",
+      "porcentaje": "0%"
+    },
+    {
+      "tipo": "Evaluación escrita de Producto (Talleres, pruebas, tareas, guías, entrevistas, etc.)",
+      "porcentaje": "15 %"
+    },
+    {
+      "tipo": "Evaluación escrita de Proceso (Portafolios, bitácoras, reflexiones, etc.)",
+      "porcentaje": "25 %"
+    },
+    {
+      "tipo": "Evaluación de actividades de expresión oral grupal. (Presentaciones, exposiciones, foros, diálogos, etc.)",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Evaluación de actividades de expresión oral individual. (Presentaciones, exposiciones, foros, diálogos, etc.)",
+      "porcentaje": "35%"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [],
+      "unidad_y_contenidos": "Unidad 1: Autorregulación y Gestión Personal en la Vida Universitaria Gestión personal en el ámbito académico y profesional. Estrategias de autorregulación y autonomía en el aprendizaje. Entorno universitario y recursos disponibles. Principios éticos, diversidad e inclusión en la vida universitaria. Herramientas para la gestión del tiempo y planificación estratégica.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [],
+      "unidad_y_contenidos": "Unidad 2: Estrategias de Estudio para la Resolución de Desafíos Académicos Métodos de estudio específicos para carreras de ingeniería. Estrategias para la resolución de problemas en el contexto universitario. Gestión del estrés en escenarios complejos y regulación emocional. Herramientas tecnológicas para la gestión del aprendizaje. Aprendizaje colaborativo y equipos de trabajo.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [],
+      "unidad_y_contenidos": "Unidad 3: Comunicación Académica y Profesional Géneros académicos asociados con la disciplina. Modelo de producción textual. Etapas en el proceso de escritura. Principios de oralidad en el contexto académico. Herramientas y aplicaciones tecnológicas para la comunicación de ideas. Normas bibliográficas y derechos de autor",
+      "indicador_logro": ""
+    }
+  ],
+  "semestre": 1
+}

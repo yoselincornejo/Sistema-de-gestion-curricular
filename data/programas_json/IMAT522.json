@@ -1,0 +1,48 @@
+{
+  "archivo": "IMAT522 Ecuaciones en Derivadas Parciales.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Civil Matemática",
+    "nombre": "Ecuaciones en Derivadas Parciales",
+    "codigo": "IMAT522",
+    "nivel": "X Semestre del 3° Ciclo",
+    "duracion": "Semestral",
+    "requisitos": "IMAT311 Cálculo Avanzado IMAT312 Métodos Numéricos IMAT421 Análisis Funcional"
+  },
+  "responsables": {
+    "responsable": "Héctor Olivero",
+    "docente_a_cargo": "Héctor Olivero, Rodrigo Meneses P.",
+    "version": "2024"
+  },
+  "metodologias": [
+    "Clases expositivas y laboratorios",
+    "Resolución de problemas",
+    "Estudio personal y colaborativo"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "descripcion_narrativa",
+      "porcentaje": "",
+      "texto": "la evaluación de la asignatura se realizará a través de pruebas escritas y trabajos prácticos computacionales. las ponderaciones serán fijadas por el docente a cargo de la asignatura y deben ser informadas al inicio del curso."
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CE1, N3, RA1",
+        "CE1, N3, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad I: Formulación débil de una ecuación en derivadas parciales. Elementos de cálculo de variaciones y de la teoría de las distribuciones. Espacios de Sobolev: Definición y propiedades elementales. Teorema de traza. El teorema de Stampacchia y el teorema de Lax-Milgram. El teorema de Hille-Yosida. Aplicación a ecuaciones de tipo elíptica, parabólicas e hiperbólicas.",
+      "indicador_logro": "Plantear la formulación débil de una ecuación en derivadas parciales de tipo elíptico, parabólico o hiperbólico a partir de su formulación clásica. Determinar un espacio funcional adecuado para abordar un problema de EDP escrito en su formulación débil. Aplicar los teoremas que sean pertinentes para abordar la existencia y unicidad de solución para una EDP escrita en su formulación débil."
+    },
+    {
+      "ras": [
+        "CE1, N3, RA2",
+        "CE2, N3, RA5"
+      ],
+      "unidad_y_contenidos": "Unidad 2: Método de los elementos finitos. Triangulación del dominio y discretización de una edp. El método de Galerkin y el método de los elementos finitos. Convergencia del método de los elementos finitos. Método de los elementos finitos para dominios curvados.",
+      "indicador_logro": "Relacionar la implementación numérica con el contexto funcional de una EDP en su formulación débil. Vincular la discretización temporal con el semigrupo asociado a la EDP original. Relacionar la convergencia del método numérico con el contexto funcional de una EDP en su formulación débil. Aplicar la metodología de elementos finitos a una ecuación en derivadas parciales escrita en su formulación débil."
+    }
+  ],
+  "semestre": 9
+}

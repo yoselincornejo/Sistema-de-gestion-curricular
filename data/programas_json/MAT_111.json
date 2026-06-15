@@ -1,0 +1,92 @@
+{
+  "archivo": "MAT 111 Fundamentos de Matemática.docx",
+  "identificacion": {
+    "facultad": "Ingeniería",
+    "carrera": "Ingeniería Plan Común Ingeniería Civil Ingeniería Civil Ambiental Ingeniería Civil Biomédica Ingeniería Civil Industrial Ingeniería Civil Informática Ingeniería Civil Matemática Ingeniería Civil Oceánica",
+    "nombre": "Fundamentos de Matemática",
+    "codigo": "MAT 111",
+    "nivel": "I Semestre del 1° Año",
+    "duracion": "Semestral"
+  },
+  "responsables": {
+    "responsable": "Coordinador General Matemática FACING, Coordinador(a) de Docencia FACING",
+    "docente_a_cargo": "",
+    "version": "V1.1 2026"
+  },
+  "metodologias": [
+    "Clases expositivas combinadas con aprendizaje colaborativo Resolución de ejercicios en clase, a través de guías de enseñanza a cargo del/la docente",
+    "Resolución de problemas relacionados con su especialidad",
+    "Uso de software para el aprendizaje activo",
+    "Se permitirá el uso de herramientas de Inteligencia Artificial (IA) generativa como apoyo en las actividades de aprendizaje",
+    "Su utilización estará autorizada y condicionada a las indicaciones expresas que entregue el o la docente para cada actividad, debiendo los estudiantes declarar siempre la herramienta empleada y el tipo de apoyo recibido, enmarcando su uso en los principios institucionales de transparencia y responsabilidad"
+  ],
+  "evaluaciones": [
+    {
+      "tipo": "Prueba Sumativa 1",
+      "porcentaje": "20%"
+    },
+    {
+      "tipo": "Prueba Sumativa 2",
+      "porcentaje": "25%"
+    },
+    {
+      "tipo": "Prueba Sumativa 3",
+      "porcentaje": "30%"
+    },
+    {
+      "tipo": "Evaluaciones de Taller: Evaluación 1 5% Evaluación 2 10% Evaluación 3 10%",
+      "porcentaje": "Promedio de Evaluaciones de Taller 25% de la Nota Semestral"
+    }
+  ],
+  "unidades": [
+    {
+      "ras": [
+        "CL1, RA1",
+        "CL1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 1: Alfabetización matemática. Contenidos: Elementos de lógica proposicional con tablas de verdad. Algunas tautologías elementales. Noción de demostración matemática. Nociones de la teoría de conjuntos. El conjunto de los números reales. Axiomas, propiedades elementales. Álgebra básica en IR: Grado y clasificación de expresiones algebraicas, multiplicación de expresiones algebraicas. Potencias enteras, productos notables y factorización, Simplificación de expresiones algebraicas.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, RA1",
+        "CL1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 2: Inecuaciones. Contenidos: Valor absoluto. Ecuaciones con valor absoluto. Inecuaciones lineales y con valor absoluto. Inecuaciones de grado superior factorizadas. Factorización de expresiones cuadráticas.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, RA1",
+        "CL1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 3: Geometría analítica. Contenidos: Plano, coordenadas, abscisas y ordenadas. Rectas. Pendiente y corte con la ordenada. Recta entre dos puntos. Recta conocida su pendiente y un punto de ella. Rectas paralelas y perpendiculares. Distancia en R^2, Circunferencias. Centro y radio. Ecuación de una circunferencia. Elipses. Ejes de simetría, focos y directrices. Excentricidad y ecuación normal. Parábolas. Eje de simetría, foco y directriz. Ecuación normal. Hipérbolas. Ejes de simetría, focos y directrices, asíntotas. Excentricidad y ecuación normal.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, RA1",
+        "CL1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 4: Trigonometría y Vectores. Contenidos: Trigonometría en triángulos rectángulos. Medida de ángulos en radianes. Circunferencia unitaria. Teorema del Seno y del Coseno Identidades trigonométricas fundamentales. Identidades de suma y diferencia. Identidades del ángulo doble y ángulo medio. Ecuaciones trigonométricas Definiciones, suma y resta de vectores, proyección en los vectores canónicos. Producto punto y ortogonalidad Producto cruz.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, RA1",
+        "CL1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 5: Funciones. Contenidos: Definición usual de funciones mediante su ley. Dominio de una función y su relación con las restricciones de la expresión algebraica utilizada en la definición. Sucesiones como ejemplos de funciones (1/n, n, n^2, n^3, 1/n, a^(1/n)) Recorrido, Representación gráfica de una función. Funciones polinomiales, racionales, Más ejemplos: raíz, valor absoluto, trigonométricas. Algebra de funciones. Traslación de funciones, composición de funciones. Funciones inyectivas, sobreyectivas e invertibles. Funciones trigonométricas inversas Otras clases de funciones: periódicas, monótonas, convexas, pares e impares, definidas por tramos.",
+      "indicador_logro": ""
+    },
+    {
+      "ras": [
+        "CL1, RA1",
+        "CL1, RA2"
+      ],
+      "unidad_y_contenidos": "Unidad 6: Función exponencial y logarítmica. Contenidos: Función exponencial. Propiedades elementales. Cambios de base. Análisis de monotonía. Representaciones gráficas. Función logaritmo Significado de una ecuación logarítmica. Relación con la función exponencial. Cambio de base, Análisis de monotonía y representaciones gráficas. Aplicaciones y modelos asociados a las funciones exponenciales y logaritmos.",
+      "indicador_logro": ""
+    }
+  ],
+  "semestre": 1
+}
