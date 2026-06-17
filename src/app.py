@@ -104,8 +104,9 @@ def get_asignaturas_lista():
 
 def get_programa_completo(asig_id):
     conn = conexion()
-    asig = dict(conn.execute(
-        "SELECT * FROM asignaturas WHERE id=?", (asig_id,)).fetchone())
+    asig = dict(conn.execute("""
+        SELECT id, codigo, nombre, semestre, duracion, requisitos, version
+        FROM asignaturas WHERE id=?""", (asig_id,)).fetchone())
     unidades = [dict(r) for r in conn.execute(
         "SELECT * FROM unidades WHERE asignatura_id=? ORDER BY orden",
         (asig_id,)).fetchall()]

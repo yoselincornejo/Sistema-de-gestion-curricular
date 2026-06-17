@@ -44,8 +44,9 @@ def conectar():
 
 def get_programa(asig_id):
     conn = conectar()
-    asig = dict(conn.execute(
-        "SELECT * FROM asignaturas WHERE id=?", (asig_id,)
+    asig = dict(conn.execute("""
+        SELECT id, codigo, nombre, semestre, duracion, requisitos, version
+        FROM asignaturas WHERE id=?""", (asig_id,)
     ).fetchone())
     unidades = [dict(r) for r in conn.execute(
         "SELECT * FROM unidades WHERE asignatura_id=? ORDER BY orden", (asig_id,)
