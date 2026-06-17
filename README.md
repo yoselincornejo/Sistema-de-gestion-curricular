@@ -177,6 +177,8 @@ python3 src/generador_word.py <id_asignatura>  # programa individual por ID
 ---
 
 ## Notas importantes
+-Los archivos generados por el sistema son guardados dentro de la carpeta 'output'
+sistema-gestion-curricular-icm/data/output
 
 - **La base de datos es la fuente de verdad.** Los Word originales en
   `data/programas/` y los JSON en `data/programas_json/` ya no son leídos
@@ -192,3 +194,5 @@ python3 src/generador_word.py <id_asignatura>  # programa individual por ID
 - Pendiente de información externa (no modificar hasta confirmar con la
   fuente oficial): el número exacto de competencias Sello UV, y la tabla
   de prerrequisitos entre asignaturas.
+
+  
