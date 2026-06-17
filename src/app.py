@@ -67,6 +67,33 @@ def get_asignaturas_por_competencia(comp_codigo):
     conn.close()
     return [dict(r) for r in filas]
 
+def get_ras_con_asignaturas(comp_codigo):
+    """Retorna lista de RAs de la competencia, cada uno con sus asignaturas tributantes."""
+    conn = conexion()
+    ras = conn.execute("""
+        SELECT ra.id, ra.codigo_completo, ra.descripcion
+        FROM resultados_aprendizaje ra
+        JOIN competencias c ON c.id = ra.competencia_id
+        WHERE c.codigo = ?
+        ORDER BY ra.codigo_completo
+    """, (comp_codigo,)).fetchall()
+    resultado = []
+    for ra in ras:
+        asigs = conn.execute("""
+            SELECT a.codigo, a.nombre, a.semestre
+            FROM asignaturas a
+            JOIN asignatura_ra ar ON ar.asignatura_id = a.id
+            WHERE ar.ra_id = ?
+            ORDER BY a.semestre, a.codigo
+        """, (ra["id"],)).fetchall()
+        resultado.append({
+            "codigo_completo": ra["codigo_completo"],
+            "descripcion":     ra["descripcion"] or "",
+            "asignaturas":     [dict(a) for a in asigs],
+        })
+    conn.close()
+    return resultado
+
 def get_asignaturas_lista():
     conn = conexion()
     filas = conn.execute(
@@ -250,34 +277,90 @@ DESC  = {
 # ── DASHBOARD ─────────────────────────────────────────────────────
 
 def build_popup_html(comp_codigo, color):
-    asigs = get_asignaturas_por_competencia(comp_codigo)
-    if not asigs:
-        cuerpo = "<p style='color:#94A3B8;padding:8px 0'>Sin asignaturas tributando.</p>"
+    ras = get_ras_con_asignaturas(comp_codigo)
+    if not ras:
+        cuerpo = "<p style='color:#94A3B8;padding:8px 0'>Sin resultados de aprendizaje declarados.</p>"
+        total_asigs = 0
     else:
-        sems = {}
-        for a in asigs:
-            sems.setdefault(a["semestre"], []).append(a)
-        cuerpo = ""
-        for sem in sorted(sems):
-            chips = "".join(
-                f'<span class="asig-chip">'
-                f'<span class="sem-tag" style="color:{color}">S{sem}</span>'
-                f'{a["codigo"]} — {a["nombre"]}</span>'
-                for a in sems[sem]
+        total_asigs = sum(len(r["asignaturas"]) for r in ras)
+        bloques = []
+        for ra in ras:
+            sin_asigs = len(ra["asignaturas"]) == 0
+            # Cabecera del RA
+            if sin_asigs:
+                ra_hdr = (
+                    f'<div style="display:flex;align-items:center;gap:8px;'
+                    f'margin-bottom:4px;">'
+                    f'<span style="font-weight:700;font-size:12px;color:#DC2626">'
+                    f'⚠ {ra["codigo_completo"]}</span>'
+                    f'<span style="font-size:11px;color:#DC2626;background:#FEE2E2;'
+                    f'padding:1px 8px;border-radius:10px;font-weight:600">sin cobertura</span>'
+                    f'</div>'
+                )
+                if ra["descripcion"]:
+                    ra_hdr += (
+                        f'<div style="font-size:11px;color:#94A3B8;'
+                        f'margin-bottom:6px;padding-left:4px">{ra["descripcion"]}</div>'
+                    )
+                chips = ""
+                border = "#FCA5A5"
+                bg = "#FFF5F5"
+            else:
+                ra_hdr = (
+                    f'<div style="display:flex;align-items:center;gap:8px;'
+                    f'margin-bottom:4px;">'
+                    f'<span style="font-weight:700;font-size:12px;color:{color}">'
+                    f'{ra["codigo_completo"]}</span>'
+                    f'<span style="font-size:11px;color:#64748B;background:#F1F5F9;'
+                    f'padding:1px 8px;border-radius:10px;font-weight:600">'
+                    f'{len(ra["asignaturas"])} asignatura(s)</span>'
+                    f'</div>'
+                )
+                if ra["descripcion"]:
+                    ra_hdr += (
+                        f'<div style="font-size:11px;color:#94A3B8;'
+                        f'margin-bottom:6px;padding-left:4px">{ra["descripcion"]}</div>'
+                    )
+                chips = "".join(
+                    f'<span class="asig-chip">'
+                    f'<span class="sem-tag" style="color:{color}">S{a["semestre"]}</span>'
+                    f'{a["codigo"]} — {a["nombre"]}</span>'
+                    for a in ra["asignaturas"]
+                )
+                border = color
+                bg = "#F8FAFC"
+
+            bloques.append(
+                f'<div style="margin-bottom:10px;padding:10px 12px;'
+                f'background:{bg};border-radius:8px;border-left:3px solid {border};">'
+                f'{ra_hdr}'
+                f'<div>{chips}</div>'
+                f'</div>'
             )
-            cuerpo += f'<div style="margin-bottom:8px">{chips}</div>'
+        cuerpo = "".join(bloques)
+
+    sin_cobertura = sum(1 for r in ras if len(r["asignaturas"]) == 0)
+    badge_extra = (
+        f'<span style="font-size:11px;color:#DC2626;background:#FEE2E2;'
+        f'padding:2px 9px;border-radius:10px;font-weight:600;margin-left:6px">'
+        f'⚠ {sin_cobertura} RA sin cobertura</span>'
+        if sin_cobertura else ""
+    )
 
     return f"""
     <div style="margin-top:8px;padding:14px 16px;background:#F8FAFC;
                 border-radius:10px;border-left:3px solid {color};">
         <div style="display:flex;justify-content:space-between;align-items:center;
-                    margin-bottom:10px;">
+                    margin-bottom:12px;flex-wrap:wrap;gap:6px;">
             <span style="font-weight:700;font-size:13px;color:{color}">
                 {comp_codigo} — {DESC.get(comp_codigo,"")}
             </span>
-            <span style="font-size:11px;color:#64748B;background:white;
-                         padding:2px 9px;border-radius:10px;font-weight:600;
-                         border:1px solid #E2E8F0;">{len(asigs)} asignatura(s)</span>
+            <div>
+                <span style="font-size:11px;color:#64748B;background:white;
+                             padding:2px 9px;border-radius:10px;font-weight:600;
+                             border:1px solid #E2E8F0;">{total_asigs} asignatura(s)</span>
+                {badge_extra}
+            </div>
         </div>
         {cuerpo}
     </div>"""
