@@ -43,13 +43,23 @@ CREATE TABLE IF NOT EXISTS competencias (
     descripcion TEXT
 );
 
+-- Niveles de dominio por competencia (ND1, ND2, ND3)
+CREATE TABLE IF NOT EXISTS niveles_dominio (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    competencia_id INTEGER NOT NULL,
+    codigo_nivel TEXT NOT NULL,          -- ND1, ND2, ND3
+    descripcion TEXT,
+    FOREIGN KEY (competencia_id) REFERENCES competencias(id) ON DELETE CASCADE,
+    UNIQUE (competencia_id, codigo_nivel)
+);
+
 -- Resultados de aprendizaje (RA) catalogados por competencia y nivel
 CREATE TABLE IF NOT EXISTS resultados_aprendizaje (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     competencia_id INTEGER NOT NULL,
-    nivel_dominio TEXT,                 -- N1, N2, N3
-    codigo TEXT NOT NULL,               -- RA1, RA2, RA.1, etc. (formato original)
-    codigo_completo TEXT NOT NULL UNIQUE,   -- "CL2, N2, RA1" para búsqueda rápida
+    nivel_dominio TEXT,                 -- ND1, ND2, ND3
+    codigo TEXT NOT NULL,               -- RA1, RA2, D1, D2, etc.
+    codigo_completo TEXT NOT NULL UNIQUE,   -- "CL2, ND2, RA1" para búsqueda rápida
     descripcion TEXT,
     FOREIGN KEY (competencia_id) REFERENCES competencias(id) ON DELETE CASCADE
 );

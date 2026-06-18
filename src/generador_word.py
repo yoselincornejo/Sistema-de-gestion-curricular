@@ -221,8 +221,7 @@ def generar_programa_individual(asig_id, salida=None):
             _cell_para(row.cells[0], str(u.get("orden", "")), size=10,
                        align=WD_ALIGN_PARAGRAPH.CENTER)
             nombre_u = u.get("nombre", "") or ""
-            # Si el nombre incluye el número de unidad al inicio, se muestra tal cual
-            _cell_para(row.cells[1], nombre_u[:120] if nombre_u else "", size=9)
+            _cell_para(row.cells[1], nombre_u, size=9)
             _cell_para(row.cells[2], u.get("contenidos", "") or "", size=9)
     else:
         doc.add_paragraph("Sin unidades declaradas.").runs[0].italic = True

@@ -19,62 +19,89 @@ _ras_no_resueltos: list[dict] = []
 
 def parse_ra_code(codigo_completo):
     """
-    Parsea un código de RA tipo 'CL2, N2, RA1' o 'CL1, RA.1'.
-    Devuelve (codigo_competencia, nivel_dominio, codigo_ra).
-    Si no se puede parsear, devuelve (None, None, None).
+    Parsea un código de RA. Acepta formatos:
+      - 'CL2, N2, RA1'  (legado N-prefix)
+      - 'CL1, ND1, RA1' (nuevo ND-prefix)
+      - 'CG1, ND2, D1'  (CG competencias con D-codes)
+      - 'CL1, RA.1'     (sin nivel)
+    Devuelve (codigo_comp, nivel_nd, cod_ra) donde nivel_nd está siempre
+    en formato ND (ND1, ND2, ND3) o None si no se especificó.
     """
-    # Normalizamos espacios
     s = re.sub(r"\s+", " ", codigo_completo).strip()
-    # Patrón: COMPETENCIA(letras+digito), opcional N(digito), RA(opcional .)(digito)
-    m = re.match(r"([A-Z]{1,3}\d+)(?:,\s*N(\d+))?,\s*RA\.?(\d+)", s)
+    m = re.match(
+        r"([A-Z]{1,3}\d+)"
+        r"(?:,\s*(ND?\d+))?"
+        r",\s*(RA\.?\d+|D\d+)",
+        s
+    )
     if not m:
         return None, None, None
+
     cod_comp = m.group(1)
-    nivel = f"N{m.group(2)}" if m.group(2) else None
-    cod_ra = f"RA{m.group(3)}"
+    nivel_raw = m.group(2)
+
+    if nivel_raw is None:
+        nivel = None
+    elif nivel_raw.startswith("ND"):
+        nivel = nivel_raw
+    else:
+        nivel = "ND" + nivel_raw[1:]  # N1 → ND1
+
+    cod_ra = re.sub(r"RA\.(\d+)", r"RA\1", m.group(3))  # RA.1 → RA1
     return cod_comp, nivel, cod_ra
 
 
 def obtener_o_crear_ra(conn, codigo_completo, archivo_origen=""):
     """
-    Dado un código tipo 'CL2, N2, RA1', devuelve el id en resultados_aprendizaje.
-    Si la competencia no existe en la BD, NO la crea: registra el caso en
-    _ras_no_resueltos y devuelve None para que la tributación se omita.
+    Dado un código de RA, devuelve su id en resultados_aprendizaje buscando
+    en la BD sin crear registros nuevos. Intenta varios formatos para máxima
+    compatibilidad con PDFs legados.
+    Si no se puede resolver, registra en _ras_no_resueltos y devuelve None.
     """
     cod_comp, nivel, cod_ra = parse_ra_code(codigo_completo)
     if not cod_comp:
         return None
 
     cur = conn.execute("SELECT id FROM competencias WHERE codigo = ?", (cod_comp,))
-    row = cur.fetchone()
-    if not row:
-        # Competencia no registrada — registrar y omitir sin crear nada
+    if not cur.fetchone():
         _ras_no_resueltos.append({
             "codigo_completo": codigo_completo,
             "cod_comp": cod_comp,
             "archivo": archivo_origen,
         })
         return None
-    competencia_id = row[0]
 
-    # Buscar el RA por codigo_completo normalizado
-    codigo_norm = f"{cod_comp}, {nivel + ', ' if nivel else ''}{cod_ra}"
-    cur = conn.execute(
-        "SELECT id FROM resultados_aprendizaje WHERE codigo_completo = ?",
-        (codigo_norm,)
-    )
-    row = cur.fetchone()
-    if row:
-        return row[0]
+    def _buscar(cc):
+        r = conn.execute(
+            "SELECT id FROM resultados_aprendizaje WHERE codigo_completo = ?", (cc,)
+        ).fetchone()
+        return r[0] if r else None
 
-    # Crear el RA (la competencia existe, solo falta el RA específico)
-    cur = conn.execute(
-        """INSERT INTO resultados_aprendizaje
-           (competencia_id, nivel_dominio, codigo, codigo_completo, descripcion)
-           VALUES (?, ?, ?, ?, ?)""",
-        (competencia_id, nivel, cod_ra, codigo_norm, "")
-    )
-    return cur.lastrowid
+    # Intento 1: código canónico ND
+    codigo_nd = f"{cod_comp}, {nivel + ', ' if nivel else ''}{cod_ra}"
+    ra_id = _buscar(codigo_nd)
+    if ra_id:
+        return ra_id
+
+    # Intento 2: para CG con RA-codes legados, probar D-code equivalente (RA1→D1)
+    if cod_comp.startswith("CG") and cod_ra.startswith("RA"):
+        d_cod = "D" + cod_ra[2:]
+        codigo_d = f"{cod_comp}, {nivel + ', ' if nivel else ''}{d_cod}"
+        ra_id = _buscar(codigo_d)
+        if ra_id:
+            return ra_id
+
+    # Intento 3: sin nivel (bare format)
+    ra_id = _buscar(f"{cod_comp}, {cod_ra}")
+    if ra_id:
+        return ra_id
+
+    _ras_no_resueltos.append({
+        "codigo_completo": codigo_completo,
+        "cod_comp": cod_comp,
+        "archivo": archivo_origen,
+    })
+    return None
 
 
 def extraer_numero_unidad(texto):
