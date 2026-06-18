@@ -6,70 +6,102 @@ Es idempotente: si vuelves a correrlo, no duplica datos (usa INSERT OR REPLACE).
 import json
 import re
 import sqlite3
+from datetime import datetime
 from pathlib import Path
 
 RUTA_DB = Path("data/sistema.db")
 CARPETA_JSON = Path("data/programas_json")
+LOG_NO_RESUELTOS = Path("data/output/ras_no_resueltos.log")
+
+# Acumulador de RAs no resueltos durante la carga: {cod_comp: [archivo, ...]}
+_ras_no_resueltos: list[dict] = []
 
 
 def parse_ra_code(codigo_completo):
     """
-    Parsea un código de RA tipo 'CL2, N2, RA1' o 'CL1, RA.1'.
-    Devuelve (codigo_competencia, nivel_dominio, codigo_ra).
-    Si no se puede parsear, devuelve (None, None, None).
+    Parsea un código de RA. Acepta formatos:
+      - 'CL2, N2, RA1'  (legado N-prefix)
+      - 'CL1, ND1, RA1' (nuevo ND-prefix)
+      - 'CG1, ND2, D1'  (CG competencias con D-codes)
+      - 'CL1, RA.1'     (sin nivel)
+    Devuelve (codigo_comp, nivel_nd, cod_ra) donde nivel_nd está siempre
+    en formato ND (ND1, ND2, ND3) o None si no se especificó.
     """
-    # Normalizamos espacios
     s = re.sub(r"\s+", " ", codigo_completo).strip()
-    # Patrón: COMPETENCIA(letras+digito), opcional N(digito), RA(opcional .)(digito)
-    m = re.match(r"([A-Z]{1,3}\d+)(?:,\s*N(\d+))?,\s*RA\.?(\d+)", s)
+    m = re.match(
+        r"([A-Z]{1,3}\d+)"
+        r"(?:,\s*(ND?\d+))?"
+        r",\s*(RA\.?\d+|D\d+)",
+        s
+    )
     if not m:
         return None, None, None
+
     cod_comp = m.group(1)
-    nivel = f"N{m.group(2)}" if m.group(2) else None
-    cod_ra = f"RA{m.group(3)}"
+    nivel_raw = m.group(2)
+
+    if nivel_raw is None:
+        nivel = None
+    elif nivel_raw.startswith("ND"):
+        nivel = nivel_raw
+    else:
+        nivel = "ND" + nivel_raw[1:]  # N1 → ND1
+
+    cod_ra = re.sub(r"RA\.(\d+)", r"RA\1", m.group(3))  # RA.1 → RA1
     return cod_comp, nivel, cod_ra
 
 
-def obtener_o_crear_ra(conn, codigo_completo):
+def obtener_o_crear_ra(conn, codigo_completo, archivo_origen=""):
     """
-    Dado un código tipo 'CL2, N2, RA1', devuelve el id en resultados_aprendizaje.
-    Si no existe, lo crea (vinculándolo a su competencia).
+    Dado un código de RA, devuelve su id en resultados_aprendizaje buscando
+    en la BD sin crear registros nuevos. Intenta varios formatos para máxima
+    compatibilidad con PDFs legados.
+    Si no se puede resolver, registra en _ras_no_resueltos y devuelve None.
     """
     cod_comp, nivel, cod_ra = parse_ra_code(codigo_completo)
     if not cod_comp:
         return None
 
-    # Buscar el id de la competencia
     cur = conn.execute("SELECT id FROM competencias WHERE codigo = ?", (cod_comp,))
-    row = cur.fetchone()
-    if not row:
-        # Competencia desconocida, la creamos (caso de tipo no estándar)
-        conn.execute(
-            "INSERT INTO competencias (codigo, tipo, descripcion) VALUES (?, ?, ?)",
-            (cod_comp, "desconocido", f"Detectada automáticamente: {cod_comp}")
-        )
-        cur = conn.execute("SELECT id FROM competencias WHERE codigo = ?", (cod_comp,))
-        row = cur.fetchone()
-    competencia_id = row[0]
+    if not cur.fetchone():
+        _ras_no_resueltos.append({
+            "codigo_completo": codigo_completo,
+            "cod_comp": cod_comp,
+            "archivo": archivo_origen,
+        })
+        return None
 
-    # Buscar el RA por codigo_completo normalizado
-    codigo_norm = f"{cod_comp}, {nivel + ', ' if nivel else ''}{cod_ra}"
-    cur = conn.execute(
-        "SELECT id FROM resultados_aprendizaje WHERE codigo_completo = ?",
-        (codigo_norm,)
-    )
-    row = cur.fetchone()
-    if row:
-        return row[0]
+    def _buscar(cc):
+        r = conn.execute(
+            "SELECT id FROM resultados_aprendizaje WHERE codigo_completo = ?", (cc,)
+        ).fetchone()
+        return r[0] if r else None
 
-    # Crear el RA
-    cur = conn.execute(
-        """INSERT INTO resultados_aprendizaje
-           (competencia_id, nivel_dominio, codigo, codigo_completo, descripcion)
-           VALUES (?, ?, ?, ?, ?)""",
-        (competencia_id, nivel, cod_ra, codigo_norm, "")
-    )
-    return cur.lastrowid
+    # Intento 1: código canónico ND
+    codigo_nd = f"{cod_comp}, {nivel + ', ' if nivel else ''}{cod_ra}"
+    ra_id = _buscar(codigo_nd)
+    if ra_id:
+        return ra_id
+
+    # Intento 2: para CG con RA-codes legados, probar D-code equivalente (RA1→D1)
+    if cod_comp.startswith("CG") and cod_ra.startswith("RA"):
+        d_cod = "D" + cod_ra[2:]
+        codigo_d = f"{cod_comp}, {nivel + ', ' if nivel else ''}{d_cod}"
+        ra_id = _buscar(codigo_d)
+        if ra_id:
+            return ra_id
+
+    # Intento 3: sin nivel (bare format)
+    ra_id = _buscar(f"{cod_comp}, {cod_ra}")
+    if ra_id:
+        return ra_id
+
+    _ras_no_resueltos.append({
+        "codigo_completo": codigo_completo,
+        "cod_comp": cod_comp,
+        "archivo": archivo_origen,
+    })
+    return None
 
 
 def extraer_numero_unidad(texto):
@@ -170,8 +202,9 @@ def cargar_programa(conn, programa):
             ras_de_la_asignatura.add(cod_ra)
 
     # 6. Tributación (asignatura_ra)
+    archivo_origen = programa.get("archivo", "")
     for cod_ra in ras_de_la_asignatura:
-        ra_id = obtener_o_crear_ra(conn, cod_ra)
+        ra_id = obtener_o_crear_ra(conn, cod_ra, archivo_origen)
         if ra_id:
             conn.execute(
                 "INSERT OR IGNORE INTO asignatura_ra (asignatura_id, ra_id) VALUES (?, ?)",
@@ -215,6 +248,29 @@ def cargar_todos():
         print(f"No cargados: {len(fallidos)}")
         for nombre, motivo in fallidos:
             print(f"  - {nombre}: {motivo}")
+
+    # Resumen de RAs no resueltos (competencias fuera del plan)
+    if _ras_no_resueltos:
+        from collections import Counter
+        por_comp = Counter(r["cod_comp"] for r in _ras_no_resueltos)
+        por_archivo = {}
+        for r in _ras_no_resueltos:
+            por_archivo.setdefault(r["archivo"], set()).add(r["codigo_completo"])
+
+        print(f"\n⚠ {len(_ras_no_resueltos)} tributación(es) omitidas por competencia desconocida:")
+        for comp, n in por_comp.most_common():
+            print(f"  {comp}: {n} RA(s)")
+        print("  (La competencia no existe en la BD — no se creó ninguna entrada nueva)")
+        print(f"  Detalle guardado en: {LOG_NO_RESUELTOS}")
+
+        LOG_NO_RESUELTOS.parent.mkdir(parents=True, exist_ok=True)
+        with open(LOG_NO_RESUELTOS, "w", encoding="utf-8") as f:
+            f.write(f"RAs no resueltos — {datetime.now().strftime('%Y-%m-%d %H:%M')}\n")
+            f.write("=" * 60 + "\n")
+            for archivo, codigos in sorted(por_archivo.items()):
+                f.write(f"\n{archivo}:\n")
+                for cod in sorted(codigos):
+                    f.write(f"  {cod}\n")
 
 
 if __name__ == "__main__":

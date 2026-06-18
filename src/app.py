@@ -538,7 +538,7 @@ class EditorProgramas(param.Parameterized):
         opciones = {"— Elige una asignatura —": 0}
         for a in asigs:
             nivel = nivel_desde_semestre(a["semestre"])
-            opciones[f"{nivel} · S{a['semestre']} · {a['codigo']} — {a['nombre']}"] = a["id"]
+            opciones[f"{a['codigo']} -- {a['nombre']}"] = a["id"]
 
         sel = pn.widgets.Select(
             name="Selecciona una asignatura",
@@ -759,7 +759,9 @@ class EditorProgramas(param.Parameterized):
         )
 
         self._contenido_editor.objects = [
-            sec_ident, sec_ras, sec_unidades, sec_metod, sec_eval, sec_acciones
+            sec_ident, sec_ras,
+            # sec_unidades, sec_metod, sec_eval,  # temporalmente ocultas
+            sec_acciones
         ]
 
     def view(self):

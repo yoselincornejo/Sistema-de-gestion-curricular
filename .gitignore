@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 .DS_Store
 data/programas/__pycache__/
+cambios_excel_cargar.patch
