@@ -6,10 +6,15 @@ Es idempotente: si vuelves a correrlo, no duplica datos (usa INSERT OR REPLACE).
 import json
 import re
 import sqlite3
+from datetime import datetime
 from pathlib import Path
 
 RUTA_DB = Path("data/sistema.db")
 CARPETA_JSON = Path("data/programas_json")
+LOG_NO_RESUELTOS = Path("data/output/ras_no_resueltos.log")
+
+# Acumulador de RAs no resueltos durante la carga: {cod_comp: [archivo, ...]}
+_ras_no_resueltos: list[dict] = []
 
 
 def parse_ra_code(codigo_completo):
@@ -30,26 +35,26 @@ def parse_ra_code(codigo_completo):
     return cod_comp, nivel, cod_ra
 
 
-def obtener_o_crear_ra(conn, codigo_completo):
+def obtener_o_crear_ra(conn, codigo_completo, archivo_origen=""):
     """
     Dado un código tipo 'CL2, N2, RA1', devuelve el id en resultados_aprendizaje.
-    Si no existe, lo crea (vinculándolo a su competencia).
+    Si la competencia no existe en la BD, NO la crea: registra el caso en
+    _ras_no_resueltos y devuelve None para que la tributación se omita.
     """
     cod_comp, nivel, cod_ra = parse_ra_code(codigo_completo)
     if not cod_comp:
         return None
 
-    # Buscar el id de la competencia
     cur = conn.execute("SELECT id FROM competencias WHERE codigo = ?", (cod_comp,))
     row = cur.fetchone()
     if not row:
-        # Competencia desconocida, la creamos (caso de tipo no estándar)
-        conn.execute(
-            "INSERT INTO competencias (codigo, tipo, descripcion) VALUES (?, ?, ?)",
-            (cod_comp, "desconocido", f"Detectada automáticamente: {cod_comp}")
-        )
-        cur = conn.execute("SELECT id FROM competencias WHERE codigo = ?", (cod_comp,))
-        row = cur.fetchone()
+        # Competencia no registrada — registrar y omitir sin crear nada
+        _ras_no_resueltos.append({
+            "codigo_completo": codigo_completo,
+            "cod_comp": cod_comp,
+            "archivo": archivo_origen,
+        })
+        return None
     competencia_id = row[0]
 
     # Buscar el RA por codigo_completo normalizado
@@ -62,7 +67,7 @@ def obtener_o_crear_ra(conn, codigo_completo):
     if row:
         return row[0]
 
-    # Crear el RA
+    # Crear el RA (la competencia existe, solo falta el RA específico)
     cur = conn.execute(
         """INSERT INTO resultados_aprendizaje
            (competencia_id, nivel_dominio, codigo, codigo_completo, descripcion)
@@ -170,8 +175,9 @@ def cargar_programa(conn, programa):
             ras_de_la_asignatura.add(cod_ra)
 
     # 6. Tributación (asignatura_ra)
+    archivo_origen = programa.get("archivo", "")
     for cod_ra in ras_de_la_asignatura:
-        ra_id = obtener_o_crear_ra(conn, cod_ra)
+        ra_id = obtener_o_crear_ra(conn, cod_ra, archivo_origen)
         if ra_id:
             conn.execute(
                 "INSERT OR IGNORE INTO asignatura_ra (asignatura_id, ra_id) VALUES (?, ?)",
@@ -215,6 +221,29 @@ def cargar_todos():
         print(f"No cargados: {len(fallidos)}")
         for nombre, motivo in fallidos:
             print(f"  - {nombre}: {motivo}")
+
+    # Resumen de RAs no resueltos (competencias fuera del plan)
+    if _ras_no_resueltos:
+        from collections import Counter
+        por_comp = Counter(r["cod_comp"] for r in _ras_no_resueltos)
+        por_archivo = {}
+        for r in _ras_no_resueltos:
+            por_archivo.setdefault(r["archivo"], set()).add(r["codigo_completo"])
+
+        print(f"\n⚠ {len(_ras_no_resueltos)} tributación(es) omitidas por competencia desconocida:")
+        for comp, n in por_comp.most_common():
+            print(f"  {comp}: {n} RA(s)")
+        print("  (La competencia no existe en la BD — no se creó ninguna entrada nueva)")
+        print(f"  Detalle guardado en: {LOG_NO_RESUELTOS}")
+
+        LOG_NO_RESUELTOS.parent.mkdir(parents=True, exist_ok=True)
+        with open(LOG_NO_RESUELTOS, "w", encoding="utf-8") as f:
+            f.write(f"RAs no resueltos — {datetime.now().strftime('%Y-%m-%d %H:%M')}\n")
+            f.write("=" * 60 + "\n")
+            for archivo, codigos in sorted(por_archivo.items()):
+                f.write(f"\n{archivo}:\n")
+                for cod in sorted(codigos):
+                    f.write(f"  {cod}\n")
 
 
 if __name__ == "__main__":
