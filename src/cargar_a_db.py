@@ -117,22 +117,43 @@ def extraer_numero_unidad(texto):
     return romanos.get(raw.upper())
 
 
+def limpiar_asignatura_datos(conn, asig_id):
+    """Borra todos los datos relacionados de una asignatura antes de recargar."""
+    for tabla in ["unidades", "metodologias", "evaluaciones",
+                  "bibliografia", "linkografia", "responsables"]:
+        conn.execute(f"DELETE FROM {tabla} WHERE asignatura_id=?", (asig_id,))
+    conn.execute("DELETE FROM asignatura_ra WHERE asignatura_id=?", (asig_id,))
+
+
 def cargar_programa(conn, programa):
-    """Inserta un programa completo en la BD."""
+    """Inserta un programa completo (dict del parser parsear_programas) en la BD."""
     ident = programa.get("identificacion", {})
-    codigo = ident.get("codigo", "").strip()
-    nombre = ident.get("nombre", "").strip()
+    codigo = (ident.get("codigo", "") or "").strip()
+    nombre = (ident.get("nombre", "") or "").strip()
 
     if not codigo:
         # Saltar programas sin código (no podemos identificarlos)
         return None, "sin_codigo"
 
-    # 1. Insertar/reemplazar asignatura
+    # 1. Insertar/actualizar asignatura (incluye horas, créditos, descripción)
     conn.execute(
-        """INSERT OR REPLACE INTO asignaturas
-           (codigo, nombre, semestre, nivel, duracion, tipo, facultad, carrera,
-            requisitos, version, archivo_origen)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        """
+        INSERT INTO asignaturas
+        (codigo, nombre, semestre, nivel, duracion, tipo, facultad, carrera,
+         requisitos, version, archivo_origen, horas_directa, horas_autonoma,
+         semanas, creditos, descripcion)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        ON CONFLICT(codigo) DO UPDATE SET
+            nombre=excluded.nombre, semestre=excluded.semestre,
+            nivel=excluded.nivel, duracion=excluded.duracion,
+            facultad=excluded.facultad, carrera=excluded.carrera,
+            requisitos=excluded.requisitos, version=excluded.version,
+            archivo_origen=excluded.archivo_origen,
+            horas_directa=excluded.horas_directa,
+            horas_autonoma=excluded.horas_autonoma,
+            semanas=excluded.semanas, creditos=excluded.creditos,
+            descripcion=excluded.descripcion
+        """,
         (
             codigo, nombre,
             programa.get("semestre"),
@@ -143,17 +164,25 @@ def cargar_programa(conn, programa):
             ident.get("carrera", ""),
             ident.get("requisitos", ""),
             programa.get("responsables", {}).get("version", ""),
-            programa.get("archivo", "")
+            programa.get("archivo", ""),
+            ident.get("horas_directa"),
+            ident.get("horas_autonoma"),
+            ident.get("semanas"),
+            ident.get("creditos"),
+            programa.get("descripcion", ""),
         )
     )
     asig_id = conn.execute("SELECT id FROM asignaturas WHERE codigo = ?", (codigo,)).fetchone()[0]
 
     # Limpiar datos previos del programa (para que sea idempotente)
-    conn.execute("DELETE FROM responsables WHERE asignatura_id = ?", (asig_id,))
-    conn.execute("DELETE FROM unidades WHERE asignatura_id = ?", (asig_id,))
-    conn.execute("DELETE FROM metodologias WHERE asignatura_id = ?", (asig_id,))
-    conn.execute("DELETE FROM evaluaciones WHERE asignatura_id = ?", (asig_id,))
-    conn.execute("DELETE FROM asignatura_ra WHERE asignatura_id = ?", (asig_id,))
+    limpiar_asignatura_datos(conn, asig_id)
+
+    # otros_recursos (columna directa)
+    if programa.get("otros_recursos"):
+        conn.execute(
+            "UPDATE asignaturas SET otros_recursos=? WHERE id=?",
+            (programa["otros_recursos"], asig_id)
+        )
 
     # 2. Responsables
     resp = programa.get("responsables", {})
@@ -188,17 +217,20 @@ def cargar_programa(conn, programa):
 
     # 5. Unidades + tributación
     ras_de_la_asignatura = set()  # para evitar duplicados en asignatura_ra
-    for u in programa.get("unidades", []):
-        texto_unidad = u.get("unidad_y_contenidos", "")
-        numero = extraer_numero_unidad(texto_unidad)
+    for i, u in enumerate(programa.get("unidades", [])):
+        titulo = u.get("titulo", "")
+        contenidos = u.get("contenidos", "")
+        numero = extraer_numero_unidad(titulo) or extraer_numero_unidad(contenidos) or (i + 1)
+        # En el schema, 'nombre' guarda los códigos RA de la unidad (col RA del doc)
+        ra_str = "\n".join(u.get("ra_codes", []))
         conn.execute(
             """INSERT INTO unidades (asignatura_id, orden, nombre, contenidos, indicador_logro)
                VALUES (?, ?, ?, ?, ?)""",
-            (asig_id, numero, texto_unidad[:100], texto_unidad, u.get("indicador_logro", ""))
+            (asig_id, numero, ra_str, contenidos, u.get("indicador_logro", ""))
         )
 
         # Acumular RAs únicos a tributar
-        for cod_ra in u.get("ras", []):
+        for cod_ra in u.get("ra_codes", []):
             ras_de_la_asignatura.add(cod_ra)
 
     # 6. Tributación (asignatura_ra)
@@ -210,6 +242,27 @@ def cargar_programa(conn, programa):
                 "INSERT OR IGNORE INTO asignatura_ra (asignatura_id, ra_id) VALUES (?, ?)",
                 (asig_id, ra_id)
             )
+
+    # 7. Bibliografía
+    for b in programa.get("bibliografia_basica", []):
+        conn.execute(
+            "INSERT INTO bibliografia (asignatura_id, tipo, numero, autor, titulo, editorial, anio, isbn, ejemplares) VALUES (?,?,?,?,?,?,?,?,?)",
+            (asig_id, "basica", b.get("numero", ""), b.get("autor", ""), b.get("titulo", ""),
+             b.get("editorial", ""), b.get("anio", ""), b.get("isbn", ""), b.get("ejemplares", ""))
+        )
+    for b in programa.get("bibliografia_complementaria", []):
+        conn.execute(
+            "INSERT INTO bibliografia (asignatura_id, tipo, numero, autor, titulo, editorial, anio, isbn, ejemplares) VALUES (?,?,?,?,?,?,?,?,?)",
+            (asig_id, "complementaria", b.get("numero", ""), b.get("autor", ""), b.get("titulo", ""),
+             b.get("editorial", ""), b.get("anio", ""), b.get("isbn", ""), b.get("ejemplares", ""))
+        )
+
+    # 8. Linkografía
+    for l in programa.get("linkografia", []):
+        conn.execute(
+            "INSERT INTO linkografia (asignatura_id, url, titulo_articulo) VALUES (?,?,?)",
+            (asig_id, l.get("url", ""), l.get("descripcion", ""))
+        )
 
     return asig_id, "ok"
 

@@ -1,613 +1,593 @@
 """
-parsear_programas.py — Parser de programas .docx para el sistema de gestión curricular ICM.
-Extrae toda la información relevante de un documento Word de programa de asignatura.
+parsear_programas.py — Parser comprensivo de programas de asignatura (.docx).
+
+Extrae TODA la información de un documento Word de programa de asignatura UV
+y la devuelve como un diccionario estructurado.
+
+Estrategia: se recorre el cuerpo del documento en orden (párrafos y tablas
+intercalados), asociando cada tabla con el último encabezado de sección visto.
+Esto permite distinguir tablas que tienen estructura idéntica (p. ej.
+"DESCRIPCIÓN" vs "APORTE AL PERFIL") pero pertenecen a secciones distintas.
 """
+
 import re
 from pathlib import Path
+
 from docx import Document
-
-WNS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
-
-
-def _cell_text(cell):
-    """Obtiene el texto completo de una celda."""
-    return cell.text.strip()
+from docx.table import Table
+from docx.text.paragraph import Paragraph
 
 
-def _tc_text(tc_elem):
-    """Obtiene texto de un elemento tc XML."""
-    return "".join(t.text for t in tc_elem.iter(f"{{{WNS}}}t") if t.text).strip()
+def _limpiar(t):
+    if not t:
+        return ""
+    return re.sub(r"[ \t]+", " ", t.replace("\xa0", " ")).strip()
 
 
-def _tabla_texto(tabla):
-    """Devuelve el texto completo de una tabla."""
-    return "\n".join(
-        " | ".join(c.text.strip() for c in row.cells)
-        for row in tabla.rows
-    )
+def _iter_bloques(doc):
+    """Itera párrafos y tablas del cuerpo en orden de aparición."""
+    body = doc.element.body
+    for child in body.iterchildren():
+        if child.tag.endswith("}p"):
+            yield Paragraph(child, doc)
+        elif child.tag.endswith("}tbl"):
+            yield Table(child, doc)
 
 
-def _inferir_semestre_desde_ruta(ruta):
-    """Infiere el semestre desde el path del archivo (ej: 'Semestre 3/')."""
-    ruta_str = str(ruta)
-    m = re.search(r'Semestre\s+(\d+)', ruta_str, re.IGNORECASE)
-    if m:
-        return int(m.group(1))
-    return None
+def _es_encabezado(texto):
+    """Determina si un párrafo es un encabezado de sección."""
+    t = texto.strip()
+    if not t or len(t) > 70:
+        return False
+    return t.isupper() or t.rstrip().endswith(":")
 
 
-def _inferir_semestre_desde_nivel(nivel_str):
-    """
-    Infiere el semestre desde el texto de nivel.
-    Ej: '5to Semestre', 'I Semestre del 1° Año' = 1
-    """
-    if not nivel_str:
+def _semestre_de_path(ruta):
+    """Extrae el número de semestre del path (ej: '.../Semestre 5/...' -> 5)."""
+    m = re.search(r"[Ss]emestre\s*(\d+)", str(ruta))
+    return int(m.group(1)) if m else None
+
+
+def _a_float(texto):
+    """Convierte '4,5' (formato español) a float; None si no es numérico."""
+    if not texto:
         return None
-    # Buscar número arábigo
-    m = re.search(r'(\d+)[°º]?\s*[Ss]emestre', nivel_str)
-    if m:
-        return int(m.group(1))
-    # Buscar romano
-    romanos = {"I": 1, "II": 2, "III": 3, "IV": 4, "V": 5,
-               "VI": 6, "VII": 7, "VIII": 8, "IX": 9, "X": 10}
-    m = re.search(r'\b(I{1,3}V?|VI{0,3}|IX|X)\b\s*[Ss]emestre', nivel_str)
-    if m:
-        return romanos.get(m.group(1).upper())
-    return None
+    t = texto.strip().replace(",", ".")
+    try:
+        return float(t)
+    except ValueError:
+        return None
 
 
-def _parsear_tabla_identificacion(tabla):
-    """
-    Parsea la tabla de identificación (Table 0, ~8 filas x 6 cols).
-    Retorna dict con identificacion + horas.
-    """
-    result = {
+def _a_int(texto):
+    if not texto:
+        return None
+    t = texto.strip().replace(",", ".")
+    try:
+        f = float(t)
+        return int(round(f))
+    except ValueError:
+        return None
+
+
+def _normalizar_clave(texto):
+    return texto.rstrip(":").strip().lower()
+
+
+# ── Identificación + horas ────────────────────────────────────────────────
+
+_ALIAS_IDENT = {
+    "facultad": "facultad",
+    "carrera": "carrera",
+    "carreras": "carrera",
+    "nombre": "nombre",
+    "codigo": "codigo",
+    "código": "codigo",
+    "codigos": "codigo",
+    "códigos": "codigo",
+    "nivel": "nivel",
+    "duracion": "duracion",
+    "duración": "duracion",
+    "requisito(s)": "requisitos",
+    "requisitos": "requisitos",
+}
+
+
+def _extraer_identificacion(tabla):
+    """Tabla 0: 8x6 con identificación + bloque de horas."""
+    ident = {
         "codigo": "", "nombre": "", "nivel": "", "duracion": "",
         "facultad": "", "carrera": "", "requisitos": "",
         "horas_directa": None, "horas_autonoma": None,
-        "semanas": None, "creditos": None
+        "semanas": None, "creditos": None,
     }
+    if tabla is None:
+        return ident
 
-    rows = tabla.rows
-    for i, row in enumerate(rows):
-        cells = [_cell_text(c) for c in row.cells]
-        # Deduplicar celdas combinadas (python-docx repite el texto en celdas fusionadas)
-        cells_unique = []
-        seen = set()
-        for c in cells:
-            if c not in seen:
-                cells_unique.append(c)
-                seen.add(c)
-            else:
-                cells_unique.append("")
+    filas = [[_limpiar(c.text) for c in fila.cells] for fila in tabla.rows]
 
-        cells_str = " ".join(cells_unique).lower()
+    # Pares etiqueta:valor (tolerando celdas fusionadas duplicadas)
+    for celdas in filas:
+        i = 0
+        while i < len(celdas) - 1:
+            clave_raw, valor = celdas[i], celdas[i + 1]
+            if clave_raw and valor and clave_raw.endswith(":"):
+                clave = _normalizar_clave(clave_raw)
+                if clave in _ALIAS_IDENT and not ident.get(_ALIAS_IDENT[clave]):
+                    ident[_ALIAS_IDENT[clave]] = valor
+                    i += 2
+                    continue
+            i += 1
 
-        # Fila con Facultad / Carreras
-        if "facultad" in cells_str or "facultades" in cells_str:
-            # Buscar valor en celdas posteriores
-            for j, c in enumerate(cells_unique):
-                if "facultad" in c.lower() and j + 1 < len(cells_unique):
-                    result["facultad"] = cells_unique[j + 1].strip()
-                if "carrera" in c.lower() and j + 1 < len(cells_unique):
-                    result["carrera"] = cells_unique[j + 1].strip()
+    # Bloque de horas: localizar la fila de etiquetas "(A) (B) ..." y tomar la
+    # fila siguiente con los valores numéricos.
+    idx_letras = None
+    for ri, celdas in enumerate(filas):
+        unicos = [c for c in celdas]
+        if any("(a)" in c.lower() for c in unicos) and any("(b)" in c.lower() for c in unicos):
+            idx_letras = ri
+            break
 
-        # Fila con Nombre / Código
-        elif "nombre" in cells_str and ("código" in cells_str or "codigo" in cells_str):
-            for j, c in enumerate(cells_unique):
-                if "nombre" in c.lower() and j + 1 < len(cells_unique):
-                    result["nombre"] = cells_unique[j + 1].strip()
-                if ("código" in c.lower() or "codigo" in c.lower()) and j + 1 < len(cells_unique):
-                    result["codigo"] = cells_unique[j + 1].strip()
+    if idx_letras is not None and idx_letras + 1 < len(filas):
+        valores = filas[idx_letras + 1]
+        # Reducir a columnas únicas (las celdas fusionadas repiten texto)
+        col_vals = []
+        prev = None
+        for v in valores:
+            if v != prev:
+                col_vals.append(v)
+            prev = v
+        # Estructura esperada: A, B, C(total), D(semanas), E(total sem), F(creditos)
+        # Pero usamos posición por columna de la tabla original (6 cols):
+        # col0=A directa, col1=B autonoma, col3=D semanas, col5=F creditos
+        directa = _a_float(valores[0]) if len(valores) > 0 else None
+        autonoma = _a_float(valores[1]) if len(valores) > 1 else None
+        semanas = _a_int(valores[3]) if len(valores) > 3 else None
+        creditos = _a_int(valores[5]) if len(valores) > 5 else None
+        ident["horas_directa"] = directa
+        ident["horas_autonoma"] = autonoma
+        ident["semanas"] = semanas
+        ident["creditos"] = creditos
 
-        # Fila con Nivel / Duración
-        elif "nivel" in cells_str and ("duración" in cells_str or "duracion" in cells_str):
-            for j, c in enumerate(cells_unique):
-                if "nivel" in c.lower() and j + 1 < len(cells_unique):
-                    result["nivel"] = cells_unique[j + 1].strip()
-                if ("duración" in c.lower() or "duracion" in c.lower()) and j + 1 < len(cells_unique):
-                    result["duracion"] = cells_unique[j + 1].strip()
+    return ident
 
-        # Fila con Requisito
-        elif "requisito" in cells_str:
-            vals = [c for c in cells_unique if c and "requisito" not in c.lower()]
-            result["requisitos"] = ", ".join(vals) if vals else ""
 
-        # Fila de valores de horas (contiene números, la última fila de datos)
-        # La fila (A)(B)(C)(D)(E)(F) es la de etiquetas, la siguiente son los valores
-        elif re.search(r'\(A\)', cells_str) or re.search(r'\(B\)', cells_str):
-            # Esta es la fila de etiquetas, la siguiente tiene los valores
-            if i + 1 < len(rows):
-                val_cells = [_cell_text(c) for c in rows[i + 1].cells]
-                # Deduplicar
-                val_unique = []
-                seen2 = set()
-                for c in val_cells:
-                    if c not in seen2:
-                        val_unique.append(c)
-                        seen2.add(c)
-                    else:
-                        val_unique.append("")
-                vals = [v for v in val_unique if v.strip()]
+# ── Texto narrativo (descripcion / aporte) ────────────────────────────────
 
-                def to_float(s):
-                    try:
-                        return float(s.replace(",", "."))
-                    except:
-                        return None
+def _texto_de_tabla_o_parrafos(tablas, parrafos):
+    partes = []
+    for t in tablas:
+        for fila in t.rows:
+            for celda in fila.cells:
+                txt = _limpiar(celda.text)
+                if txt and txt not in partes:
+                    partes.append(txt)
+    for p in parrafos:
+        txt = _limpiar(p)
+        if txt and txt not in partes:
+            partes.append(txt)
+    return "\n".join(partes).strip()
 
-                def to_int(s):
-                    try:
-                        return int(float(s.replace(",", ".")))
-                    except:
-                        return None
 
-                if len(vals) >= 1:
-                    result["horas_directa"] = to_float(vals[0])
-                if len(vals) >= 2:
-                    result["horas_autonoma"] = to_float(vals[1])
-                if len(vals) >= 4:
-                    result["semanas"] = to_int(vals[3])
-                if len(vals) >= 6:
-                    result["creditos"] = to_int(vals[5])
+# ── Unidades ──────────────────────────────────────────────────────────────
 
-    return result
+def _parsear_ra_codes(texto):
+    """Extrae códigos RA de una celda. Separados por ';' o '.' o saltos."""
+    codigos = []
+    # Patrón: COMP[, ND/N nivel], RA/D código
+    patron = r"\b[A-Z]{1,3}\d+\s*,\s*(?:ND?\d+\s*,\s*)?(?:RA\.?\d+|D\d+)"
+    for m in re.finditer(patron, texto):
+        cod = re.sub(r"\s+", " ", m.group(0)).strip().rstrip(".").strip()
+        codigos.append(cod)
+    return codigos
 
 
 def _es_tabla_unidades(tabla):
-    """Detecta si una tabla es la tabla de Unidades (3 cols con cabecera de RA)."""
-    if len(tabla.columns) < 2:
+    if len(tabla.rows) < 1:
         return False
-    if not tabla.rows:
-        return False
-    first_row_text = " ".join(_cell_text(c).lower() for c in tabla.rows[0].cells)
-    return ("resultado de aprendizaje" in first_row_text or
-            "unidades de aprendizaje" in first_row_text)
+    celdas = [_limpiar(c.text).lower() for c in tabla.rows[0].cells]
+    header = " | ".join(celdas)
+    tiene_ra = (
+        "resultado de aprendizaje" in header
+        or "resultados de aprendizaje" in header
+        or any(c.strip() == "ra" or c.startswith("ra ") or c.startswith("ra\n") for c in celdas)
+    )
+    tiene_unidad = "unidad" in header
+    return tiene_ra and tiene_unidad
 
 
-def _parsear_unidades(tabla):
-    """Parsea la tabla de unidades. Retorna lista de dicts."""
+def _extraer_unidades(tabla):
     unidades = []
-    rows = tabla.rows
-    if len(rows) < 2:
-        return unidades
-
-    n_cols = len(tabla.columns)
-
-    for row in rows[1:]:
-        cells = [_cell_text(c) for c in row.cells]
-        if not any(cells):
+    n_cols = len(tabla.rows[0].cells)
+    for fila in tabla.rows[1:]:
+        celdas = [_limpiar(c.text) for c in fila.cells]
+        if not celdas or (not celdas[0] and (len(celdas) < 2 or not celdas[1])):
             continue
-
-        # Deduplicar celdas combinadas
-        cells_unique = []
-        seen = set()
-        for c in cells:
-            if c not in seen or not c:
-                cells_unique.append(c)
-                seen.add(c)
-            else:
-                cells_unique.append("")
-
-        ra_col = cells_unique[0] if len(cells_unique) > 0 else ""
-        contenido_col = cells_unique[1] if len(cells_unique) > 1 else ""
-        indicador_col = cells_unique[2] if len(cells_unique) > 2 else ""
-
-        # Extraer códigos de RA (separados por ; o salto de línea)
-        ra_codes = []
-        if ra_col:
-            for part in re.split(r'[;\n]', ra_col):
-                part = part.strip()
-                if part and re.match(r'[A-Z]{2}\d', part):
-                    ra_codes.append(part)
-
-        if contenido_col or ra_codes:
-            unidades.append({
-                "ra_codes": ra_codes,
-                "titulo": contenido_col[:100] if contenido_col else "",
-                "contenidos": contenido_col,
-                "indicador_logro": indicador_col
-            })
-
+        # Saltar repeticiones del header
+        if "resultado de aprendizaje" in celdas[0].lower():
+            continue
+        ra_codes = _parsear_ra_codes(celdas[0])
+        unidad_texto = celdas[1] if n_cols >= 2 and len(celdas) > 1 else ""
+        indicador = celdas[2] if n_cols >= 3 and len(celdas) > 2 else ""
+        # Separar titulo de contenidos (primera línea = titulo)
+        lineas = [l.strip() for l in unidad_texto.split("\n") if l.strip()]
+        titulo = lineas[0] if lineas else ""
+        contenidos = unidad_texto.strip()
+        unidades.append({
+            "ra_codes": ra_codes,
+            "titulo": titulo,
+            "contenidos": contenidos,
+            "indicador_logro": indicador,
+        })
     return unidades
 
 
-def _parsear_ra_generales(doc, idx_tabla_unidades):
-    """
-    Busca los RA de la sección 'RESULTADOS DE APRENDIZAJE Y DESEMPEÑOS'
-    en párrafos o tabla antes de las unidades.
-    """
-    ra_codes = []
-    body = doc.element.body
-    elems = list(body)
+# ── Metodologías ──────────────────────────────────────────────────────────
 
-    # Buscar el marcador de sección RA
-    for i, elem in enumerate(elems):
-        tag = elem.tag.split("}")[-1]
-        if tag == "p":
-            text = "".join(t.text for t in elem.iter(f"{{{WNS}}}t") if t.text).strip()
-            if "RESULTADO" in text.upper() and "APRENDIZAJE" in text.upper():
-                # Buscar párrafos con códigos RA entre aquí y UNIDADES
-                for j in range(i+1, min(i+50, len(elems))):
-                    e = elems[j]
-                    etag = e.tag.split("}")[-1]
-                    if etag == "p":
-                        txt = "".join(t.text for t in e.iter(f"{{{WNS}}}t") if t.text).strip()
-                        if "UNIDAD" in txt.upper() and "APRENDIZAJE" in txt.upper():
-                            break
-                        # RA codes tienen formato CL1, N1, RA1 o similar
-                        m = re.match(r'([A-Z]{2}\d[\w,\s\.]*RA[\.\d]+)', txt)
-                        if m:
-                            ra_codes.append(txt.split(":")[0].strip())
-                break
-
-    return ra_codes
-
-
-def _es_tabla_metodologia_checkbox(tabla):
-    """Detecta si la tabla tiene checkboxes de metodología."""
-    full_text = _tabla_texto(tabla).lower()
-    return any(m in full_text for m in ["clase expositiva", "aprendizaje basado", "seminario", "taller", "laboratorio"])
-
-
-def _parsear_metodologias_checkbox(tabla):
-    """Extrae metodologías marcadas con X en una tabla de checkboxes."""
-    metodologias = []
-    for row in tabla.rows:
-        cells = [_cell_text(c) for c in row.cells]
-        for i in range(len(cells)):
-            if cells[i].strip().upper() in ("X", "✓", "✗", "☑") and i + 1 < len(cells):
-                metodologias.append(cells[i + 1].strip())
-            elif i > 0 and cells[i-1].strip().upper() in ("X", "✓") and cells[i]:
-                pass  # ya capturado
-    return metodologias
-
-
-def _es_tabla_evaluacion(tabla):
-    """Detecta si la tabla es de evaluaciones."""
-    if not tabla.rows:
-        return False
-    first_row = " ".join(_cell_text(c).lower() for c in tabla.rows[0].cells)
-    return ("evaluaci" in first_row or "ponderaci" in first_row or "porcentaje" in first_row) and \
-           len(tabla.columns) >= 2
-
-
-def _parsear_evaluaciones(tabla):
-    """Parsea la tabla de evaluaciones."""
-    evaluaciones = []
-    for row in tabla.rows[1:]:
-        cells = [_cell_text(c) for c in row.cells]
-        tipo = cells[0].strip() if cells else ""
-        porc = cells[1].strip() if len(cells) > 1 else ""
-        if tipo and "tipo" not in tipo.lower():
-            evaluaciones.append({"tipo": tipo, "porcentaje": porc})
-    return evaluaciones
-
-
-def _es_tabla_bibliografia(tabla):
-    """Detecta si la tabla es de bibliografía."""
-    if not tabla.rows:
-        return False
-    full_text = " ".join(_cell_text(c).lower() for c in tabla.rows[0].cells)
-    return "autor" in full_text or "título" in full_text or "titulo" in full_text or \
-           "editorial" in full_text or "isbn" in full_text
-
-
-def _parsear_bibliografia(tabla, tipo="basica"):
-    """Parsea una tabla de bibliografía. Retorna lista de dicts."""
-    entradas = []
-    rows = tabla.rows
-    if len(rows) < 2:
-        return entradas
-
-    for row in rows[1:]:
-        cells = [_cell_text(c) for c in row.cells]
-        if len(cells) >= 3 and any(cells):
-            # N° | Autor | Título | Editorial | Año | ISBN | Ejemplares
-            entradas.append({
-                "numero": cells[0] if len(cells) > 0 else "",
-                "autor": cells[1] if len(cells) > 1 else "",
-                "titulo": cells[2] if len(cells) > 2 else "",
-                "editorial": cells[3] if len(cells) > 3 else "",
-                "anio": cells[4] if len(cells) > 4 else "",
-                "isbn": cells[5] if len(cells) > 5 else "",
-                "ejemplares": cells[6] if len(cells) > 6 else "",
-            })
-    return entradas
-
-
-def _parsear_linkografia(tabla):
-    """Parsea la tabla de linkografía."""
-    entradas = []
-    rows = tabla.rows
-    if len(rows) < 2:
-        return entradas
-
-    for row in rows[1:]:
-        cells = [_cell_text(c) for c in row.cells]
-        if len(cells) >= 2 and any(cells):
-            entradas.append({
-                "tipo_doc": cells[0] if len(cells) > 0 else "",
-                "autor": cells[1] if len(cells) > 1 else "",
-                "titulo_articulo": cells[2] if len(cells) > 2 else "",
-                "anio": cells[3] if len(cells) > 3 else "",
-                "titulo_revista": cells[4] if len(cells) > 4 else "",
-                "volumen": cells[5] if len(cells) > 5 else "",
-                "url": cells[6] if len(cells) > 6 else "",
-                "disponible": cells[7] if len(cells) > 7 else "",
-            })
-    return entradas
-
-
-def _encontrar_texto_entre_secciones(doc, inicio_marker, fin_marker=None):
-    """Extrae el texto entre dos marcadores de sección."""
-    parrafos = doc.paragraphs
+def _extraer_metodologias(tablas, parrafos):
+    items = []
     textos = []
-    capturando = False
-
-    for p in parrafos:
-        texto = p.text.strip()
-        if inicio_marker.lower() in texto.lower():
-            capturando = True
-            continue
-        if fin_marker and fin_marker.lower() in texto.lower():
-            break
-        if capturando and texto:
-            textos.append(texto)
-
-    return "\n".join(textos)
-
-
-def _get_body_elements(doc):
-    return list(doc.element.body)
-
-
-def _get_paragraph_text(elem):
-    return "".join(t.text for t in elem.iter(f"{{{WNS}}}t") if t.text).strip()
-
-
-def parsear_docx(ruta_docx: str) -> dict:
-    """
-    Parsea un archivo .docx de programa de asignatura.
-    Retorna un diccionario con toda la información extraída.
-    """
-    ruta = Path(ruta_docx)
-    doc = Document(str(ruta))
-
-    resultado = {
-        "archivo": str(ruta),
-        "identificacion": {
-            "codigo": "", "nombre": "", "nivel": "", "duracion": "",
-            "facultad": "", "carrera": "", "requisitos": "",
-            "horas_directa": None, "horas_autonoma": None,
-            "semanas": None, "creditos": None
-        },
-        "descripcion": "",
-        "aporte_perfil": "",
-        "responsables": {"responsable": "", "docente_a_cargo": "", "version": ""},
-        "ra_codes": [],
-        "unidades": [],
-        "metodologias": [],
-        "evaluaciones": [],
-        "bibliografia_basica": [],
-        "bibliografia_complementaria": [],
-        "linkografia": [],
-        "otros_recursos": "",
-        "semestre": None
-    }
-
-    tablas = doc.tables
-
-    # ── 1. Tabla de identificación (Table 0) ──────────────────────
-    if tablas:
-        ident = _parsear_tabla_identificacion(tablas[0])
-        resultado["identificacion"].update(ident)
-
-    # ── 2. Inferir semestre ────────────────────────────────────────
-    semestre = _inferir_semestre_desde_ruta(ruta)
-    if semestre is None:
-        semestre = _inferir_semestre_desde_nivel(resultado["identificacion"].get("nivel", ""))
-    resultado["semestre"] = semestre
-
-    # ── 3. Leer cuerpo del documento por secciones ─────────────────
-    body_elems = _get_body_elements(doc)
-
-    # Mapear índices de párrafos y tablas
-    seccion_actual = None
-    secciones_idx = {}
-    tablas_por_seccion = {}
-    tabla_counter = 0
-    tabla_idx_map = {}  # tabla_counter -> tabla object
-
-    for elem in body_elems:
-        tag = elem.tag.split("}")[-1]
-        if tag == "p":
-            txt = _get_paragraph_text(elem)
-            TU = txt.upper()
-            if "DESCRIPCIÓN DE LA ASIGNATURA" in TU:
-                seccion_actual = "descripcion"
-                secciones_idx[seccion_actual] = []
-            elif "APORTE AL PERFIL" in TU:
-                seccion_actual = "aporte_perfil"
-                secciones_idx[seccion_actual] = []
-            elif "RESULTADO" in TU and "APRENDIZAJE" in TU and "DESEMPEÑO" in TU:
-                seccion_actual = "ras"
-                secciones_idx[seccion_actual] = []
-            elif "RESULTADO" in TU and "APRENDIZAJE" in TU and seccion_actual != "ras":
-                seccion_actual = "ras"
-                secciones_idx.setdefault(seccion_actual, [])
-            elif "UNIDADES DE APRENDIZAJE" in TU and "CONTENIDO" in TU:
-                seccion_actual = "unidades"
-                secciones_idx[seccion_actual] = []
-            elif "ESTRATEGIA" in TU and ("ENSEÑANZA" in TU or "METODOLOG" in TU):
-                seccion_actual = "metodologia"
-                secciones_idx[seccion_actual] = []
-            elif "METODOLOG" in TU and "EVALUACI" in TU:
-                seccion_actual = "evaluacion"
-                secciones_idx[seccion_actual] = []
-            elif "BIBLIOGRAFÍA" in TU or "BIBLIOGRAFIA" in TU:
-                if "BÁSICA" in TU or "BASICA" in TU or "OBLIGATORIA" in TU:
-                    seccion_actual = "biblio_basica"
-                elif "COMPLEMENTARIA" in TU:
-                    seccion_actual = "biblio_complementaria"
-                else:
-                    seccion_actual = "biblio_basica"
-                secciones_idx.setdefault(seccion_actual, [])
-            elif "LINKOGRAFÍA" in TU or "LINKOGRAFIA" in TU:
-                seccion_actual = "linkografia"
-                secciones_idx[seccion_actual] = []
-            elif "OTROS RECURSOS" in TU:
-                seccion_actual = "otros_recursos"
-                secciones_idx[seccion_actual] = []
-            elif "DATOS ACTUALIZACIÓN" in TU or "DATOS ACTUALIZACION" in TU:
-                seccion_actual = "datos_actualizacion"
-                secciones_idx.setdefault(seccion_actual, [])
-            elif seccion_actual and txt:
-                if seccion_actual in secciones_idx:
-                    secciones_idx[seccion_actual].append(txt)
-        elif tag == "tbl":
-            tabla_idx_map[tabla_counter] = seccion_actual
-            tabla_counter += 1
-
-    # ── 4. Descripción ─────────────────────────────────────────────
-    desc_textos = secciones_idx.get("descripcion", [])
-    resultado["descripcion"] = "\n".join(desc_textos).strip()
-
-    # Si está vacío, buscar en tabla de celda única
-    if not resultado["descripcion"]:
-        for t in tablas[1:6]:
-            if len(t.rows) == 1 and len(t.columns) == 1:
-                txt = _cell_text(t.rows[0].cells[0])
-                if len(txt) > 50:
-                    resultado["descripcion"] = txt
-                    break
-
-    # ── 5. Aporte al perfil ────────────────────────────────────────
-    aporte_textos = secciones_idx.get("aporte_perfil", [])
-    resultado["aporte_perfil"] = "\n".join(aporte_textos).strip()
-
-    # Si no se encontró, buscar en tablas
-    if not resultado["aporte_perfil"]:
-        for i, t in enumerate(tablas[1:8], 1):
-            if len(t.rows) == 1 and len(t.columns) == 1:
-                txt = _cell_text(t.rows[0].cells[0])
-                if len(txt) > 30 and not resultado["descripcion"].startswith(txt[:20]):
-                    if resultado["descripcion"] and len(resultado["aporte_perfil"]) == 0:
-                        resultado["aporte_perfil"] = txt
-                        break
-
-    # ── 6. RAs generales ──────────────────────────────────────────
-    ra_textos = secciones_idx.get("ras", [])
-    for txt in ra_textos:
-        m = re.match(r'([A-Z]{2}\d[\w,\s\.]*)', txt.strip())
-        if m and re.search(r'RA[\.\d]', txt):
-            cod = txt.split(":")[0].strip()
-            resultado["ra_codes"].append(cod)
-
-    # ── 7. Unidades ────────────────────────────────────────────────
-    for ti, t in enumerate(tablas):
-        if _es_tabla_unidades(t):
-            resultado["unidades"] = _parsear_unidades(t)
-            break
-
-    # ── 8. Metodologías ───────────────────────────────────────────
-    metod_section = secciones_idx.get("metodologia", [])
-
-    # Buscar tabla de metodología
-    metod_tabla_idx = None
-    for ti, seccion in tabla_idx_map.items():
-        if seccion == "metodologia" and ti < len(tablas):
-            metod_tabla_idx = ti
-            break
-
-    if metod_tabla_idx is not None and metod_tabla_idx < len(tablas):
-        t = tablas[metod_tabla_idx]
-        if _es_tabla_metodologia_checkbox(t):
-            resultado["metodologias"] = _parsear_metodologias_checkbox(t)
+    for t in tablas:
+        # Tabla con checkboxes (4 cols con X)
+        es_checkbox = False
+        for fila in t.rows:
+            celdas = [_limpiar(c.text) for c in fila.cells]
+            if any(c.lower() in ("x", "☒", "[x]") for c in celdas):
+                es_checkbox = True
+                break
+        if es_checkbox:
+            for fila in t.rows:
+                celdas = [_limpiar(c.text) for c in fila.cells]
+                for i, c in enumerate(celdas):
+                    if c.lower() in ("x", "☒", "[x]"):
+                        # la etiqueta suele ser la celda contigua (anterior o siguiente)
+                        etiqueta = ""
+                        for j in (i - 1, i + 1):
+                            if 0 <= j < len(celdas) and celdas[j] and celdas[j].lower() not in ("x", "☒", "[x]"):
+                                etiqueta = celdas[j]
+                                break
+                        if etiqueta:
+                            items.append(etiqueta)
         else:
-            # Texto libre en la tabla
-            texto = _tabla_texto(t)
-            if texto.strip():
-                resultado["metodologias"] = [texto.strip()]
+            for fila in t.rows:
+                for celda in fila.cells:
+                    txt = _limpiar(celda.text)
+                    if txt and txt not in textos:
+                        textos.append(txt)
+    for p in parrafos:
+        txt = _limpiar(p)
+        if txt and txt not in textos:
+            textos.append(txt)
 
-    if not resultado["metodologias"] and metod_section:
-        resultado["metodologias"] = metod_section
+    if items:
+        return _dedup(items)
 
-    # ── 9. Evaluaciones ───────────────────────────────────────────
-    for ti, seccion in tabla_idx_map.items():
-        if seccion == "evaluacion" and ti < len(tablas):
-            t = tablas[ti]
-            if _es_tabla_evaluacion(t):
-                resultado["evaluaciones"] = _parsear_evaluaciones(t)
-                break
+    # Texto libre: separar por líneas y por puntos
+    bloque = "\n".join(textos)
+    bloque = re.sub(r"(?i)^.*?listado de metodolog[ií]as\s*:?", "", bloque).strip()
+    crudos = re.split(r"[\n.;]", bloque)
+    for c in crudos:
+        c = c.strip()
+        if c and len(c) > 4:
+            items.append(c)
+    return _dedup(items)
 
-    # ── 10. Bibliografía ──────────────────────────────────────────
-    for ti, seccion in tabla_idx_map.items():
-        if ti >= len(tablas):
+
+def _dedup(seq):
+    visto = set()
+    out = []
+    for x in seq:
+        if x not in visto:
+            visto.add(x)
+            out.append(x)
+    return out
+
+
+# ── Evaluaciones ──────────────────────────────────────────────────────────
+
+def _extraer_evaluaciones(tablas):
+    evals = []
+    for t in tablas:
+        if len(t.rows) < 1:
             continue
-        t = tablas[ti]
-        if seccion == "biblio_basica" and _es_tabla_bibliografia(t):
-            entradas = _parsear_bibliografia(t, "basica")
-            resultado["bibliografia_basica"].extend(entradas)
-        elif seccion == "biblio_complementaria" and _es_tabla_bibliografia(t):
-            entradas = _parsear_bibliografia(t, "complementaria")
-            resultado["bibliografia_complementaria"].extend(entradas)
+        header = " | ".join(_limpiar(c.text).lower() for c in t.rows[0].cells)
+        if "tipo de evaluaci" in header or "porcentaje" in header:
+            for fila in t.rows[1:]:
+                celdas = [_limpiar(c.text) for c in fila.cells]
+                if len(celdas) < 2 or not celdas[0]:
+                    continue
+                tipo = celdas[0]
+                porc = celdas[1]
+                if "resultado de aprendizaje" in tipo.lower():
+                    continue
+                evals.append({"tipo": tipo, "porcentaje": porc})
+        else:
+            # Tabla narrativa de evaluación
+            for fila in t.rows:
+                celdas = [_limpiar(c.text) for c in fila.cells]
+                if celdas and celdas[0] and len(celdas[0]) > 15:
+                    evals.append({"tipo": celdas[0], "porcentaje": celdas[1] if len(celdas) > 1 else ""})
+    return evals
 
-    # Fallback: buscar tablas de bibliografía por contenido
-    if not resultado["bibliografia_basica"] and not resultado["bibliografia_complementaria"]:
-        for ti, t in enumerate(tablas):
-            if not t.rows:
-                continue
-            header = " ".join(_cell_text(c).lower() for c in t.rows[0].cells)
-            if "autor" in header and ("título" in header or "titulo" in header or "isbn" in header):
-                if ti < len(tablas) - 2 and not resultado["bibliografia_basica"]:
-                    resultado["bibliografia_basica"] = _parsear_bibliografia(t)
-                elif not resultado["bibliografia_complementaria"]:
-                    resultado["bibliografia_complementaria"] = _parsear_bibliografia(t)
 
-    # ── 11. Linkografía ───────────────────────────────────────────
-    for ti, seccion in tabla_idx_map.items():
-        if seccion == "linkografia" and ti < len(tablas):
-            t = tablas[ti]
-            resultado["linkografia"] = _parsear_linkografia(t)
-            break
+# ── Bibliografía ──────────────────────────────────────────────────────────
 
-    # ── 12. Otros recursos ────────────────────────────────────────
-    otros_textos = secciones_idx.get("otros_recursos", [])
-    resultado["otros_recursos"] = "\n".join(otros_textos).strip()
+def _fila_biblio_vacia(d):
+    return not any(d.get(k, "").strip() for k in ("autor", "titulo", "editorial", "isbn"))
 
-    # Buscar en tabla también
-    if not resultado["otros_recursos"]:
-        for ti, seccion in tabla_idx_map.items():
-            if seccion == "otros_recursos" and ti < len(tablas):
-                t = tablas[ti]
-                resultado["otros_recursos"] = _tabla_texto(t).strip()
+
+_BIBLIO_CAMPOS = {
+    "autor": "autor",
+    "título": "titulo", "titulo": "titulo",
+    "editorial": "editorial",
+    "año": "anio", "ano": "anio",
+    "isbn": "isbn",
+}
+
+
+def _mapear_columnas_biblio(celdas_header):
+    """Dado el header de columnas, devuelve {indice_col: campo}.
+    La col 0 (vacía o 'N°') es el numero; la última col es ejemplares."""
+    mapa = {0: "numero"}
+    n = len(celdas_header)
+    for i, c in enumerate(celdas_header):
+        cl = c.lower().strip()
+        for clave, campo in _BIBLIO_CAMPOS.items():
+            if cl == clave or cl.startswith(clave):
+                mapa[i] = campo
                 break
+        if "ejemplar" in cl or "biblioteca" in cl:
+            mapa[i] = "ejemplares"
+    # Si la última columna no quedó mapeada, asumir ejemplares
+    if (n - 1) not in mapa:
+        mapa[n - 1] = "ejemplares"
+    return mapa
 
-    # ── 13. Datos de actualización ────────────────────────────────
-    for ti, seccion in tabla_idx_map.items():
-        if seccion == "datos_actualizacion" and ti < len(tablas):
-            t = tablas[ti]
-            for row in t.rows:
-                cells = [_cell_text(c) for c in row.cells]
-                if len(cells) >= 2:
-                    label = cells[0].lower()
-                    val = cells[1]
-                    if "responsable" in label:
-                        resultado["responsables"]["responsable"] = val
-                    elif "docente" in label:
-                        resultado["responsables"]["docente_a_cargo"] = val
-                    elif "versión" in label or "version" in label or "fecha" in label:
-                        resultado["responsables"]["version"] = val
+
+def _extraer_bibliografia(tablas):
+    """Procesa una o más tablas (7 u 8 cols). Distingue básica/complementaria
+    por las filas de header internas. Mapea columnas por su encabezado."""
+    basica, complementaria = [], []
+    for t in tablas:
+        destino = None
+        mapa = None
+        for fila in t.rows:
+            celdas = [_limpiar(c.text) for c in fila.cells]
+            texto_fila = " ".join(celdas).upper()
+            up = texto_fila.replace("Á", "A")
+            if "BIBLIOGRAF" in up and "BASICA" in up:
+                destino = basica
+                continue
+            if "BIBLIOGRAF" in up and "COMPLEMENTARIA" in up:
+                destino = complementaria
+                continue
+            # Header de columnas (contiene 'Autor')
+            if any(c.lower() == "autor" for c in celdas):
+                mapa = _mapear_columnas_biblio(celdas)
+                continue
+            if destino is None:
+                destino = basica
+            if mapa is None:
+                mapa = {0: "numero", 1: "autor", 2: "titulo", 3: "editorial",
+                        4: "anio", 5: "isbn", len(celdas) - 1: "ejemplares"}
+            entrada = {k: "" for k in ("numero", "autor", "titulo", "editorial", "anio", "isbn", "ejemplares")}
+            for i, campo in mapa.items():
+                if i < len(celdas):
+                    entrada[campo] = celdas[i]
+            if _fila_biblio_vacia(entrada):
+                continue
+            destino.append(entrada)
+    return basica, complementaria
+
+
+# ── Linkografía ───────────────────────────────────────────────────────────
+
+def _extraer_linkografia(tablas, parrafos):
+    links = []
+    textos = []
+    url_re_busca = re.compile(r"https?://\S+|www\.\S+")
+    for t in tablas:
+        header = [_limpiar(c.text).lower() for c in t.rows[0].cells]
+        idx_url = next((i for i, h in enumerate(header) if "direcci" in h or "electrón" in h or "electron" in h or "url" in h), None)
+        idx_tit = next((i for i, h in enumerate(header) if "título" in h or "titulo" in h or "documento" in h), None)
+        if idx_url is not None and len(t.rows) > 1:
+            # Tabla estructurada de linkografía
+            for fila in t.rows[1:]:
+                celdas = [_limpiar(c.text) for c in fila.cells]
+                url = celdas[idx_url] if idx_url < len(celdas) else ""
+                desc = celdas[idx_tit] if idx_tit is not None and idx_tit < len(celdas) else ""
+                if url.strip() or url_re_busca.search(" ".join(celdas)):
+                    if not url.strip():
+                        m = url_re_busca.search(" ".join(celdas))
+                        url = m.group(0) if m else ""
+                    if url.strip():
+                        links.append({"url": url.strip().rstrip(".,);"), "descripcion": desc})
+            continue
+        for fila in t.rows:
+            for celda in fila.cells:
+                txt = _limpiar(celda.text)
+                if txt:
+                    textos.append(txt)
+    for p in parrafos:
+        txt = _limpiar(p)
+        if txt:
+            textos.append(txt)
+
+    url_re = re.compile(r"https?://\S+|www\.\S+")
+    for txt in _dedup(textos):
+        urls = url_re.findall(txt)
+        if urls:
+            for u in urls:
+                desc = url_re.sub("", txt).strip(" .-—:")
+                links.append({"url": u.rstrip(".,);"), "descripcion": desc})
+        # líneas sin URL se ignoran como linkografía
+    return links
+
+
+# ── Responsables ──────────────────────────────────────────────────────────
+
+_ALIAS_RESP = {
+    "responsable(s) del programa": "responsable",
+    "responsables del programa": "responsable",
+    "responsable del programa": "responsable",
+    "docente(s) a cargo": "docente_a_cargo",
+    "docentes a cargo": "docente_a_cargo",
+    "docente a cargo": "docente_a_cargo",
+    "versión / fecha de actualización": "version",
+    "version / fecha de actualizacion": "version",
+    "versión": "version",
+    "version": "version",
+}
+
+
+def _extraer_responsables(tablas):
+    datos = {"responsable": "", "docente_a_cargo": "", "version": ""}
+    for t in tablas:
+        for fila in t.rows:
+            celdas = [_limpiar(c.text) for c in fila.cells]
+            if len(celdas) >= 2 and celdas[0]:
+                clave = celdas[0].rstrip(":").strip().lower()
+                if clave in _ALIAS_RESP:
+                    datos[_ALIAS_RESP[clave]] = celdas[1]
+    return datos
+
+
+# ── Función principal ─────────────────────────────────────────────────────
+
+def parsear_docx(ruta_docx):
+    """Parsea un programa .docx y devuelve un dict comprensivo."""
+    doc = Document(ruta_docx)
+    nombre_archivo = Path(ruta_docx).name
+
+    # Recorrer cuerpo asociando tablas a su sección (último encabezado)
+    seccion_actual = None
+    parrafos_seccion = {}  # seccion -> [texto, ...]
+    tablas_seccion = {}    # seccion -> [Table, ...]
+    todas_tablas = []
+
+    def _key(texto):
+        u = texto.upper()
+        if "DESCRIPCIÓN DE LA ASIGNATURA" in u or "DESCRIPCION DE LA ASIGNATURA" in u:
+            return "descripcion"
+        if "APORTE AL PERFIL" in u:
+            return "aporte"
+        if "RESULTADO" in u and "APRENDIZAJE" in u and "UNIDAD" not in u:
+            return "ra"
+        if "UNIDAD" in u and "APRENDIZAJE" in u:
+            return "unidades"
+        if "ESTRATEGIA" in u and ("ENSEÑANZA" in u or "ENSENANZA" in u):
+            return "metodologia"
+        if "EVALUACI" in u:
+            return "evaluacion"
+        if "BIBLIOGRAF" in u:
+            return "bibliografia"
+        if "LINKOGRAF" in u:
+            return "linkografia"
+        if "OTROS RECURSOS" in u:
+            return "otros_recursos"
+        if "DATOS ACTUALIZACI" in u or "ACTUALIZACIÓN" in u:
+            return "actualizacion"
+        if "IDENTIFICACIÓN" in u or "IDENTIFICACION" in u:
+            return "identificacion"
+        return None
+
+    for bloque in _iter_bloques(doc):
+        if isinstance(bloque, Paragraph):
+            txt = _limpiar(bloque.text)
+            if _es_encabezado(txt):
+                k = _key(txt)
+                if k:
+                    seccion_actual = k
+            elif txt and seccion_actual:
+                parrafos_seccion.setdefault(seccion_actual, []).append(txt)
+        else:  # Table
+            todas_tablas.append(bloque)
+            if seccion_actual:
+                tablas_seccion.setdefault(seccion_actual, []).append(bloque)
+
+    # Identificación: tabla 0
+    tabla_ident = todas_tablas[0] if todas_tablas else None
+    identificacion = _extraer_identificacion(tabla_ident)
+
+    # Descripción
+    descripcion = _texto_de_tabla_o_parrafos(
+        tablas_seccion.get("descripcion", []),
+        parrafos_seccion.get("descripcion", []),
+    )
+
+    # Aporte al perfil
+    aporte = _texto_de_tabla_o_parrafos(
+        tablas_seccion.get("aporte", []),
+        parrafos_seccion.get("aporte", []),
+    )
+
+    # Unidades: usar tabla de la sección, o buscar por header en cualquier tabla
+    tabla_unidades = None
+    for t in tablas_seccion.get("unidades", []):
+        if _es_tabla_unidades(t):
+            tabla_unidades = t
             break
+    if tabla_unidades is None:
+        for t in todas_tablas:
+            if _es_tabla_unidades(t):
+                tabla_unidades = t
+                break
+    unidades = _extraer_unidades(tabla_unidades) if tabla_unidades else []
 
-    return resultado
+    # ra_codes globales
+    ra_codes_global = _dedup([c for u in unidades for c in u["ra_codes"]])
+
+    # Metodologías
+    metodologias = _extraer_metodologias(
+        tablas_seccion.get("metodologia", []),
+        parrafos_seccion.get("metodologia", []),
+    )
+
+    # Evaluaciones
+    evaluaciones = _extraer_evaluaciones(tablas_seccion.get("evaluacion", []))
+
+    # Bibliografía
+    biblio_basica, biblio_comp = _extraer_bibliografia(tablas_seccion.get("bibliografia", []))
+
+    # Linkografía
+    linkografia = _extraer_linkografia(
+        tablas_seccion.get("linkografia", []),
+        parrafos_seccion.get("linkografia", []),
+    )
+
+    # Otros recursos
+    otros = _texto_de_tabla_o_parrafos(
+        tablas_seccion.get("otros_recursos", []),
+        parrafos_seccion.get("otros_recursos", []),
+    )
+
+    # Responsables
+    responsables = _extraer_responsables(tablas_seccion.get("actualizacion", []))
+    if not any(responsables.values()):
+        # fallback: buscar en todas las tablas
+        responsables = _extraer_responsables(todas_tablas)
+
+    return {
+        "archivo": nombre_archivo,
+        "semestre": _semestre_de_path(ruta_docx),
+        "identificacion": identificacion,
+        "descripcion": descripcion,
+        "aporte_perfil": aporte,
+        "responsables": responsables,
+        "ra_codes": ra_codes_global,
+        "unidades": unidades,
+        "metodologias": metodologias,
+        "evaluaciones": evaluaciones,
+        "bibliografia_basica": biblio_basica,
+        "bibliografia_complementaria": biblio_comp,
+        "linkografia": linkografia,
+        "otros_recursos": otros,
+    }
 
 
 if __name__ == "__main__":
-    import sys, json
-    if len(sys.argv) < 2:
-        print("Uso: python3 src/parsear_programas.py <ruta.docx>")
-        sys.exit(1)
-    resultado = parsear_docx(sys.argv[1])
-    print(json.dumps(resultado, ensure_ascii=False, indent=2))
+    import json
+    import sys
+    ruta = sys.argv[1] if len(sys.argv) > 1 else "data/programas/Semestre 5/IMAT 321 ANALISIS.docx"
+    prog = parsear_docx(ruta)
+    print(json.dumps(prog, ensure_ascii=False, indent=2))

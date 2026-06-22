@@ -2,7 +2,7 @@
 app.py — Sistema de Gestión Curricular ICM
 panel serve src/app.py --show --autoreload
 """
-import sqlite3, os, sys
+import sqlite3, os, sys, io
 import panel as pn
 import param
 from pathlib import Path
@@ -478,30 +478,42 @@ class Dashboard(param.Parameterized):
             bloques.append(self._build_bloque(tipo, grupos[tipo], popup_pane))
 
         # ── Botones generación ────────────────────────────────────
-        btn_excel = pn.widgets.Button(
-            name="📊 Generar Matriz de Competencias",
-            css_classes=["btn-p"], width=320, height=48)
-        btn_word  = pn.widgets.Button(
-            name="🗺️ Generar Mapa de Progreso",
-            css_classes=["btn-s"], width=320, height=48)
         status = pn.pane.HTML("", align="center")
 
-        def gen_excel(event):
+        def _hacer_matriz():
             try:
-                generar_matriz()
-                status.object = '<p style="color:#10B981;font-weight:600;text-align:center">✓ Matriz generada en data/output/</p>'
+                ruta = generar_matriz()
+                with open(ruta, 'rb') as f:
+                    return io.BytesIO(f.read())
             except Exception as e:
                 status.object = f'<p style="color:#EF4444;text-align:center">✗ {e}</p>'
+                return io.BytesIO(b"")
 
-        def gen_word(event):
+        def _hacer_mapa():
             try:
-                generar_mapa_progreso()
-                status.object = '<p style="color:#10B981;font-weight:600;text-align:center">✓ Mapa de Progreso generado en data/output/</p>'
+                ruta = generar_mapa_progreso()
+                with open(ruta, 'rb') as f:
+                    return io.BytesIO(f.read())
             except Exception as e:
                 status.object = f'<p style="color:#EF4444;text-align:center">✗ {e}</p>'
+                return io.BytesIO(b"")
 
-        btn_excel.on_click(gen_excel)
-        btn_word.on_click(gen_word)
+        btn_excel = pn.widgets.FileDownload(
+            callback=_hacer_matriz,
+            filename="matriz_competencias.xlsx",
+            label="📊 Descargar Matriz de Competencias",
+            button_type="primary",
+            width=320, height=48,
+            embed=False,
+        )
+        btn_word = pn.widgets.FileDownload(
+            callback=_hacer_mapa,
+            filename="mapa_progreso.docx",
+            label="🗺️ Descargar Mapa de Progreso",
+            button_type="default",
+            width=320, height=48,
+            embed=False,
+        )
 
         return pn.Column(
             pn.Row(*bloques, sizing_mode="stretch_width"),
@@ -709,8 +721,25 @@ class EditorProgramas(param.Parameterized):
 
         btn_guardar = pn.widgets.Button(
             name="💾 Guardar cambios", css_classes=["btn-p"], width=270, height=48)
-        btn_word = pn.widgets.Button(
-            name="📝 Generar Word", css_classes=["btn-s"], width=220, height=48)
+
+        def _hacer_word():
+            try:
+                ruta = generar_programa_individual(self.asignatura_id)
+                with open(ruta, 'rb') as f:
+                    return io.BytesIO(f.read())
+            except Exception as e:
+                self._status.object = f'<p style="color:#EF4444">✗ {e}</p>'
+                return io.BytesIO(b"")
+
+        codigo_asig = (asig.get("codigo", "asig") or "asig").replace(" ", "_")
+        btn_word = pn.widgets.FileDownload(
+            callback=_hacer_word,
+            filename=f"programa_{codigo_asig}.docx",
+            label="📥 Descargar Word",
+            button_type="primary",
+            width=220, height=48,
+            embed=False,
+        )
 
         def on_guardar(event):
             datos = {
@@ -736,19 +765,7 @@ class EditorProgramas(param.Parameterized):
                 f'<p style="color:#EF4444">✗ {msg}</p>'
             )
 
-        def on_word(event):
-            try:
-                ruta = generar_programa_individual(self.asignatura_id)
-                nombre = Path(ruta).name if ruta else "?"
-                self._status.object = (
-                    f'<p style="color:#10B981;font-weight:600;font-size:14px">'
-                    f'✓ Word generado: {nombre}</p>'
-                )
-            except Exception as e:
-                self._status.object = f'<p style="color:#EF4444">✗ {e}</p>'
-
         btn_guardar.on_click(on_guardar)
-        btn_word.on_click(on_word)
 
         sec_acciones = pn.Column(
             pn.Row(btn_guardar, btn_word, align="center",
