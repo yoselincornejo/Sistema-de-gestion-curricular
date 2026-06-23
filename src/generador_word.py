@@ -62,7 +62,8 @@ def get_programa(asig_id):
         SELECT ra.codigo_completo, ra.descripcion, c.codigo, c.tipo
         FROM tributaciones ar
         JOIN resultados_aprendizaje ra ON ra.id=ar.ra_id
-        JOIN competencias c ON c.id=ra.competencia_id
+        JOIN niveles_dominio nd ON nd.id = ra.nivel_dominio_id
+        JOIN competencias c ON c.id=nd.competencia_id
         WHERE ar.asignatura_id=?
         ORDER BY c.codigo, ra.codigo_completo
     """, (asig_id,)).fetchall()
@@ -430,9 +431,10 @@ def _get_programa_data(asignatura_id):
         SELECT ra.codigo_completo, ra.descripcion, c.tipo
         FROM tributaciones ar
         JOIN resultados_aprendizaje ra ON ra.id = ar.ra_id
-        JOIN competencias c ON c.id = ra.competencia_id
+        JOIN niveles_dominio nd ON nd.id = ra.nivel_dominio_id
+        JOIN competencias c ON c.id = nd.competencia_id
         WHERE ar.asignatura_id = ?
-        ORDER BY c.codigo, ra.nivel_dominio, ra.codigo
+        ORDER BY c.codigo, nd.codigo_nivel, ra.codigo_ra
     """, (asignatura_id,)).fetchall()
 
     unidades = conn.execute(
@@ -871,9 +873,11 @@ def generar_mapa_progreso(salida=None):
         r2.font.color.rgb = RGBColor(int(hx[:2],16),int(hx[2:4],16),int(hx[4:],16))
 
         ras_raw = conn.execute("""
-            SELECT nivel_dominio, codigo_completo, descripcion
-            FROM resultados_aprendizaje WHERE competencia_id=?
-            ORDER BY COALESCE(nivel_dominio,''), codigo
+            SELECT nd.codigo_nivel, ra.codigo_completo, ra.descripcion
+            FROM resultados_aprendizaje ra
+            JOIN niveles_dominio nd ON nd.id = ra.nivel_dominio_id
+            WHERE nd.competencia_id=?
+            ORDER BY nd.codigo_nivel, ra.codigo_ra
         """, (comp_id,)).fetchall()
 
         niveles = {}
