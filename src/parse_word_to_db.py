@@ -33,7 +33,9 @@ RUTA_DB          = Path("data/sistema.db")
 CARPETA_DOCS     = Path("data/programas")
 LOG_REVISION     = Path("data/output/revision_manual.txt")
 LOG_PARSE        = Path("data/output/parse_word_to_db.log")
-EXCLUIDOS        = {"IMAT 423"}   # excluir explícitamente por nombre
+# IMAT 423: excluido por solicitud expresa.
+# QUI 121 Lab: documento auxiliar sin estructura de programa (1 tabla).
+EXCLUIDOS = {"IMAT 423", "QUI 121 Química para Ingeniería - Laboratorios"}
 
 Path("data/output").mkdir(parents=True, exist_ok=True)
 
@@ -108,33 +110,56 @@ class DiccionarioCodigos:
                 self.ra_por_codigo[_normalizar(f"{comp}, N{num_nd}, DC{num}")] = ra_id
                 self.ra_por_codigo[_normalizar(f"{comp}, DC{num}")] = ra_id
 
-        # Patron regex que detecta CUALQUIER mención a un código tipo RA
-        # Construido con las competencias reales: CL1|CE2|CG4|...
+        # Patron regex que detecta CUALQUIER mención a un código tipo RA.
+        # Soporta separadores coma O guión: "CL1, N2, RA1" y "CG2-ND2-DC1".
         comp_alternativa = "|".join(sorted(self.competencias, key=len, reverse=True))
+        SEP = r"[\s]*[-,][\s]*"   # separador flexible: coma o guión con espacios opcionales
         self._PATRON_RA = re.compile(
-            rf"(?P<comp>{comp_alternativa})"             # competencia: CL1, CE2…
-            r"(?:\s*[-,]\s*"                             # separador , o -
-            r"(?P<nivel>ND?\s*\d+|DC?\s*\d+))?"         # nivel ND2 / N2 / D1 / DC1 (opcional)
-            r"\s*[-,]\s*"                               # separador
-            r"(?P<ra>RA\.?\s*\d+|DC?\s*\d+)",           # RA1 / RA.1 / D1 / DC1
+            rf"(?P<comp>{comp_alternativa})"        # competencia: CL1, CE2, CG4…
+            rf"(?:{SEP}"                            # separador opcional
+            r"(?P<nivel>ND?\s*\d+))?"              # nivel: ND2 / N2  (nunca D/DC aquí)
+            rf"{SEP}"                               # separador obligatorio
+            r"(?P<ra>RA\.?\s*\d+|DC?\s*\d+)",      # RA1 / RA.1 / D1 / DC1
             re.IGNORECASE,
         )
 
-    def buscar_ra_id(self, raw: str) -> Optional[int]:
-        """Normaliza un fragmento capturado y lo busca en el índice."""
-        clave = _normalizar(raw)
-        return self.ra_por_codigo.get(clave)
-
     def extraer_ra_ids_de_texto(self, texto: str) -> set[int]:
-        """Aplica el patrón sobre un bloque de texto y devuelve ra_ids encontrados."""
+        """
+        Aplica el patrón sobre un bloque de texto.
+        Reconstruye la clave canónica desde los grupos nombrados, por lo que
+        los separadores guión/coma son transparentes para la búsqueda.
+        """
         encontrados = set()
         for m in self._PATRON_RA.finditer(texto):
-            raw = m.group(0)
-            ra_id = self.buscar_ra_id(raw)
+            comp  = m.group("comp").upper().strip()
+            nivel = (m.group("nivel") or "").upper().replace(" ", "")
+            ra    = m.group("ra").upper().replace(" ", "").replace(".", "")
+
+            # N2 → ND2
+            if nivel and nivel.startswith("N") and not nivel.startswith("ND"):
+                nivel = "ND" + nivel[1:]
+
+            # DC1 → D1  (alias de D en documentos TIPE)
+            if ra.startswith("DC"):
+                ra = "D" + ra[2:]
+
+            # Competencias CG con RA-codes → convertir a D-code (RA1 → D1)
+            if comp.startswith("CG") and ra.startswith("RA"):
+                ra = "D" + ra[2:]
+
+            # Intentar con nivel primero, luego sin nivel
+            claves = (
+                [f"{comp}, {nivel}, {ra}", f"{comp}, {ra}"] if nivel
+                else [f"{comp}, {ra}"]
+            )
+            ra_id = next((self.ra_por_codigo.get(c) for c in claves
+                          if self.ra_por_codigo.get(c)), None)
+
             if ra_id:
                 encontrados.add(ra_id)
             elif VERBOSE:
-                log.debug("  sin match en BD: %r", raw)
+                log.debug("  sin match: %r → claves intentadas: %s",
+                          m.group(0), claves)
         return encontrados
 
 
@@ -706,18 +731,19 @@ def procesar_todos(dry_run: bool = False, archivo_unico: Optional[Path] = None):
         n_bc    = len(data["biblio_compl"])
 
         # ── Sistema de Cuarentena ─────────────────────────────────────────
-        problemas = []
+        # Solo bloquear si no se puede identificar la asignatura.
+        # Documentos sin tributaciones (electivos, idiomas con plan antiguo)
+        # se cargan igual con sus metadatos.
         if not codigo:
-            problemas.append("código de asignatura no determinado")
-        if not ra_ids:
-            problemas.append("0 tributaciones encontradas")
-
-        if problemas:
-            motivo = " | ".join(problemas)
+            motivo = "código de asignatura no determinado"
             log.warning("CUARENTENA %-45s → %s", nombre, motivo)
             en_cuarentena.append((nombre, motivo))
             cuarentena += 1
             continue   # NO tocar la BD
+
+        if not ra_ids:
+            log.warning("SIN-RA    %-10s %-40s (se carga sin tributaciones)",
+                        codigo, data["identificacion"].get("nombre","")[:39])
 
         # ── Inserción ─────────────────────────────────────────────────────
         estado = "dry-run" if dry_run else "ok"
