@@ -1,0 +1,87 @@
+INFO     ============================================================
+INFO     parse_word_to_db.py — 53 documentos
+INFO     ============================================================
+WARNING  [CFG 111] RAs no resueltos en BD: ['CG1, D2', 'CG2, D1', 'CG2, D2', 'CG3, D1', 'CG4, D1', 'CG4, D2', 'CG4, D3']
+INFO     OK   CFG 111    Desarrollo Personal                           | RA:7 U:3
+INFO     OK   ING 111    Desafíos de Ingeniería                        | RA:7 U:3
+WARNING  [MAT 111] RAs no resueltos en BD: ['CG4, D1', 'CL1, RA1', 'CL1, RA2']
+INFO     OK   MAT 111    Fundamentos de Matemática                     | RA:6 U:6
+INFO     OK   PRO 111    Fundamentos de Programación                   | RA:3 U:3
+ERROR    ERROR QUI 121 Química para Ingeniería - Laboratorios.docx → Documento no estándar: solo 1 tabla(s)
+WARNING  [QUI 121] RAs no resueltos en BD: ['CG2, D2', 'CG2, D3', 'CG4, D1', 'CL1, RA1', 'CL1, RA2', 'CL2, RA1']
+INFO     OK   QUI 121    Química para Ingeniería                       | RA:11 U:4
+INFO     OK   IMAT 415   Idioma IV                                     | RA:5 U:1
+WARNING  [IMAT 513 Electivo de formación profesional III.docx] No se encontraron códigos RA
+WARNING  [IMAT 513 Electivo de formación profesional III.docx] Bibliografía vacía
+INFO     OK   IMAT 513   Electivo de formación profesional III         | RA:0 U:0
+WARNING  [IMAT 523] RAs no resueltos en BD: ['CG1, ND3, D3', 'CG5, ND3, D1', 'CG5, ND3, D2', 'CG6, ND3, D1', 'CG6, ND3, D2', 'CG6, ND3, D3']
+INFO     OK   IMAT 523   Proyecto de Ingeniería                        | RA:24 U:1
+WARNING  [IMAT 524 Electivo de formación profesional II.docx] No se encontraron códigos RA
+WARNING  [IMAT 524 Electivo de formación profesional II.docx] Bibliografía vacía
+INFO     OK   IMAT 524   Electivo de formación profesional II          | RA:0 U:0
+INFO     OK   IMAT 611   Taller de Título                              | RA:18 U:1
+WARNING  [IMAT 612 Practica Profesional 2025.docx] Bibliografía vacía
+INFO     OK   IMAT 612   Práctica Profesional                          | RA:12 U:3
+WARNING  [FIS 111] RAs no resueltos en BD: ['CG2, D2', 'CG4, D1', 'CL1, RA1', 'CL1, RA2']
+INFO     OK   FIS 111    Fundamentos de Física                         | RA:4 U:5
+INFO     OK   ING 121    Ingeniería, Innovación y Emprendimiento.      | RA:10 U:4
+INFO     OK   MAT 121    Cálculo Diferencial                           | RA:3 U:3
+INFO     OK   MAT 122    Álgebra                                       | RA:3 U:6
+INFO     OK   PRO 121    Programación                                  | RA:3 U:3
+WARNING  [FIS 211] RAs no resueltos en BD: ['CG2, D2', 'CG4, D1']
+INFO     OK   FIS 211    Física Mecánica                               | RA:4 U:5
+INFO     OK   IMAT 221   Taller de Deducción Matemática                | RA:5 U:3
+INFO     OK   IMAT211    Programación para Ingeniería                  | RA:3 U:3
+INFO     OK   MAT 211    Cálculo Integral y Series                     | RA:3 U:4
+INFO     OK   MAT 212    Álgebra Lineal                                | RA:3 U:4
+WARNING  [FIS 221] RAs no resueltos en BD: ['CG2, D2', 'CG4, D1', 'CL1, RA1', 'CL1, RA2']
+INFO     OK   FIS 221    Física Calor y Ondas                          | RA:6 U:3
+WARNING  [IMAT 223] RAs no resueltos en BD: ['CG10, D4', 'CG10, D5', 'CG11, D2']
+INFO     OK   IMAT 223   Idioma I                                      | RA:3 U:3
+WARNING  [IMAT314] RAs no resueltos en BD: ['CL2, ND1, RA2']
+INFO     OK   IMAT314    Estructuras Algebraicas                       | RA:4 U:3
+INFO     OK   IMAT 212   Economía                                      | RA:4 U:2
+INFO     OK   MAT 221    Cálculo en Varias Variables                   | RA:3 U:2
+INFO     OK   MAT 222    Ecuaciones Diferenciales Ordinarias           | RA:3 U:2
+INFO     OK   FIS 311    Física Electromagnetismo                      | RA:4 U:3
+INFO     OK   IMAT 311   Cálculo Avanzado                              | RA:3 U:3
+INFO     OK   IMAT 312   Métodos Numéricos                             | RA:7 U:3
+WARNING  [IMAT321] RAs no resueltos en BD: ['N2, D1', 'N2, D2']
+INFO     OK   IMAT321    Análisis                                      | RA:10 U:8
+WARNING  [IMAT 324 TIPE SELLO UV I.docx] No se encontraron códigos RA
+INFO     OK   IMAT324    TIPE I                                        | RA:0 U:3
+WARNING  [IMAT222] RAs no resueltos en BD: ['CG4, ND2, D3']
+INFO     OK   IMAT222    Evaluación de Proyectos                       | RA:4 U:2
+INFO     OK   IMAT313    Combinatoria y Algoritmos                     | RA:8 U:4
+INFO     OK   IMAT 315   Idioma II                                     | RA:2 U:2
+INFO     OK   IMAT322    Cálculo de Probabilidades                     | RA:7 U:3
+WARNING  [IMAT 411] RAs no resueltos en BD: ['N2, D1', 'N2, D2']
+INFO     OK   IMAT 411   Teoría de la Medida                           | RA:10 U:5
+INFO     OMITIDO  IMAT 423 Sistemas Dinámicos Continuos.docx (excluido explícitamente)
+WARNING  [IMAT 323] RAs no resueltos en BD: ['N1, D1', 'N1, D2']
+INFO     OK   IMAT 323   Optimización                                  | RA:9 U:4
+INFO     OK   IMAT413    Análisis Complejo                             | RA:4 U:4
+WARNING  [IMAT 414 TIPE sello UV II.docx] No se encontraron códigos RA
+INFO     OK   IMAT 414   TIPE II                                       | RA:0 U:3
+WARNING  [IMAT 412] RAs no resueltos en BD: ['CG4, ND2, D3']
+INFO     OK   IMAT 412   Inferencia Estadística                        | RA:7 U:6
+INFO     OK   IMAT 325   Idioma III                                    | RA:2 U:2
+INFO     OK   IMAT422    Procesos Estocásticos                         | RA:8 U:3
+INFO     OK   IMAT424    Taller de Integración al Perfil de Egreso In  | RA:8 U:3
+WARNING  [IMAT 521] RAs no resueltos en BD: ['CE1, RA1', 'CE1, RA3', 'CG2, D1', 'CG4, D2', 'CL1, RA1', 'CL4, RA1', 'CL5, RA1']
+INFO     OK   IMAT 521   Optimización Combinatorial                    | RA:15 U:4
+WARNING  [IMAT421] RAs no resueltos en BD: ['N2, D1', 'N2, D2']
+INFO     OK   IMAT421    Análisis Funcional                            | RA:10 U:3
+INFO     OK   IMAT 511   Grafos                                        | RA:4 U:5
+INFO     OK   IMAT512    Modelación Estocástica                        | RA:5 U:3
+WARNING  [IMAT 514 Electivo de formación profesional I.docx] No se encontraron códigos RA
+WARNING  [IMAT 514 Electivo de formación profesional I.docx] Bibliografía vacía
+INFO     OK   IMAT 514   Electivo de Ingeniería I                      | RA:0 U:0
+WARNING  [IMAT 515 Practica Basica.docx] Bibliografía vacía
+INFO     OK   IMAT 515   Práctica Básica                               | RA:9 U:3
+INFO     OK   IMAT522    Ecuaciones en Derivadas Parciales             | RA:7 U:2
+INFO     
+INFO     ============================================================
+INFO     RESULTADO: 51 OK | 1 omitidos | 1 errores | total 53
+INFO     DOCUMENTOS CON ERROR:
+INFO       - QUI 121 Química para Ingeniería - Laboratorios.docx Documento no estándar: solo 1 tabla(s)
