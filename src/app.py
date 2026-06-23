@@ -39,7 +39,8 @@ def get_dashboard_data():
         SELECT c.codigo, c.tipo, c.descripcion,
                COUNT(DISTINCT ar.asignatura_id) as n_asig
         FROM competencias c
-        LEFT JOIN resultados_aprendizaje ra ON ra.competencia_id = c.id
+        LEFT JOIN niveles_dominio nd ON nd.competencia_id = c.id
+        LEFT JOIN resultados_aprendizaje ra ON ra.nivel_dominio_id = nd.id
         LEFT JOIN tributaciones ar ON ar.ra_id = ra.id
         WHERE c.tipo != 'desconocido'
         GROUP BY c.id
@@ -60,7 +61,8 @@ def get_asignaturas_por_competencia(comp_codigo):
         FROM asignaturas a
         JOIN tributaciones ar ON ar.asignatura_id = a.id
         JOIN resultados_aprendizaje ra ON ra.id = ar.ra_id
-        JOIN competencias c ON c.id = ra.competencia_id
+        JOIN niveles_dominio nd ON nd.id = ra.nivel_dominio_id
+        JOIN competencias c ON c.id = nd.competencia_id
         WHERE c.codigo = ?
         ORDER BY a.semestre, a.codigo
     """, (comp_codigo,)).fetchall()
@@ -73,7 +75,8 @@ def get_ras_con_asignaturas(comp_codigo):
     ras = conn.execute("""
         SELECT ra.id, ra.codigo_completo, ra.descripcion
         FROM resultados_aprendizaje ra
-        JOIN competencias c ON c.id = ra.competencia_id
+        JOIN niveles_dominio nd ON nd.id = ra.nivel_dominio_id
+        JOIN competencias c ON c.id = nd.competencia_id
         WHERE c.codigo = ?
         ORDER BY ra.codigo_completo
     """, (comp_codigo,)).fetchall()
@@ -121,14 +124,16 @@ def get_programa_completo(asig_id):
         SELECT ra.id, ra.codigo_completo, c.codigo, c.tipo
         FROM tributaciones ar
         JOIN resultados_aprendizaje ra ON ra.id = ar.ra_id
-        JOIN competencias c ON c.id = ra.competencia_id
+        JOIN niveles_dominio nd ON nd.id = ra.nivel_dominio_id
+        JOIN competencias c ON c.id = nd.competencia_id
         WHERE ar.asignatura_id = ?
         ORDER BY c.codigo, ra.codigo_completo
     """, (asig_id,)).fetchall()
     todos_ras_raw = conn.execute("""
         SELECT ra.id, ra.codigo_completo, c.codigo, c.tipo
         FROM resultados_aprendizaje ra
-        JOIN competencias c ON c.id = ra.competencia_id
+        JOIN niveles_dominio nd ON nd.id = ra.nivel_dominio_id
+        JOIN competencias c ON c.id = nd.competencia_id
         WHERE c.tipo != 'desconocido'
         ORDER BY
             CASE c.tipo
