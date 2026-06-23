@@ -76,10 +76,11 @@ def _obtener_datos():
     conn = _conectar()
 
     ras = conn.execute("""
-        SELECT ra.id, ra.codigo_completo, ra.nivel_dominio, ra.codigo,
+        SELECT ra.id, ra.codigo_completo, nd.codigo_nivel, ra.codigo_ra,
                c.id, c.codigo, c.tipo
         FROM resultados_aprendizaje ra
-        JOIN competencias c ON c.id = ra.competencia_id
+        JOIN niveles_dominio nd ON nd.id = ra.nivel_dominio_id
+        JOIN competencias c ON c.id = nd.competencia_id
         WHERE c.tipo != 'desconocido'
         ORDER BY
             CASE c.tipo
@@ -88,8 +89,8 @@ def _obtener_datos():
                 WHEN 'sello_uv'     THEN 2
             END,
             c.codigo,
-            COALESCE(ra.nivel_dominio, ''),
-            ra.codigo
+            nd.codigo_nivel,
+            ra.codigo_ra
     """).fetchall()
 
     asigs = conn.execute("""
