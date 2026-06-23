@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS resultados_aprendizaje (
 );
 
 -- Tributación: qué asignatura aporta a qué RA (corazón del sistema)
-CREATE TABLE IF NOT EXISTS asignatura_ra (
+CREATE TABLE IF NOT EXISTS tributaciones (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     asignatura_id INTEGER NOT NULL,
     ra_id INTEGER NOT NULL,
@@ -106,8 +106,8 @@ CREATE TABLE IF NOT EXISTS evaluaciones (
 CREATE INDEX IF NOT EXISTS idx_asig_codigo ON asignaturas(codigo);
 CREATE INDEX IF NOT EXISTS idx_asig_semestre ON asignaturas(semestre);
 CREATE INDEX IF NOT EXISTS idx_ra_competencia ON resultados_aprendizaje(competencia_id);
-CREATE INDEX IF NOT EXISTS idx_asig_ra_asignatura ON asignatura_ra(asignatura_id);
-CREATE INDEX IF NOT EXISTS idx_asig_ra_ra ON asignatura_ra(ra_id);
+CREATE INDEX IF NOT EXISTS idx_asig_ra_asignatura ON tributaciones(asignatura_id);
+CREATE INDEX IF NOT EXISTS idx_asig_ra_ra ON tributaciones(ra_id);
 """
 
 # Seed inicial de las 8 competencias del plan 2025

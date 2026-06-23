@@ -40,7 +40,7 @@ def get_dashboard_data():
                COUNT(DISTINCT ar.asignatura_id) as n_asig
         FROM competencias c
         LEFT JOIN resultados_aprendizaje ra ON ra.competencia_id = c.id
-        LEFT JOIN asignatura_ra ar ON ar.ra_id = ra.id
+        LEFT JOIN tributaciones ar ON ar.ra_id = ra.id
         WHERE c.tipo != 'desconocido'
         GROUP BY c.id
         ORDER BY
@@ -58,7 +58,7 @@ def get_asignaturas_por_competencia(comp_codigo):
     filas = conn.execute("""
         SELECT DISTINCT a.codigo, a.nombre, a.semestre
         FROM asignaturas a
-        JOIN asignatura_ra ar ON ar.asignatura_id = a.id
+        JOIN tributaciones ar ON ar.asignatura_id = a.id
         JOIN resultados_aprendizaje ra ON ra.id = ar.ra_id
         JOIN competencias c ON c.id = ra.competencia_id
         WHERE c.codigo = ?
@@ -82,7 +82,7 @@ def get_ras_con_asignaturas(comp_codigo):
         asigs = conn.execute("""
             SELECT a.codigo, a.nombre, a.semestre
             FROM asignaturas a
-            JOIN asignatura_ra ar ON ar.asignatura_id = a.id
+            JOIN tributaciones ar ON ar.asignatura_id = a.id
             WHERE ar.ra_id = ?
             ORDER BY a.semestre, a.codigo
         """, (ra["id"],)).fetchall()
@@ -119,7 +119,7 @@ def get_programa_completo(asig_id):
     conn.row_factory = None
     ras_raw = conn.execute("""
         SELECT ra.id, ra.codigo_completo, c.codigo, c.tipo
-        FROM asignatura_ra ar
+        FROM tributaciones ar
         JOIN resultados_aprendizaje ra ON ra.id = ar.ra_id
         JOIN competencias c ON c.id = ra.competencia_id
         WHERE ar.asignatura_id = ?
@@ -174,10 +174,10 @@ def guardar_programa(asig_id, datos):
                 conn.execute(
                     "INSERT INTO evaluaciones (asignatura_id, tipo, porcentaje) VALUES (?,?,?)",
                     (asig_id, ev["tipo"], ev["porcentaje"]))
-        conn.execute("DELETE FROM asignatura_ra WHERE asignatura_id=?", (asig_id,))
+        conn.execute("DELETE FROM tributaciones WHERE asignatura_id=?", (asig_id,))
         for ra_id in datos["ra_ids"]:
             conn.execute(
-                "INSERT OR IGNORE INTO asignatura_ra (asignatura_id, ra_id) VALUES (?,?)",
+                "INSERT OR IGNORE INTO tributaciones (asignatura_id, ra_id) VALUES (?,?)",
                 (asig_id, ra_id))
         conn.commit()
         return True, "Cambios guardados correctamente"

@@ -60,7 +60,7 @@ def get_programa(asig_id):
     conn.row_factory = None
     ras = conn.execute("""
         SELECT ra.codigo_completo, ra.descripcion, c.codigo, c.tipo
-        FROM asignatura_ra ar
+        FROM tributaciones ar
         JOIN resultados_aprendizaje ra ON ra.id=ar.ra_id
         JOIN competencias c ON c.id=ra.competencia_id
         WHERE ar.asignatura_id=?
@@ -428,7 +428,7 @@ def _get_programa_data(asignatura_id):
 
     ras = conn.execute("""
         SELECT ra.codigo_completo, ra.descripcion, c.tipo
-        FROM asignatura_ra ar
+        FROM tributaciones ar
         JOIN resultados_aprendizaje ra ON ra.id = ar.ra_id
         JOIN competencias c ON c.id = ra.competencia_id
         WHERE ar.asignatura_id = ?
@@ -917,7 +917,7 @@ def generar_mapa_progreso(salida=None):
                 placeholders = ",".join("?" * len(ra_codes))
                 asigs_niv = conn.execute(f"""
                     SELECT DISTINCT a.codigo, a.nombre FROM asignaturas a
-                    JOIN asignatura_ra ar ON ar.asignatura_id=a.id
+                    JOIN tributaciones ar ON ar.asignatura_id=a.id
                     JOIN resultados_aprendizaje ra ON ra.id=ar.ra_id
                     WHERE ra.codigo_completo IN ({placeholders})
                     ORDER BY a.semestre, a.codigo

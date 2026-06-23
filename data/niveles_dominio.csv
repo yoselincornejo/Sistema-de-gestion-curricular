@@ -1,0 +1,24 @@
+﻿id;competencia;codigo_nivel;descripcion
+1;CL1;ND1;Aplica el pensamiento lógico matemático para resolver problemas de nivel inicial usando técnicas de las ciencias básicas en el ámbito de la ingeniería.
+2;CL1;ND2;Resuelve problemas de ciencias de la Ingeniería mediante la generación, análisis e interpretación de información incorporando los aspectos sociales, económicos, ambientales y de innovación.
+3;CL2;ND1;Reconoce técnicas, métodos y/o herramientas de investigación propios de las ciencias de la ingeniería, que permitan resolver problemas disciplinares. 
+4;CL2;ND2;Utiliza métodos y/o herramientas de investigación propios de las ciencias de la ingeniería que le permitan proponer soluciones a problemas disciplinares.
+5;CE1;ND1;Domina  herramientas básicas de la Matemática Aplicada para resolver problemas  simplificados de ciencias o ingeniería. 
+6;CE1;ND2;Aplica modelos y métodos avanzados de la  Matemática Aplicada para resolver problemas delimitados de ingeniería, ciencias y tecnología.
+7;CE1;ND3;Formula modelos y aplica métodos avanzados de la Matemática para resolver problemas complejos de ingeniería, ciencias y tecnología.
+8;CE2;ND1;Utiliza técnicas de matemáticas básicas y computacionales  para resolver problemas simplificados de ciencias o ingeniería. 
+9;CE2;ND2;Selecciona e implementa técnicas matemáticas y computacionales, para resolver problemas delimitados de ingeniería, ciencias y tecnología.
+10;CE2;ND3;Diseña, planifica y valida soluciones a problemas complejos de ingeniería, ciencias y tecnología, en base a herramientas avanzadas de matemática aplicada y computación.
+11;CG1;ND1;Emplea de forma autorregulada estrategias de aprendizaje y herramientas de búsqueda y gestión del conocimiento, según sus necesidades, para la solución de desafíos académicos.
+12;CG1;ND2;"Desarrolla procesos reflexivos en torno a prácticas propias y observadas, explorando nuevas áreas de conocimiento a partir de las necesidades, debilidades  o
+problemáticas detectadas en su entorno sociocultural y profesional."
+13;CG1;ND3;Mejora continuamente sus habilidades profesionales y de investigación a partir de un aprendizaje autorregulado y con pensamiento crítico, lo que le permite generar soluciones innovadoras pertinentes según sus contextos de desempeño.
+14;CG2;ND1;Integra equipos activamente, ejecutando tareas académicas con responsabilidad y oportunidad, para el abordaje y resolución colaborativa de problemáticas y desafíos propios de la vida universitaria.
+15;CG2;ND2;Desarrolla en equipo propuestas consensuadas para la resolución de problemas en diversos contextos académicos y socioculturales.
+16;CG2;ND3;Colabora en  equipos multidisciplinarios asumiendo  diversos roles, liderando tareas y soluciones en entornos complejos en pos de un objetivo común.
+17;CG3;ND1;Propone soluciones a dilemas del ámbito sociocultural y disciplinar, desde un enfoque de género, derechos humanos, diversidad e inclusión, considerando las consecuencias en la toma de decisiones, para la actuación ética en el entorno académico y social.
+18;CG3;ND2;Demuestra comportamientos éticos asociados a la responsabilidad ciudadana en contextos académicos y de vinculación con el medio, para el desarrollo de proyectos  que contemplan en su diseño y ejecución la perspectiva de género y los enfoques de derechos humanos, diversidad e inclusión.
+19;CG3;ND3;Actúa en forma ética, demostrando un comportamiento inclusivo y con responsabilidad ciudadana, desde un enfoque de género y derechos humanos, respetuoso de la diversidad, para un desempeño profesional de excelencia que considera el impacto sociocultural, económico y medioambiental.
+20;CG4;ND1;Utiliza herramientas de expresión oral y escrita para la comunicación efectiva de sus ideas, opiniones y emociones en contextos académicos
+21;CG4;ND2;Desarrolla habilidades de comunicación interpersonal en el trabajo académico y en distintos contextos socioculturales
+22;CG4;ND3;Actúa de manera eficaz en contextos comunicativos a nivel nacional e internacional

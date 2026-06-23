@@ -99,7 +99,7 @@ def _obtener_datos():
     """).fetchall()
 
     tribs = set(conn.execute(
-        "SELECT asignatura_id, ra_id FROM asignatura_ra"
+        "SELECT asignatura_id, ra_id FROM tributaciones"
     ).fetchall())
 
     conn.close()

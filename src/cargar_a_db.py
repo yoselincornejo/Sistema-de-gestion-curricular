@@ -122,7 +122,7 @@ def limpiar_asignatura_datos(conn, asig_id):
     for tabla in ["unidades", "metodologias", "evaluaciones",
                   "bibliografia", "linkografia", "responsables"]:
         conn.execute(f"DELETE FROM {tabla} WHERE asignatura_id=?", (asig_id,))
-    conn.execute("DELETE FROM asignatura_ra WHERE asignatura_id=?", (asig_id,))
+    conn.execute("DELETE FROM tributaciones WHERE asignatura_id=?", (asig_id,))
 
 
 def cargar_programa(conn, programa):
@@ -216,7 +216,7 @@ def cargar_programa(conn, programa):
             )
 
     # 5. Unidades + tributación
-    ras_de_la_asignatura = set()  # para evitar duplicados en asignatura_ra
+    ras_de_la_asignatura = set()  # para evitar duplicados en tributaciones
     for i, u in enumerate(programa.get("unidades", [])):
         titulo = u.get("titulo", "")
         contenidos = u.get("contenidos", "")
@@ -233,13 +233,13 @@ def cargar_programa(conn, programa):
         for cod_ra in u.get("ra_codes", []):
             ras_de_la_asignatura.add(cod_ra)
 
-    # 6. Tributación (asignatura_ra)
+    # 6. Tributación (tributaciones)
     archivo_origen = programa.get("archivo", "")
     for cod_ra in ras_de_la_asignatura:
         ra_id = obtener_o_crear_ra(conn, cod_ra, archivo_origen)
         if ra_id:
             conn.execute(
-                "INSERT OR IGNORE INTO asignatura_ra (asignatura_id, ra_id) VALUES (?, ?)",
+                "INSERT OR IGNORE INTO tributaciones (asignatura_id, ra_id) VALUES (?, ?)",
                 (asig_id, ra_id)
             )
 

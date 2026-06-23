@@ -1,0 +1,66 @@
+﻿id;competencia;nivel_dominio;codigo_ra;descripcion
+1;CL1;ND1;RA1;Aplica conocimientos, métodos y herramientas de las ciencias básicas en situaciones simplificadas de ingeniería, para fortalecer el pensamiento lógico matemático.
+2;CL1;ND1;RA2;Resuelve problemas de nivel inicial usando técnica de las ciencias básicas para comprender fenómenos en el ámbito de la ingeniería.
+3;CL1;ND2;RA1;Aplica conocimientos, métodos y herramientas de las ciencias de la ingeniería incorporando aspectos sociales, económicos, ambientales o de innovación para resolver problemas de ciencias de la ingeniería.
+4;CL1;ND2;RA2;Propone alternativas de solución incorporando aspectos sociales, económicos, ambientales o de innovación para dar respuesta a problemáticas del área disciplinar.
+5;CL2;ND1;RA1;Utiliza conocimientos basados en investigaciones o métodos de investigación, para alcanzar conclusiones válidas.
+6;CL2;ND2;RA1;Analiza problemas complejos de ingeniería, utilizando métodos o herramientas de investigación para alcanzar conclusiones basadas en las ciencias de la ingeniería.
+7;CL2;ND2;RA2;Aplica técnicas, métodos o herramientas de investigación propias de las ciencias de la ingeniería para resolver problemas disciplinares.
+8;CE1;ND1; RA1;Maneja herramientas de Matemática, Física y Química, en un nivel básico, para resolver problemas de ciencias e ingeniería.
+9;CE1;ND1; RA2;Utiliza lógica y argumentación matemática, en diferentes contextos, para resolver problemas simplificados de ciencias e ingeniería.
+10;CE1;ND1; RA3;Reconoce estructuras matemáticas, considerando sus propiedades, para resolver problemas simplificados de ciencias e ingeniería.
+11;CE1;ND1; RA4;Identifica técnicas de Matemática Aplicada en un nivel básico, para resolver problemas simplificados de ciencias e ingeniería.
+12;CE1;ND2; RA1;Demuestra resultados más avanzados en matemáticas, en diferentes contextos, para resolver problemas delimitados de ingeniería, ciencias y tecnología.
+13;CE1;ND2; RA2;Plantea ecuaciones diferenciales (ordinarias o en derivadas parciales) a partir de un problema físico delimitado, para lograr su resolución.
+14;CE1;ND2; RA3;Formula problemas de optimización, en contextos generales y en aplicaciones reales, para ayudar a su solución.
+15;CE1;ND2; RA4;Aplica conceptos y resultados fundamentales, de análisis avanzado, para resolver problemas delimitados de ingeniería, ciencias y tecnología.
+16;CE1;ND2; RA5;Aplica métodos de Matemática Aplicada, básicos y avanzados, para resolver problemas combinatoriales teóricos y aplicados​.
+17;CE1;ND2; RA6;Analiza modelos matemáticos y estadísticos, involucrando incertidumbre y datos, para solucionar problemas o explicar fenómenos.
+18;CE1;ND2; RA7;Maneja herramientas avanzadas de la Física, en contextos generales y en aplicaciones reales, para solucionar problemasdelimitados de ingeniería, ciencias y tecnología.
+19;CE1;ND3; RA1;Fundamenta los modelos y estrategias usados en la resolución del problema, para su comprensión y resolución.
+20;CE1;ND3; RA2;Formula modelos y aplica métodos matemáticos, avanzados en la resolución de ecuaciones en derivadas parciales para problemas físicos complejos.
+21;CE1;ND3; RA3;Formula modelos y aplica métodos probabilísticos y estadísticos, avanzados e involucrando incertidumbre, para el estudio de fenómenos.
+22;CE2;ND1; RA1;Maneja software matemáticos, estadísticos y lenguaje de programación, en un nivel básico, para resolver problemas simplificados de ingeniería.
+23;CE2;ND1; RA2;Diseña algoritmos y análisis de costo computacional, aplicando principios básicos, para resolver problemas simplificados de ingeniería.
+24;CE2;ND1; RA3;Plantea problemas simplificados de ingeniería, matemáticamente, para facilitar su interpretación y solución.
+25;CE2;ND1; RA4;Aplica técnicas matemáticas y computacionales, en un nivel básico, para resolver problemas simplificados de ingeniería.
+26;CE2;ND2; RA1;Implementa modelos matemáticos y estadísticos, computacionalmente, involucrando incertidumbre y datos, para simular e investigar problemas y fenómenos.
+27;CE2;ND2; RA2;​Usa herramientas ​matemáticas en un nivel avanzado, para diseñar algoritmos y analizar el coste computacional de los mismos.
+28;CE2;ND2; RA3;Aplica métodos matemáticos en un nivel avanzado, para la resolución numérica de problemas de álgebra lineal y de análisis.
+29;CE2;ND2; RA4;Implementa métodos numéricos, computacionalmente, para simular e investigar soluciones de edp y problemas de optimización.
+30;CE2;ND3; RA1;Genera soluciones, en contextos reales y multidisciplinarios, de manera autónoma y colaborativa, a problemas de ingeniería, ciencias y tecnología.
+31;CE2;ND3; RA2;Planifica el proceso de implementación de la solución propuesta, en base a herramientas avanzadas de matemáticas, para solucionar problemas complejos
+32;CE2;ND3; RA3;Valida procesos y métodos optimizándolos, para lograr la eficiencia de la solución propuesta.
+33;CE2;ND3; RA4;Fundamenta la factibilidad de la resolución del problema propuesto, indicando su complejidad, para lograr la eficiencia de la solución.
+34;CE2;ND3; RA5;Simula métodos matemáticos avanzados en la resolución de ecuaciones en derivadas parciales, para problemas físicos complejos.
+35;CE2;ND3; RA6;Implementa modelos probabilísticos y estadísticos, a través de su diseño y análisis, para la ingeniería financiera, la energía, biología y gestión de recursos, entre otros.
+36;CG1;ND1;D1;Utiliza herramientas de búsqueda, actualización y gestión de la información, generando respuestas actualizadas y atingentes a problemáticas coyunturales.
+37;CG1;ND1;D2;Explora y usa estrategias de aprendizaje y métodos de estudio pertinentes y eficientes para enfrentar los retos académicos de la vida universitaria.
+38;CG1;ND2;D1;Reflexiona sobre su propio desempeño en el abordaje de las distintas problemáticas de su entorno, a fin de distinguir procedimientos idóneos para los requerimientos externos.
+39;CG1;ND2;D2;Analiza diversos escenarios en contextos académicos prácticos a fin de dar respuestas oportunas y viables a retos que impone el medio en que se desenvuelve.
+40;CG1;ND3;D1;Muestra un desempeño profesional innovador, integrando habilidades, conocimientos y experiencias de su área disciplinar.
+41;CG1;ND3;D2;Genera nuevas ideas para la producción de soluciones prácticas y transformadoras en su área disciplinar.
+42;CG2;ND1;D1;Participa en los espacios de encuentro acordados por el grupo, compartiendo información y sus experiencias, para el cumplimiento de los fines del equipo.
+43;CG2;ND1;D2;Asume responsablemente las tareas asignadas dentro del equipo, para la concreción de metas grupales.
+44;CG2;ND1;D3;Adapta su desempeño a diversos roles definidos por el equipo, para colaborar en el avance de las tareas asumidas por el equipo.
+45;CG2;ND2;D1;Expone al equipo sus propuestas en forma organizada, considerando diversos escenarios y puntos de vista, para la definición de acuerdos grupales.
+46;CG2;ND2;D2;Analiza en equipo la viabilidad de soluciones propuestas, para la selección grupal de las respuestas más idóneas.
+47;CG2;ND2;D3;Colabora en la generación de climas grupales cooperativos, demostrando respeto por otras ideas y propuestas, para el cumplimiento de objetivos del equipo.
+48;CG2;ND3;D1;Desarrolla tareas y soluciones en equipos inter y multidisciplinarios, en forma planificada, para favorecer el cumplimiento de objetivos en entornos complejos.
+49;CG2;ND3;D2;Favorece la comunicación efectiva, el reparto equilibrado de tareas y la cohesión del equipo, para contribuir a la consolidación y desarrollo del grupo.
+50;CG3;ND1;D1;Reconoce los principios y/o valores que están a la base de comportamientos ético- sociales y propios de su disciplina, desde un enfoque de género, derechos humanos, diversidad e inclusión.
+51;CG3;ND1;D2;Distingue los comportamientos éticos, para visibilizar sus consecuencias en la esfera social y disciplinar, desde un enfoque de género, derechos humanos, diversidad e inclusión.
+52;CG3;ND1;D3;Plantea soluciones a dilemas ético-sociales y disciplinares, para contribuir al debate grupal, considerando las consecuencias en la toma de decisiones, desde un enfoque de género, derechos humanos, diversidad e inclusión.
+53;CG3;ND2;D1;Implementa actividades en vinculación con el medio, demostrando comportamientos éticos, contemplando las necesidades e intereses de la comunidad local y/o regional, desde un enfoque de género, derechos humanos, diversidad e inclusión.
+54;CG3;ND2;D2;Reflexiona de manera permanente sobre su comportamiento ético y respetuoso de los derechos humanos, en el trabajo de vinculación con el medio, desde un enfoque de género, derechos humanos, diversidad e inclusión.
+55;CG3;ND2;D3;Desarrolla proyectos de vinculación con el medio, contemplando en su diseño y ejecución un comportamiento ético, la perspectiva de género y el enfoque de derechos humanos, diversidad e inclusión.
+56;CG3;ND3;D1;Ejecuta propuestas de intervención de manera colaborativa con su equipo de trabajo para solucionar problemáticas sociales, económicas y/o medioambientales, respondiendo a intereses de la comunidad local y/o regional.
+57;CG3;ND3;D2;Evalúa procesos de intervención junto a los actores involucrados, considerando el impacto social, económico y medioambiental para contribuir al desarrollo integral de la comunidad local y/o regional.
+58;CG4;ND1;D1;Emplea correctamente el lenguaje escrito para la construcción de documentos académicos, en distintos contextos académicos.
+59;CG4;ND1;D2;Comprende textos relacionados con temáticas disciplinares, escritos en lengua materna y en un segundo idioma, extrayendo información relevante para la realización de actividades académicas.
+60;CG4;ND1;D3;Expresa correctamente opiniones, ideas y experiencias para el abordaje de temas y tareas relacionadas con actividades propias de la vida universitaria.
+61;CG4;ND2;D1;Manifiesta con claridad las propias necesidades y requerimientos en el trabajo colaborativo en contextos académicos y socioculturales.
+62;CG4;ND2;D2;Escucha atentamente a los distintos actores involucrados en el trabajo académico y en diversos contextos socioculturales.
+63;CG4;ND3;D1;Escucha atentamente a los distintos actores involucrados en el trabajo profesional en contextos nacionales e internacionales
+64;CG4;ND3;D2;Empatiza ante las necesidades y requerimientos que se expresan en el trabajo profesional en contextos nacionales e internacionales
+65;CG4;ND3;D3;Expresa con claridad y respeto las propias necesidades y requerimientos en el trabajo profesional en contextos nacionales e internacionales

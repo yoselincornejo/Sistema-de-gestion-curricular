@@ -139,7 +139,7 @@ def cargar_todos():
     print("Con descripción:", conn2.execute("SELECT COUNT(*) FROM asignaturas WHERE descripcion IS NOT NULL AND descripcion != ''").fetchone()[0])
     print("Unidades con indicador_logro:", conn2.execute("SELECT COUNT(*) FROM unidades WHERE indicador_logro IS NOT NULL AND indicador_logro != ''").fetchone()[0])
     print("Bibliografía:", conn2.execute("SELECT COUNT(*) FROM bibliografia").fetchone()[0])
-    print("Tributaciones:", conn2.execute("SELECT COUNT(*) FROM asignatura_ra").fetchone()[0])
+    print("Tributaciones:", conn2.execute("SELECT COUNT(*) FROM tributaciones").fetchone()[0])
     conn2.close()
 
 
