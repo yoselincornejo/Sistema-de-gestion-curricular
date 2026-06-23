@@ -1,12 +1,21 @@
 """
-parse_word_to_db.py — Parsea los 53 documentos Word e inserta en sistema.db.
+parse_word_to_db.py — Extrae datos de los .docx e inserta en sistema.db.
+
+Enfoque heurístico:
+  1. Carga desde la BD el diccionario de códigos válidos (competencias,
+     niveles_dominio, resultados_aprendizaje).
+  2. Extrae TODO el texto del documento (párrafos + cada celda de cada tabla).
+  3. Usa regex para detectar menciones a esos códigos → tributaciones.
+  4. Cuarentena: si un archivo no produce código de asignatura ni tributaciones,
+     se escribe en 'revision_manual.txt' y NO se toca la BD.
 
 Uso:
     python3 src/parse_word_to_db.py            # procesa todos los .docx
-    python3 src/parse_word_to_db.py --dry-run  # parsea sin tocar la BD
+    python3 src/parse_word_to_db.py --dry-run  # solo muestra; no modifica BD
     python3 src/parse_word_to_db.py --file "data/programas/Semestre 1/MAT 111.docx"
+    python3 src/parse_word_to_db.py --verbose  # muestra cada RA encontrado
 
-La BD debe existir previamente (ejecutar init_db.py primero).
+La BD debe existir (ejecutar init_db.py primero).
 """
 
 import logging
@@ -17,37 +26,246 @@ from pathlib import Path
 from typing import Optional
 
 from docx import Document
-from docx.table import Table
 
 # ── Configuración ─────────────────────────────────────────────────────────────
 
-RUTA_DB       = Path("data/sistema.db")
-CARPETA_DOCS  = Path("data/programas")
-EXCLUIDOS     = {"IMAT 423"}   # Sistemas Dinámicos Continuos — excluir explícitamente
+RUTA_DB          = Path("data/sistema.db")
+CARPETA_DOCS     = Path("data/programas")
+LOG_REVISION     = Path("data/output/revision_manual.txt")
+LOG_PARSE        = Path("data/output/parse_word_to_db.log")
+EXCLUIDOS        = {"IMAT 423"}   # excluir explícitamente por nombre
+
+Path("data/output").mkdir(parents=True, exist_ok=True)
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(levelname)-8s %(message)s",
     handlers=[
         logging.StreamHandler(sys.stdout),
-        logging.FileHandler("data/output/parse_word_to_db.log", mode="w", encoding="utf-8"),
+        logging.FileHandler(LOG_PARSE, mode="w", encoding="utf-8"),
     ],
 )
 log = logging.getLogger(__name__)
+VERBOSE = "--verbose" in sys.argv
 
-# ── Helpers de texto ──────────────────────────────────────────────────────────
 
-def _txt(cell) -> str:
-    return cell.text.strip()
+# ══════════════════════════════════════════════════════════════════════════════
+#  PASO 1 — Diccionario de códigos válidos desde la BD
+# ══════════════════════════════════════════════════════════════════════════════
 
-def _txt_t(tabla: Table, fila: int, col: int) -> str:
+class DiccionarioCodigos:
+    """
+    Carga desde sistema.db todos los códigos válidos y construye el índice
+    de búsqueda: texto_en_docx → ra_id en la BD.
+    """
+
+    def __init__(self, conn: sqlite3.Connection):
+        # Competencias válidas: {'CL1', 'CE2', 'CG4', ...}
+        self.competencias: set[str] = {
+            r[0] for r in conn.execute("SELECT codigo FROM competencias")
+        }
+
+        # Niveles de dominio válidos por competencia:
+        # {'CE1': {'ND1', 'ND2', 'ND3'}, ...}
+        self.niveles: dict[str, set[str]] = {}
+        for comp_cod, nd_cod in conn.execute(
+            """SELECT c.codigo, nd.codigo_nivel
+               FROM niveles_dominio nd JOIN competencias c ON c.id = nd.competencia_id"""
+        ):
+            self.niveles.setdefault(comp_cod, set()).add(nd_cod)
+
+        # Mapa completo: codigo_completo → id
+        # Incluye variantes con N-prefix y RA. para máxima compatibilidad
+        self.ra_por_codigo: dict[str, int] = {}
+        for ra_id, nd_id, cod_ra, cod_completo in conn.execute(
+            """SELECT ra.id, ra.nivel_dominio_id, ra.codigo_ra, ra.codigo_completo
+               FROM resultados_aprendizaje ra"""
+        ):
+            # Forma canónica: "CE1, ND2, RA3"
+            self.ra_por_codigo[_normalizar(cod_completo)] = ra_id
+
+            # Descomponer para generar variantes
+            m = re.match(r"([A-Z]{1,3}\d+),\s*(ND\d+),\s*(.+)", cod_completo)
+            if not m:
+                continue
+            comp, nd, ra = m.group(1), m.group(2), m.group(3)
+            num_nd = nd[2:]  # "ND2" → "2"
+
+            # Variantes N-prefix: "CE1, N2, RA3"
+            self.ra_por_codigo[_normalizar(f"{comp}, N{num_nd}, {ra}")] = ra_id
+            # Sin nivel: "CE1, RA3" / "CE1, D1"
+            self.ra_por_codigo[_normalizar(f"{comp}, {ra}")] = ra_id
+            # Con punto: "CE1, ND2, RA.3"
+            if ra.startswith("RA"):
+                num = ra[2:]
+                self.ra_por_codigo[_normalizar(f"{comp}, {nd}, RA.{num}")] = ra_id
+                self.ra_por_codigo[_normalizar(f"{comp}, N{num_nd}, RA.{num}")] = ra_id
+                self.ra_por_codigo[_normalizar(f"{comp}, RA.{num}")] = ra_id
+            # DC-codes: algunos docs usan "DC1" en vez de "D1"
+            if ra.startswith("D"):
+                num = ra[1:]
+                self.ra_por_codigo[_normalizar(f"{comp}, {nd}, DC{num}")] = ra_id
+                self.ra_por_codigo[_normalizar(f"{comp}, N{num_nd}, DC{num}")] = ra_id
+                self.ra_por_codigo[_normalizar(f"{comp}, DC{num}")] = ra_id
+
+        # Patron regex que detecta CUALQUIER mención a un código tipo RA
+        # Construido con las competencias reales: CL1|CE2|CG4|...
+        comp_alternativa = "|".join(sorted(self.competencias, key=len, reverse=True))
+        self._PATRON_RA = re.compile(
+            rf"(?P<comp>{comp_alternativa})"             # competencia: CL1, CE2…
+            r"(?:\s*[-,]\s*"                             # separador , o -
+            r"(?P<nivel>ND?\s*\d+|DC?\s*\d+))?"         # nivel ND2 / N2 / D1 / DC1 (opcional)
+            r"\s*[-,]\s*"                               # separador
+            r"(?P<ra>RA\.?\s*\d+|DC?\s*\d+)",           # RA1 / RA.1 / D1 / DC1
+            re.IGNORECASE,
+        )
+
+    def buscar_ra_id(self, raw: str) -> Optional[int]:
+        """Normaliza un fragmento capturado y lo busca en el índice."""
+        clave = _normalizar(raw)
+        return self.ra_por_codigo.get(clave)
+
+    def extraer_ra_ids_de_texto(self, texto: str) -> set[int]:
+        """Aplica el patrón sobre un bloque de texto y devuelve ra_ids encontrados."""
+        encontrados = set()
+        for m in self._PATRON_RA.finditer(texto):
+            raw = m.group(0)
+            ra_id = self.buscar_ra_id(raw)
+            if ra_id:
+                encontrados.add(ra_id)
+            elif VERBOSE:
+                log.debug("  sin match en BD: %r", raw)
+        return encontrados
+
+
+def _normalizar(s: str) -> str:
+    """Quita espacios extras, puntos finales, y pasa a mayúsculas para comparar."""
+    s = re.sub(r"\s+", " ", s).strip().rstrip(".")
+    # Quitar espacio interior en "RA. 1" → "RA.1", "D C1" → "DC1"
+    s = re.sub(r"(RA|DC?)\s*\.\s*(\d)", r"\1.\2", s, flags=re.IGNORECASE)
+    return s.upper()
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  PASO 2 — Extracción de texto completo del documento
+# ══════════════════════════════════════════════════════════════════════════════
+
+def extraer_texto_completo(doc: Document) -> str:
+    """
+    Concatena TODOS los párrafos y TODAS las celdas de TODAS las tablas.
+    Se usa para la búsqueda heurística de códigos RA.
+    """
+    partes = []
+
+    # Párrafos directos del documento
+    for p in doc.paragraphs:
+        t = p.text.strip()
+        if t:
+            partes.append(t)
+
+    # Cada celda de cada tabla (sin importar profundidad ni estructura)
+    for tabla in doc.tables:
+        for fila in tabla.rows:
+            for celda in fila.cells:
+                t = celda.text.strip()
+                if t:
+                    partes.append(t)
+
+    return "\n".join(partes)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  PASO 3 — Extracción de metadatos principales
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Patrones de código de asignatura: "MAT 111", "IMAT211", "CFG 111", "PRO 121"
+_PATRON_CODIGO_ASIG = re.compile(
+    r"\b([A-Z]{2,5}\s*\d{3}[A-Z]?)\b"
+)
+
+# Palabras clave que etiquetan el código en el documento
+_PATRON_ETIQUETA_CODIGO = re.compile(
+    r"(?:código[s]?|code|asignatura|curso)\s*[:\-]?\s*([A-Z]{2,5}\s*\d{3}[A-Z]?)",
+    re.IGNORECASE,
+)
+
+def _extraer_codigo_y_nombre(doc: Document, texto_completo: str) -> tuple[str, str]:
+    """
+    Busca el código y nombre de la asignatura.
+    Estrategia:
+      1. Tabla 0, fila 1 → columnas típicas "Nombre / Código"
+      2. Tabla con 2 cols y cabecera "Nombre"
+      3. Búsqueda de etiquetas textuales ("Código: MAT 111")
+      4. Primera mención de código alfanumérico en el texto
+    """
+    codigo = ""
+    nombre = ""
+
+    # Estrategia 1: Tabla 0 estructura estándar (8 filas × 6 cols)
+    if doc.tables:
+        t0 = doc.tables[0]
+        try:
+            fila_nombre = t0.rows[1]
+            cs = [c.text.strip() for c in fila_nombre.cells]
+            if len(cs) >= 5:
+                cand_nombre = cs[1]
+                cand_codigo = cs[4]
+                if _PATRON_CODIGO_ASIG.match(cand_codigo):
+                    nombre = cand_nombre
+                    codigo = cand_codigo
+        except IndexError:
+            pass
+
+    # Estrategia 2: tabla con cabecera "Nombre" en columna 0
+    if not codigo:
+        for t in doc.tables:
+            rows = t.rows
+            if len(rows) < 2 or len(t.columns) < 2:
+                continue
+            h = rows[0].cells[0].text.strip().lower()
+            if "nombre" in h:
+                try:
+                    nombre_cand = rows[1].cells[1].text.strip()
+                    # Buscar código en la fila siguiente
+                    if len(rows) > 2:
+                        cod_cand = rows[2].cells[1].text.strip()
+                        if _PATRON_CODIGO_ASIG.match(cod_cand):
+                            nombre = nombre_cand
+                            codigo = cod_cand
+                            break
+                except IndexError:
+                    pass
+
+    # Estrategia 3: etiqueta textual
+    if not codigo:
+        m = _PATRON_ETIQUETA_CODIGO.search(texto_completo)
+        if m:
+            codigo = m.group(1).strip()
+
+    # Estrategia 4: primera mención de código en el texto
+    if not codigo:
+        m = _PATRON_CODIGO_ASIG.search(texto_completo)
+        if m:
+            codigo = m.group(1).strip()
+
+    # Limpiar espacios internos del código: "MAT 111" → "MAT 111" (mantener)
+    codigo = re.sub(r"\s+", " ", codigo).strip()
+
+    return codigo, nombre
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  PASO 4 — Extracción de metadatos secundarios
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _txt_t(t, fila: int, col: int) -> str:
     try:
-        return tabla.rows[fila].cells[col].text.strip()
+        return t.rows[fila].cells[col].text.strip()
     except IndexError:
         return ""
 
 def _to_float(s: str) -> Optional[float]:
-    s = s.replace(",", ".").strip()
+    s = re.sub(r"[^\d,\.]", "", s).replace(",", ".")
     try:
         return float(s)
     except (ValueError, TypeError):
@@ -60,256 +278,197 @@ def _to_int(s: str) -> Optional[int]:
         return None
 
 def _semestre_desde_nivel(nivel: str) -> Optional[int]:
-    """'I Semestre del 1° Año' → 1, 'II Semestre del 2° Año' → 4, etc."""
-    numeros = {"I": 1, "II": 2, "III": 3, "IV": 4, "V": 5,
-               "VI": 6, "VII": 7, "VIII": 8, "IX": 9, "X": 10}
-    m = re.search(r"(\d+)[°º]\s*Año", nivel)
-    anio = int(m.group(1)) if m else None
-    m2 = re.match(r"(I{1,3}V?|VI{0,3}|IX|X)\s+Semestre", nivel)
-    sem_en_anio = numeros.get(m2.group(1), 1) if m2 else 1
+    rom = {"I":1,"II":2,"III":3,"IV":4,"V":5,"VI":6,"VII":7,"VIII":8,"IX":9,"X":10}
+    m_anio = re.search(r"(\d+)[°º]\s*Año", nivel)
+    m_sem  = re.match(r"(I{1,3}V?|VI{0,3}|IX|X)\s+Semestre", nivel)
+    anio      = int(m_anio.group(1)) if m_anio else None
+    sem_en_anio = rom.get(m_sem.group(1), 1) if m_sem else 1
     if anio:
         return (anio - 1) * 2 + sem_en_anio
     return None
 
-# ── Parser principal ──────────────────────────────────────────────────────────
+def extraer_identificacion(doc: Document, texto_completo: str, codigo: str, nombre: str) -> dict:
+    """Extrae metadatos numéricos y de texto de la tabla de identificación."""
+    data = {
+        "codigo": codigo, "nombre": nombre,
+        "facultad": "", "carrera": "", "nivel": "",
+        "duracion": "", "requisitos": "", "semestre": None,
+        "horas_directa": None, "horas_autonoma": None,
+        "semanas": None, "creditos": None,
+    }
 
-class ParseError(Exception):
-    pass
-
-
-def parsear_tabla_identificacion(doc: Document, nombre_archivo: str) -> dict:
-    """
-    Extrae datos de la Tabla 0 (siempre primera tabla, 8 filas x 6 cols).
-    Estructura esperada:
-        F0: Facultad | val | | Carreras | val
-        F1: Nombre   | val | | Códigos  | val
-        F2: Nivel    | val | | Duración | val
-        F3: Requisito| val
-        F4-F6: encabezados horas
-        F7: docencia_directa | autonoma | total | semanas | total_hrs | creditos
-    """
     if not doc.tables:
-        raise ParseError("El documento no tiene tablas")
+        return data
 
-    t = doc.tables[0]
-    rows = t.rows
+    t0 = doc.tables[0]
+    try:
+        data["facultad"]  = _txt_t(t0, 0, 1)
+        data["carrera"]   = _txt_t(t0, 0, 4)
+        if not nombre:
+            data["nombre"] = _txt_t(t0, 1, 1)
+        data["nivel"]     = _txt_t(t0, 2, 1)
+        data["duracion"]  = _txt_t(t0, 2, 4)
+        data["requisitos"]= _txt_t(t0, 3, 1)
+        data["semestre"]  = _semestre_desde_nivel(data["nivel"])
 
-    if len(rows) < 4:
-        raise ParseError(f"Tabla 0 tiene solo {len(rows)} filas, esperadas ≥4")
-
-    data = {}
-
-    # Fila 0: Facultad / Carreras
-    data["facultad"] = _txt_t(t, 0, 1)
-    data["carrera"]  = _txt_t(t, 0, 4)
-
-    # Fila 1: Nombre / Código
-    data["nombre"] = _txt_t(t, 1, 1)
-    data["codigo"] = _txt_t(t, 1, 4)
-
-    # Fila 2: Nivel / Duración
-    data["nivel"]    = _txt_t(t, 2, 1)
-    data["duracion"] = _txt_t(t, 2, 4)
-    data["semestre"] = _semestre_desde_nivel(data["nivel"])
-
-    # Fila 3: Requisitos
-    data["requisitos"] = _txt_t(t, 3, 1)
-
-    # Última fila: valores numéricos de horas y créditos
-    fila_vals = rows[-1]
-    celdas = [_txt(c) for c in fila_vals.cells]
-    # Columnas: 0=docencia_directa, 1=autonoma, 2=total, 3=semanas, 4=total_hrs, 5=creditos
-    if len(celdas) >= 6:
-        data["horas_directa"]  = _to_float(celdas[0])
-        data["horas_autonoma"] = _to_float(celdas[1])
-        data["semanas"]        = _to_int(celdas[3])
-        data["creditos"]       = _to_int(celdas[5])
-    else:
-        log.warning("[%s] Fila de horas incompleta (%d celdas)", nombre_archivo, len(celdas))
-        data["horas_directa"] = data["horas_autonoma"] = data["semanas"] = data["creditos"] = None
+        # Última fila → horas y créditos
+        fila_vals = [c.text.strip() for c in t0.rows[-1].cells]
+        if len(fila_vals) >= 6:
+            data["horas_directa"]  = _to_float(fila_vals[0])
+            data["horas_autonoma"] = _to_float(fila_vals[1])
+            data["semanas"]        = _to_int(fila_vals[3])
+            data["creditos"]       = _to_int(fila_vals[5])
+    except (IndexError, AttributeError):
+        pass
 
     return data
 
 
-def _es_tabla_descripcion(t: Table) -> bool:
-    """Una tabla de descripción tiene 1 col y el texto empieza con 'La asignatura'."""
-    if len(t.columns) != 1:
-        return False
-    txt = _txt_t(t, 0, 0).lower()
-    return txt.startswith("la asignatura") or txt.startswith("esta asignatura aporta")
-
-
-def _es_tabla_ras_texto(t: Table) -> bool:
-    """Tabla con texto largo de RAs: 1 col, comienza con 'Al final'."""
-    if len(t.columns) != 1:
-        return False
-    return _txt_t(t, 0, 0).lower().startswith("al final")
-
-
-def _es_tabla_unidades(t: Table) -> bool:
-    """Tabla de unidades: 2 cols, cabecera contiene 'Resultado' o 'RA'."""
-    if len(t.columns) < 2:
-        return False
-    h = _txt_t(t, 0, 0).lower()
-    return "resultado" in h or "desempeño" in h or h.startswith("ra")
-
-
-def _es_tabla_metod(t: Table) -> bool:
-    """Tabla de metodologías: muchas celdas de checkboxes."""
-    if len(t.rows) < 2:
-        return False
-    h = _txt_t(t, 0, 0).lower()
-    return "basado" in h or "expositi" in h or "aprendizaje" in h or "taller" in h
-
-
-def _es_tabla_eval(t: Table) -> bool:
-    h = _txt_t(t, 0, 0).lower()
-    return "evaluaci" in h and "tipo" in h
-
-
-def _es_tabla_biblio(t: Table, tipo: str) -> bool:
-    h = _txt_t(t, 0, 0).lower()
-    if tipo == "basica":
-        return "bibliografía básica" in h or "bibliografia basica" in h
-    return "complementaria" in h
-
-
-def _es_tabla_linkografia(t: Table) -> bool:
-    h = _txt_t(t, 0, 0).lower()
-    return "tipo de documento" in h or "linkografía" in h or "linkografia" in h
-
-
-def _es_tabla_otros_recursos(t: Table) -> bool:
-    txt = _txt_t(t, 0, 0).lower()
-    return ("material" in txt or "recurso" in txt or "otro" in txt) and len(t.columns) == 1
-
-
-def _es_tabla_responsables(t: Table) -> bool:
-    h = _txt_t(t, 0, 0).lower()
-    return "responsable" in h
-
-
-# ── Extracción de secciones ───────────────────────────────────────────────────
-
 def extraer_descripcion(doc: Document) -> str:
-    """Busca tabla de descripción ('La asignatura…') y la concatena."""
+    """Recoge tablas de 1 col que empiezan con 'La asignatura…'."""
     partes = []
-    for t in doc.tables[1:]:
-        if _es_tabla_descripcion(t):
-            for row in t.rows:
-                txt = _txt(row.cells[0])
-                if txt:
-                    partes.append(txt)
+    for t in doc.tables:
+        if len(t.columns) == 1:
+            txt = t.rows[0].cells[0].text.strip()
+            if txt.lower().startswith("la asignatura") or \
+               txt.lower().startswith("esta asignatura aporta"):
+                for row in t.rows:
+                    p = row.cells[0].text.strip()
+                    if p:
+                        partes.append(p)
     return "\n".join(partes)
 
 
-RA_PATTERN = re.compile(
-    r"([A-Z]{1,3}\d+)"          # código competencia: CL1, CE2, CG3…
-    r"(?:\s*,\s*(?:ND?)\d+)?"   # nivel opcional: N2 o ND2
-    r"\s*,\s*"
-    r"(RA\.?\s*\d+|D\s*\d+)",   # código RA o D
-    re.IGNORECASE
-)
-
-def _normalizar_codigo_ra(raw: str) -> str:
-    """'CL1,N2, RA.2' → 'CL1, ND2, RA2' | 'CG1, N2, RA1' → 'CG1, ND2, D1'"""
-    raw = re.sub(r"\s+", " ", raw).strip()
-    m = re.match(
-        r"([A-Z]{1,3}\d+)"
-        r"(?:\s*,\s*(ND?)\s*(\d+))?"
-        r"\s*,\s*(RA\.?\s*\d+|D\s*\d+)",
-        raw, re.IGNORECASE
-    )
-    if not m:
-        return raw
-    cod_comp = m.group(1).upper()
-    nd_prefix = (m.group(2) or "").upper()
-    nd_num    = m.group(3) or ""
-    cod_ra    = re.sub(r"[\s\.]", "", m.group(4)).upper()  # RA.2 → RA2, D 1 → D1
-
-    if nd_num:
-        nivel = f"ND{nd_num}"
-    else:
-        nivel = None
-
-    # CG competencias usan D-codes; si el doc dice RA convertir a D
-    if cod_comp.startswith("CG") and cod_ra.startswith("RA"):
-        cod_ra = "D" + cod_ra[2:]
-
-    partes = [cod_comp]
-    if nivel:
-        partes.append(nivel)
-    partes.append(cod_ra)
-    return ", ".join(partes)
-
-
-def extraer_codigos_ra(doc: Document) -> list[str]:
-    """
-    Recoge todos los códigos RA del documento.
-    Estrategia: busca en tablas de texto libre (1 col con 'Al final…')
-    y en la primera columna de tablas de unidades.
-    """
-    codigos = set()
-
-    for t in doc.tables:
-        texto_completo = "\n".join(
-            c.text for row in t.rows for c in row.cells
-        )
-        for m in RA_PATTERN.finditer(texto_completo):
-            raw = m.group(0)
-            cod = _normalizar_codigo_ra(raw)
-            codigos.add(cod)
-
-    return sorted(codigos)
-
-
-def extraer_unidades(doc: Document, nombre_archivo: str) -> list[dict]:
-    """
-    Extrae unidades desde la tabla de 2-3 columnas con cabecera 'Resultado…'.
-    Columnas: col0=RA/Desempeño | col1=Contenidos | col2=Indicador (opcional)
-    """
+def extraer_unidades(doc: Document) -> list[dict]:
     unidades = []
     for t in doc.tables:
-        if not _es_tabla_unidades(t):
+        if len(t.columns) < 2:
             continue
-        for i, row in enumerate(t.rows[1:], start=1):
+        h0 = t.rows[0].cells[0].text.strip().lower()
+        h1 = t.rows[0].cells[1].text.strip().lower() if len(t.columns) > 1 else ""
+        if not ("resultado" in h0 or "desempeño" in h0 or "ra" == h0[:2] or
+                "unidad" in h1 or "contenido" in h1):
+            continue
+        for i, row in enumerate(t.rows[1:], 1):
             cells = row.cells
-            if len(cells) < 2:
-                continue
-            contenidos = _txt(cells[1]) if len(cells) > 1 else ""
-            indicador  = _txt(cells[2]) if len(cells) > 2 else ""
-
+            contenidos   = cells[1].text.strip() if len(cells) > 1 else ""
+            indicador    = cells[2].text.strip() if len(cells) > 2 else ""
             if not contenidos:
                 continue
-
-            num = None
             m = re.search(r"Unidad\s+(\d+|[IVX]+)", contenidos, re.IGNORECASE)
+            num = None
             if m:
                 raw = m.group(1)
-                if raw.isdigit():
-                    num = int(raw)
-                else:
-                    rom = {"I":1,"II":2,"III":3,"IV":4,"V":5,"VI":6,"VII":7,"VIII":8}
-                    num = rom.get(raw.upper())
-
-            nombre_u = contenidos[:100]
+                num = int(raw) if raw.isdigit() else \
+                    {"I":1,"II":2,"III":3,"IV":4,"V":5,"VI":6,"VII":7,"VIII":8}.get(raw.upper())
             unidades.append({
                 "orden": num or i,
-                "nombre": nombre_u,
+                "nombre": contenidos[:100],
                 "contenidos": contenidos,
                 "indicador_logro": indicador,
             })
     return unidades
 
 
+def _parsear_biblio_tabla(t) -> list[dict]:
+    entradas = []
+    for row in t.rows[1:]:
+        cs = [c.text.strip() for c in row.cells]
+        if len(cs) >= 7:
+            n, autor, titulo, editorial, anio, isbn, ej = cs[:7]
+        elif len(cs) >= 4:
+            n, autor, titulo, editorial = cs[:4]
+            anio = isbn = ej = ""
+        elif len(cs) >= 2:
+            n, autor, titulo = "", cs[0], cs[1]
+            editorial = anio = isbn = ej = ""
+        else:
+            continue
+        if titulo or autor:
+            entradas.append({"numero":n,"autor":autor,"titulo":titulo,
+                             "editorial":editorial,"anio":anio,"isbn":isbn,"ejemplares":ej})
+    return entradas
+
+
+def extraer_bibliografia(doc: Document) -> tuple[list[dict], list[dict]]:
+    basica, compl = [], []
+    for t in doc.tables:
+        h = t.rows[0].cells[0].text.strip().lower()
+        if "básica" in h or "basica" in h:
+            basica.extend(_parsear_biblio_tabla(t))
+        elif "complementaria" in h:
+            compl.extend(_parsear_biblio_tabla(t))
+    return basica, compl
+
+
+def extraer_linkografia(doc: Document) -> list[dict]:
+    links = []
+    for t in doc.tables:
+        h = t.rows[0].cells[0].text.strip().lower()
+        if "tipo de documento" not in h and "linkograf" not in h:
+            continue
+        for row in t.rows[1:]:
+            cs = [c.text.strip() for c in row.cells]
+            if len(cs) >= 5:
+                links.append({"url": cs[4], "titulo_articulo": cs[2],
+                              "descripcion": f"{cs[0]} {cs[1]} {cs[3]}".strip()})
+            elif cs:
+                for url in re.findall(r"https?://\S+", cs[0]):
+                    links.append({"url": url, "titulo_articulo": "", "descripcion": cs[0][:200]})
+    # URLs en tablas de recursos libres (1 col)
+    for t in doc.tables:
+        if len(t.columns) != 1:
+            continue
+        txt = " ".join(c.text for row in t.rows for c in row.cells)
+        if re.search(r"https?://", txt):
+            for url in re.findall(r"https?://\S+", txt):
+                if not any(l["url"] == url for l in links):
+                    links.append({"url": url, "titulo_articulo": "", "descripcion": "recursos"})
+    return links
+
+
+def extraer_otros_recursos(doc: Document) -> str:
+    for t in doc.tables:
+        if len(t.columns) != 1:
+            continue
+        txt = t.rows[0].cells[0].text.strip()
+        lwr = txt.lower()
+        if "material" in lwr or "recurso" in lwr or "otro" in lwr:
+            return " ".join(
+                c.text.strip() for row in t.rows for c in row.cells if c.text.strip()
+            )
+    return ""
+
+
+def extraer_responsables(doc: Document) -> dict:
+    resp = {}
+    for t in doc.tables:
+        h = t.rows[0].cells[0].text.strip().lower()
+        if "responsable" not in h:
+            continue
+        for row in t.rows:
+            cs = [c.text.strip() for c in row.cells]
+            if len(cs) >= 2:
+                clave = cs[0].lower()
+                valor = cs[1]
+                if "docente" in clave:
+                    resp["docente_a_cargo"] = valor
+                elif "responsable" in clave:
+                    resp["responsable"] = valor
+                elif "versión" in clave or "version" in clave:
+                    resp["version"] = valor
+    return resp
+
+
 def extraer_metodologias(doc: Document) -> list[str]:
     metods = []
     for t in doc.tables:
-        if not _es_tabla_metod(t):
+        h = t.rows[0].cells[0].text.strip().lower()
+        if not ("basado" in h or "exposit" in h or "aprendizaje" in h or "taller" in h):
             continue
         for row in t.rows:
             for cell in row.cells:
-                txt = _txt(cell)
+                txt = cell.text.strip()
                 if txt and len(txt) > 4 and txt not in metods:
                     metods.append(txt)
     return metods
@@ -318,430 +477,294 @@ def extraer_metodologias(doc: Document) -> list[str]:
 def extraer_evaluaciones(doc: Document) -> list[dict]:
     evals = []
     for t in doc.tables:
-        if not _es_tabla_eval(t):
+        h = t.rows[0].cells[0].text.strip().lower()
+        if "evaluaci" not in h or "tipo" not in h:
             continue
         for row in t.rows[1:]:
             if len(row.cells) >= 2:
-                tipo = _txt(row.cells[0])
-                porc = _txt(row.cells[1])
+                tipo = row.cells[0].text.strip()
+                porc = row.cells[1].text.strip()
                 if tipo:
                     evals.append({"tipo": tipo, "porcentaje": porc})
     return evals
 
 
-def _parsear_biblio_tabla(t: Table) -> list[dict]:
-    """
-    Tabla de bibliografía con columnas:
-    Nº | Autor | Título | Editorial | Año | ISBN | Ejemplares
-    """
-    entradas = []
-    for row in t.rows[1:]:
-        cells = [_txt(c) for c in row.cells]
-        if len(cells) < 3:
-            continue
-        # Detectar si primera celda es número o autor
-        if len(cells) >= 7:
-            numero, autor, titulo, editorial, anio, isbn, ejemplares = cells[:7]
-        elif len(cells) >= 4:
-            numero, autor, titulo, editorial = cells[:4]
-            anio = isbn = ejemplares = ""
-        else:
-            numero = ""
-            autor  = cells[0] if len(cells) > 0 else ""
-            titulo = cells[1] if len(cells) > 1 else ""
-            editorial = anio = isbn = ejemplares = ""
+# ══════════════════════════════════════════════════════════════════════════════
+#  PASO 5 — Parseo completo de un documento
+# ══════════════════════════════════════════════════════════════════════════════
 
-        if not titulo and not autor:
-            continue
-        entradas.append({
-            "numero": numero, "autor": autor, "titulo": titulo,
-            "editorial": editorial, "anio": anio,
-            "isbn": isbn, "ejemplares": ejemplares,
-        })
-    return entradas
+class ParseError(Exception):
+    pass
 
 
-def extraer_bibliografia(doc: Document) -> tuple[list[dict], list[dict]]:
-    basica = []
-    complementaria = []
-    for t in doc.tables:
-        h = _txt_t(t, 0, 0).lower()
-        if "básica" in h or "basica" in h:
-            basica.extend(_parsear_biblio_tabla(t))
-        elif "complementaria" in h:
-            complementaria.extend(_parsear_biblio_tabla(t))
-    return basica, complementaria
-
-
-def extraer_linkografia(doc: Document, nombre_archivo: str) -> list[dict]:
-    links = []
-    for t in doc.tables:
-        if not _es_tabla_linkografia(t):
-            continue
-        for row in t.rows[1:]:
-            cells = [_txt(c) for c in row.cells]
-            if len(cells) >= 4:
-                tipo_doc = cells[0]
-                autor    = cells[1]
-                titulo   = cells[2]
-                anio     = cells[3]
-                url      = cells[4] if len(cells) > 4 else ""
-            elif len(cells) >= 1:
-                # tabla libre con URL en texto
-                texto = cells[0]
-                urls  = re.findall(r"https?://\S+", texto)
-                for u in urls:
-                    links.append({"url": u, "titulo_articulo": "", "descripcion": texto[:200]})
-                continue
-            else:
-                continue
-
-            if url or titulo:
-                links.append({
-                    "url": url,
-                    "titulo_articulo": titulo,
-                    "descripcion": f"{tipo_doc} {autor} {anio}".strip(),
-                })
-    # Tabla "otros recursos" con URL en texto libre
-    for t in doc.tables:
-        if _es_tabla_otros_recursos(t):
-            texto = "\n".join(c.text for row in t.rows for c in row.cells)
-            for url in re.findall(r"https?://\S+", texto):
-                if url not in [l["url"] for l in links]:
-                    links.append({"url": url, "titulo_articulo": "", "descripcion": "otros recursos"})
-    return links
-
-
-def extraer_otros_recursos(doc: Document) -> str:
-    for t in doc.tables:
-        if _es_tabla_otros_recursos(t):
-            return "\n".join(c.text.strip() for row in t.rows for c in row.cells if c.text.strip())
-    return ""
-
-
-def extraer_responsables(doc: Document) -> dict:
-    resp = {}
-    for t in doc.tables:
-        if _es_tabla_responsables(t):
-            for row in t.rows:
-                cells = [_txt(c) for c in row.cells]
-                if len(cells) >= 2:
-                    clave = cells[0].lower()
-                    valor = cells[1]
-                    if "docente" in clave:
-                        resp["docente_a_cargo"] = valor
-                    elif "responsable" in clave:
-                        resp["responsable"] = valor
-                    elif "versión" in clave or "version" in clave:
-                        resp["version"] = valor
-    return resp
-
-
-# ── Parseo completo de un documento ──────────────────────────────────────────
-
-def parsear_docx(ruta: Path) -> dict:
+def parsear_docx(ruta: Path, dicc: DiccionarioCodigos) -> dict:
     nombre = ruta.name
-    doc = Document(str(ruta))
+
+    try:
+        doc = Document(str(ruta))
+    except Exception as e:
+        raise ParseError(f"No se pudo abrir el archivo: {e}")
 
     if len(doc.tables) < 2:
         raise ParseError(f"Documento no estándar: solo {len(doc.tables)} tabla(s)")
 
-    ident = parsear_tabla_identificacion(doc, nombre)
+    # ── Texto completo (párrafos + celdas) ────────────────────────────────
+    texto_completo = extraer_texto_completo(doc)
 
-    if not ident.get("codigo"):
-        raise ParseError("No se encontró código de asignatura")
+    # ── Código y nombre ───────────────────────────────────────────────────
+    codigo, nombre_asig = _extraer_codigo_y_nombre(doc, texto_completo)
 
-    codigos_ra = extraer_codigos_ra(doc)
-    if not codigos_ra:
-        log.warning("[%s] No se encontraron códigos RA", nombre)
+    if not codigo:
+        raise ParseError("No se pudo determinar el código de la asignatura")
 
-    basica, complementaria = extraer_bibliografia(doc)
-    if not basica and not complementaria:
-        log.warning("[%s] Bibliografía vacía", nombre)
+    # ── RAs heurísticos ───────────────────────────────────────────────────
+    ra_ids = dicc.extraer_ra_ids_de_texto(texto_completo)
 
-    responsables = extraer_responsables(doc)
-    if not responsables:
-        log.warning("[%s] No se encontraron responsables", nombre)
+    if VERBOSE and ra_ids:
+        conn_tmp = sqlite3.connect(str(RUTA_DB))
+        for ra_id in sorted(ra_ids):
+            cod = conn_tmp.execute(
+                "SELECT codigo_completo FROM resultados_aprendizaje WHERE id=?", (ra_id,)
+            ).fetchone()
+            log.debug("  → RA encontrado: %s", cod[0] if cod else ra_id)
+        conn_tmp.close()
 
     return {
-        "archivo":          nombre,
-        "identificacion":   ident,
-        "descripcion":      extraer_descripcion(doc),
-        "codigos_ra":       codigos_ra,
-        "unidades":         extraer_unidades(doc, nombre),
-        "metodologias":     extraer_metodologias(doc),
-        "evaluaciones":     extraer_evaluaciones(doc),
-        "biblio_basica":    basica,
-        "biblio_compl":     complementaria,
-        "linkografia":      extraer_linkografia(doc, nombre),
-        "otros_recursos":   extraer_otros_recursos(doc),
-        "responsables":     responsables,
+        "archivo":       nombre,
+        "identificacion": extraer_identificacion(doc, texto_completo, codigo, nombre_asig),
+        "descripcion":   extraer_descripcion(doc),
+        "ra_ids":        ra_ids,               # set[int] — IDs directos de la BD
+        "unidades":      extraer_unidades(doc),
+        "metodologias":  extraer_metodologias(doc),
+        "evaluaciones":  extraer_evaluaciones(doc),
+        "biblio_basica": extraer_bibliografia(doc)[0],
+        "biblio_compl":  extraer_bibliografia(doc)[1],
+        "linkografia":   extraer_linkografia(doc),
+        "otros_recursos":extraer_otros_recursos(doc),
+        "responsables":  extraer_responsables(doc),
     }
 
 
-# ── Inserción en BD ───────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+#  PASO 6 — Inserción en BD
+# ══════════════════════════════════════════════════════════════════════════════
 
-def resolver_ra_id(conn: sqlite3.Connection, codigo: str) -> Optional[int]:
-    """Busca el RA en la BD por codigo_completo con varios intentos de normalización."""
-    r = conn.execute(
-        "SELECT id FROM resultados_aprendizaje WHERE codigo_completo = ?", (codigo,)
-    ).fetchone()
-    if r:
-        return r[0]
-
-    # Intentar sin espacios extra
-    codigo_limpio = re.sub(r"\s+", " ", codigo).strip()
-    r = conn.execute(
-        "SELECT id FROM resultados_aprendizaje WHERE TRIM(codigo_completo) = ?",
-        (codigo_limpio,)
-    ).fetchone()
-    return r[0] if r else None
-
-
-def insertar_programa(conn: sqlite3.Connection, data: dict, dry_run: bool = False) -> str:
+def insertar_programa(conn: sqlite3.Connection, data: dict):
     ident  = data["identificacion"]
-    codigo = ident.get("codigo", "").strip()
+    codigo = ident["codigo"].strip()
     nombre = ident.get("nombre", "").strip()
 
-    if not codigo:
-        return "sin_codigo"
+    conn.execute("""
+        INSERT INTO asignaturas
+          (codigo, nombre, semestre, nivel, duracion, tipo, facultad, carrera,
+           requisitos, horas_directa, horas_autonoma, semanas, creditos,
+           descripcion, otros_recursos, version, archivo_origen)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        ON CONFLICT(codigo) DO UPDATE SET
+          nombre         = excluded.nombre,
+          semestre       = excluded.semestre,
+          nivel          = excluded.nivel,
+          duracion       = excluded.duracion,
+          facultad       = excluded.facultad,
+          carrera        = excluded.carrera,
+          requisitos     = excluded.requisitos,
+          horas_directa  = excluded.horas_directa,
+          horas_autonoma = excluded.horas_autonoma,
+          semanas        = excluded.semanas,
+          creditos       = excluded.creditos,
+          descripcion    = excluded.descripcion,
+          otros_recursos = excluded.otros_recursos,
+          version        = excluded.version,
+          archivo_origen = excluded.archivo_origen
+    """, (
+        codigo, nombre,
+        ident.get("semestre"),       ident.get("nivel", ""),
+        ident.get("duracion", ""),   "disciplinar",
+        ident.get("facultad", ""),   ident.get("carrera", ""),
+        ident.get("requisitos", ""), ident.get("horas_directa"),
+        ident.get("horas_autonoma"), ident.get("semanas"),
+        ident.get("creditos"),       data.get("descripcion", ""),
+        data.get("otros_recursos",""),
+        data.get("responsables", {}).get("version", ""),
+        data.get("archivo", ""),
+    ))
 
-    if not dry_run:
-        # Upsert asignatura
-        conn.execute("""
-            INSERT INTO asignaturas
-              (codigo, nombre, semestre, nivel, duracion, tipo, facultad, carrera,
-               requisitos, horas_directa, horas_autonoma, semanas, creditos,
-               descripcion, otros_recursos, version, archivo_origen)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-            ON CONFLICT(codigo) DO UPDATE SET
-              nombre         = excluded.nombre,
-              semestre       = excluded.semestre,
-              nivel          = excluded.nivel,
-              duracion       = excluded.duracion,
-              facultad       = excluded.facultad,
-              carrera        = excluded.carrera,
-              requisitos     = excluded.requisitos,
-              horas_directa  = excluded.horas_directa,
-              horas_autonoma = excluded.horas_autonoma,
-              semanas        = excluded.semanas,
-              creditos       = excluded.creditos,
-              descripcion    = excluded.descripcion,
-              otros_recursos = excluded.otros_recursos,
-              version        = excluded.version,
-              archivo_origen = excluded.archivo_origen
-        """, (
-            codigo, nombre,
-            ident.get("semestre"),
-            ident.get("nivel", ""),
-            ident.get("duracion", ""),
-            "disciplinar",
-            ident.get("facultad", ""),
-            ident.get("carrera", ""),
-            ident.get("requisitos", ""),
-            ident.get("horas_directa"),
-            ident.get("horas_autonoma"),
-            ident.get("semanas"),
-            ident.get("creditos"),
-            data.get("descripcion", ""),
-            data.get("otros_recursos", ""),
-            data.get("responsables", {}).get("version", ""),
-            data.get("archivo", ""),
-        ))
+    asig_id = conn.execute(
+        "SELECT id FROM asignaturas WHERE codigo = ?", (codigo,)
+    ).fetchone()[0]
 
-        asig_id = conn.execute(
-            "SELECT id FROM asignaturas WHERE codigo = ?", (codigo,)
-        ).fetchone()[0]
+    # Limpiar datos previos (idempotente)
+    for tbl in ("responsables","unidades","metodologias","evaluaciones",
+                "bibliografia","linkografia","tributaciones"):
+        conn.execute(f"DELETE FROM {tbl} WHERE asignatura_id = ?", (asig_id,))
 
-        # Limpiar datos previos (idempotente)
-        for tbl in ("responsables", "unidades", "metodologias", "evaluaciones",
-                    "bibliografia", "linkografia", "tributaciones"):
-            conn.execute(f"DELETE FROM {tbl} WHERE asignatura_id = ?", (asig_id,))
+    resp = data.get("responsables", {})
+    for rol in ("responsable", "docente_a_cargo"):
+        if resp.get(rol):
+            conn.execute(
+                "INSERT INTO responsables (asignatura_id, rol, nombre) VALUES (?,?,?)",
+                (asig_id, rol, resp[rol])
+            )
 
-        # Responsables
-        resp = data.get("responsables", {})
-        for rol in ("responsable", "docente_a_cargo"):
-            if resp.get(rol):
-                conn.execute(
-                    "INSERT INTO responsables (asignatura_id, rol, nombre) VALUES (?,?,?)",
-                    (asig_id, rol, resp[rol])
-                )
+    for u in data.get("unidades", []):
+        conn.execute("""INSERT INTO unidades
+            (asignatura_id, orden, nombre, contenidos, indicador_logro) VALUES (?,?,?,?,?)""",
+            (asig_id, u["orden"], u["nombre"], u["contenidos"], u["indicador_logro"]))
 
-        # Unidades
-        for u in data.get("unidades", []):
-            conn.execute("""
-                INSERT INTO unidades (asignatura_id, orden, nombre, contenidos, indicador_logro)
-                VALUES (?,?,?,?,?)
-            """, (asig_id, u["orden"], u["nombre"], u["contenidos"], u["indicador_logro"]))
+    for m in data.get("metodologias", []):
+        if m:
+            conn.execute(
+                "INSERT INTO metodologias (asignatura_id, descripcion) VALUES (?,?)",
+                (asig_id, m))
 
-        # Metodologías
-        for m in data.get("metodologias", []):
-            if m:
-                conn.execute(
-                    "INSERT INTO metodologias (asignatura_id, descripcion) VALUES (?,?)",
-                    (asig_id, m)
-                )
+    for ev in data.get("evaluaciones", []):
+        if ev.get("tipo"):
+            conn.execute(
+                "INSERT INTO evaluaciones (asignatura_id, tipo, porcentaje) VALUES (?,?,?)",
+                (asig_id, ev["tipo"], ev.get("porcentaje", "")))
 
-        # Evaluaciones
-        for ev in data.get("evaluaciones", []):
-            if ev.get("tipo"):
-                conn.execute(
-                    "INSERT INTO evaluaciones (asignatura_id, tipo, porcentaje) VALUES (?,?,?)",
-                    (asig_id, ev["tipo"], ev.get("porcentaje", ""))
-                )
+    for b in data.get("biblio_basica", []):
+        conn.execute("""INSERT INTO bibliografia
+            (asignatura_id,tipo,numero,autor,titulo,editorial,anio,isbn,ejemplares)
+            VALUES (?,?,?,?,?,?,?,?,?)""",
+            (asig_id,"basica",b.get("numero",""),b.get("autor",""),b.get("titulo",""),
+             b.get("editorial",""),b.get("anio",""),b.get("isbn",""),b.get("ejemplares","")))
 
-        # Bibliografía básica
-        for b in data.get("biblio_basica", []):
-            conn.execute("""
-                INSERT INTO bibliografia
-                  (asignatura_id, tipo, numero, autor, titulo, editorial, anio, isbn, ejemplares)
-                VALUES (?,?,?,?,?,?,?,?,?)
-            """, (asig_id, "basica",
-                  b.get("numero",""), b.get("autor",""), b.get("titulo",""),
-                  b.get("editorial",""), b.get("anio",""),
-                  b.get("isbn",""), b.get("ejemplares","")))
+    for b in data.get("biblio_compl", []):
+        conn.execute("""INSERT INTO bibliografia
+            (asignatura_id,tipo,numero,autor,titulo,editorial,anio,isbn,ejemplares)
+            VALUES (?,?,?,?,?,?,?,?,?)""",
+            (asig_id,"complementaria",b.get("numero",""),b.get("autor",""),b.get("titulo",""),
+             b.get("editorial",""),b.get("anio",""),b.get("isbn",""),b.get("ejemplares","")))
 
-        # Bibliografía complementaria
-        for b in data.get("biblio_compl", []):
-            conn.execute("""
-                INSERT INTO bibliografia
-                  (asignatura_id, tipo, numero, autor, titulo, editorial, anio, isbn, ejemplares)
-                VALUES (?,?,?,?,?,?,?,?,?)
-            """, (asig_id, "complementaria",
-                  b.get("numero",""), b.get("autor",""), b.get("titulo",""),
-                  b.get("editorial",""), b.get("anio",""),
-                  b.get("isbn",""), b.get("ejemplares","")))
+    for lk in data.get("linkografia", []):
+        conn.execute("""INSERT INTO linkografia
+            (asignatura_id, url, titulo_articulo, descripcion) VALUES (?,?,?,?)""",
+            (asig_id, lk.get("url",""), lk.get("titulo_articulo",""), lk.get("descripcion","")))
 
-        # Linkografía
-        for lk in data.get("linkografia", []):
-            conn.execute("""
-                INSERT INTO linkografia (asignatura_id, url, titulo_articulo, descripcion)
-                VALUES (?,?,?,?)
-            """, (asig_id, lk.get("url",""), lk.get("titulo_articulo",""), lk.get("descripcion","")))
-
-        # Tributaciones
-        ra_no_resueltos = []
-        for cod in data.get("codigos_ra", []):
-            ra_id = resolver_ra_id(conn, cod)
-            if ra_id:
-                conn.execute("""
-                    INSERT OR IGNORE INTO tributaciones (asignatura_id, ra_id)
-                    VALUES (?,?)
-                """, (asig_id, ra_id))
-            else:
-                ra_no_resueltos.append(cod)
-
-        if ra_no_resueltos:
-            log.warning("[%s] RAs no resueltos en BD: %s", codigo, ra_no_resueltos)
-
-    return "ok"
+    # Tributaciones desde ra_ids ya validados
+    for ra_id in data.get("ra_ids", set()):
+        conn.execute("""INSERT OR IGNORE INTO tributaciones (asignatura_id, ra_id)
+                        VALUES (?,?)""", (asig_id, ra_id))
 
 
-# ── Procesamiento masivo ──────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+#  PASO 7 — Procesamiento masivo
+# ══════════════════════════════════════════════════════════════════════════════
 
 def procesar_todos(dry_run: bool = False, archivo_unico: Optional[Path] = None):
     if not RUTA_DB.exists():
-        log.error("BD no encontrada en %s. Ejecuta init_db.py primero.", RUTA_DB)
+        log.error("BD no encontrada: %s. Ejecuta init_db.py primero.", RUTA_DB)
         sys.exit(1)
 
-    Path("data/output").mkdir(parents=True, exist_ok=True)
+    conn_dicc = sqlite3.connect(str(RUTA_DB))
+    dicc = DiccionarioCodigos(conn_dicc)
+    conn_dicc.close()
 
-    if archivo_unico:
-        archivos = [archivo_unico]
-    else:
-        archivos = sorted(CARPETA_DOCS.rglob("*.docx"))
+    log.info("Diccionario cargado: %d competencias | %d RA codes válidos",
+             len(dicc.competencias), len(dicc.ra_por_codigo))
 
-    log.info("=" * 60)
-    log.info("parse_word_to_db.py — %s documentos", len(archivos))
-    if dry_run:
-        log.info("MODO DRY-RUN: no se modifica la BD")
-    log.info("=" * 60)
+    archivos = [archivo_unico] if archivo_unico else sorted(CARPETA_DOCS.rglob("*.docx"))
 
-    conn = sqlite3.connect(str(RUTA_DB)) if not dry_run else None
+    log.info("=" * 65)
+    log.info("parse_word_to_db.py  —  %d documentos  %s",
+             len(archivos), "[DRY-RUN]" if dry_run else "")
+    log.info("=" * 65)
+
+    conn = None if dry_run else sqlite3.connect(str(RUTA_DB))
     if conn:
         conn.execute("PRAGMA foreign_keys = ON")
 
-    ok = errores = omitidos = 0
-    errores_detalle = []
+    ok = errores = omitidos = cuarentena = 0
+    en_cuarentena: list[tuple[str, str]] = []
 
     for ruta in archivos:
         nombre = ruta.name
 
-        # Verificar exclusiones
         if any(ex in nombre for ex in EXCLUIDOS):
-            log.info("OMITIDO  %s (excluido explícitamente)", nombre)
+            log.info("OMITIDO   %s", nombre)
             omitidos += 1
             continue
 
         try:
-            data = parsear_docx(ruta)
-            codigo = data["identificacion"].get("codigo", "?")
-
-            if not dry_run:
-                estado = insertar_programa(conn, data)
-            else:
-                estado = "dry-run"
-                # En dry-run, reportar lo que se extrajo
-                n_ra   = len(data["codigos_ra"])
-                n_u    = len(data["unidades"])
-                n_bb   = len(data["biblio_basica"])
-                n_bc   = len(data["biblio_compl"])
-                log.info("DRY  %-10s %-45s | RA:%d U:%d BB:%d BC:%d",
-                         codigo, data["identificacion"].get("nombre","")[:44],
-                         n_ra, n_u, n_bb, n_bc)
-                ok += 1
-                continue
-
-            if estado == "ok":
-                n_ra = len(data["codigos_ra"])
-                n_u  = len(data["unidades"])
-                log.info("OK   %-10s %-45s | RA:%d U:%d", codigo,
-                         data["identificacion"].get("nombre","")[:44], n_ra, n_u)
-                ok += 1
-            else:
-                log.warning("SKIP %-10s %s (%s)", codigo, nombre, estado)
-                omitidos += 1
-
+            data = parsear_docx(ruta, dicc)
         except ParseError as e:
-            log.error("ERROR %-50s → %s", nombre, e)
+            log.error("ERROR     %-50s → %s", nombre, e)
             errores += 1
-            errores_detalle.append((nombre, str(e)))
+            en_cuarentena.append((nombre, str(e)))
+            continue
         except Exception as e:
             log.exception("EXCEPCION %-45s → %s", nombre, e)
             errores += 1
-            errores_detalle.append((nombre, str(e)))
+            en_cuarentena.append((nombre, str(e)))
+            continue
+
+        codigo  = data["identificacion"]["codigo"]
+        ra_ids  = data["ra_ids"]
+        n_u     = len(data["unidades"])
+        n_bb    = len(data["biblio_basica"])
+        n_bc    = len(data["biblio_compl"])
+
+        # ── Sistema de Cuarentena ─────────────────────────────────────────
+        problemas = []
+        if not codigo:
+            problemas.append("código de asignatura no determinado")
+        if not ra_ids:
+            problemas.append("0 tributaciones encontradas")
+
+        if problemas:
+            motivo = " | ".join(problemas)
+            log.warning("CUARENTENA %-45s → %s", nombre, motivo)
+            en_cuarentena.append((nombre, motivo))
+            cuarentena += 1
+            continue   # NO tocar la BD
+
+        # ── Inserción ─────────────────────────────────────────────────────
+        estado = "dry-run" if dry_run else "ok"
+        if not dry_run:
+            insertar_programa(conn, data)
+
+        log.info("%-10s %-10s %-40s | RA:%-3d U:%-3d BB:%-3d BC:%d",
+                 estado.upper(), codigo,
+                 data["identificacion"].get("nombre","")[:39],
+                 len(ra_ids), n_u, n_bb, n_bc)
+        ok += 1
 
     if conn:
         conn.commit()
         conn.close()
 
-    log.info("")
-    log.info("=" * 60)
-    log.info("RESULTADO: %d OK | %d omitidos | %d errores | total %d",
-             ok, omitidos, errores, len(archivos))
-    if errores_detalle:
-        log.info("DOCUMENTOS CON ERROR:")
-        for nombre, motivo in errores_detalle:
-            log.info("  - %-50s %s", nombre, motivo)
+    # ── Archivo revision_manual.txt ───────────────────────────────────────
+    if en_cuarentena:
+        with open(LOG_REVISION, "w", encoding="utf-8") as f:
+            f.write("Documentos que requieren revisión manual\n")
+            f.write("=" * 60 + "\n\n")
+            for nombre, motivo in en_cuarentena:
+                f.write(f"{nombre}\n  Motivo: {motivo}\n\n")
+        log.info("Archivo de revisión guardado en: %s", LOG_REVISION)
 
-    if not dry_run and conn is None is False:
+    log.info("")
+    log.info("=" * 65)
+    log.info("RESULTADO: %d OK | %d cuarentena | %d omitidos | %d errores",
+             ok, cuarentena, omitidos, errores)
+    if not dry_run:
         _verificar_bd()
 
 
 def _verificar_bd():
     conn = sqlite3.connect(str(RUTA_DB))
-    counts = {}
-    for tbl in ("asignaturas", "tributaciones", "unidades", "bibliografia",
-                "linkografia", "metodologias", "evaluaciones"):
-        counts[tbl] = conn.execute(f"SELECT COUNT(*) FROM {tbl}").fetchone()[0]
-    conn.close()
     log.info("")
-    log.info("VERIFICACIÓN BD:")
-    for tbl, n in counts.items():
-        log.info("  %-20s %d filas", tbl, n)
+    log.info("ESTADO FINAL DE LA BD:")
+    for tbl in ("asignaturas","tributaciones","unidades","bibliografia",
+                "linkografia","metodologias","evaluaciones"):
+        n = conn.execute(f"SELECT COUNT(*) FROM {tbl}").fetchone()[0]
+        log.info("  %-25s %d", tbl, n)
+    conn.close()
 
 
-# ── Punto de entrada ──────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+#  Punto de entrada
+# ══════════════════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
     dry_run       = "--dry-run" in sys.argv
