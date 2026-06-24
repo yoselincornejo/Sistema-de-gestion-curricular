@@ -708,10 +708,11 @@ def generar_programa_individual(asignatura_id, salida=None):
             _cell_para(c, h, bold=True, size=9, color=RGBColor(255, 255, 255), align=WD_ALIGN_PARAGRAPH.CENTER)
         for u in data["unidades"]:
             row = t_uni.add_row()
-            _cell_para(row.cells[0], u.get("nombre", "") or "", size=9)
+            # Col 0: RA/desempeños de la unidad (texto extraído del documento original)
+            _cell_para(row.cells[0], u.get("indicador_logro", "") or "", size=9)
             contenido = (u.get("contenidos", "") or "").strip()
             _cell_para(row.cells[1], contenido, size=9)
-            _cell_para(row.cells[2], u.get("indicador_logro", "") or "", size=9)
+            _cell_para(row.cells[2], "", size=9)
     doc.add_paragraph()
 
     _section_title(doc, "ESTRATEGIAS DE ENSEÑANZA Y APRENDIZAJE:")

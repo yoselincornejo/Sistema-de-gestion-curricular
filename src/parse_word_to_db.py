@@ -376,19 +376,34 @@ def extraer_unidades(doc: Document) -> list[dict]:
             continue
         for i, row in enumerate(t.rows[1:], 1):
             cells = row.cells
-            contenidos   = cells[1].text.strip() if len(cells) > 1 else ""
-            indicador    = cells[2].text.strip() if len(cells) > 2 else ""
+            # Col 0: RA/desempeños por unidad (texto de los RAs que aplican)
+            desempenos  = cells[0].text.strip() if len(cells) > 0 else ""
+            # Col 1: nombre de unidad + contenidos
+            contenidos  = cells[1].text.strip() if len(cells) > 1 else ""
+            # Col 2: indicador de logro (si existe en el documento)
+            indicador   = cells[2].text.strip() if len(cells) > 2 else ""
             if not contenidos:
                 continue
+            # Si col 2 está vacía pero col 0 tiene texto de RA/desempeños, usarlo como indicador
+            if not indicador and desempenos and not any(
+                k in desempenos.lower() for k in ("resultado", "desempeño", "unidad")
+            ):
+                indicador = desempenos
+
             m = re.search(r"Unidad\s+(\d+|[IVX]+)", contenidos, re.IGNORECASE)
             num = None
             if m:
                 raw = m.group(1)
                 num = int(raw) if raw.isdigit() else \
                     {"I":1,"II":2,"III":3,"IV":4,"V":5,"VI":6,"VII":7,"VIII":8}.get(raw.upper())
+
+            # Nombre de la unidad = primera línea no vacía del bloque de contenidos
+            lines = [l.strip() for l in contenidos.split("\n") if l.strip()]
+            nombre = lines[0][:120] if lines else contenidos[:120]
+
             unidades.append({
                 "orden": num or i,
-                "nombre": contenidos[:100],
+                "nombre": nombre,
                 "contenidos": contenidos,
                 "indicador_logro": indicador,
             })
@@ -434,7 +449,14 @@ def extraer_linkografia(doc: Document) -> list[dict]:
             continue
         for row in t.rows[1:]:
             cs = [c.text.strip() for c in row.cells]
-            if len(cs) >= 5:
+            # Tabla estándar UV: tipo(0) autor(1) titulo(2) año(3) titulo_revista(4) vol(5) url(6) disponible(7)
+            if len(cs) >= 7:
+                links.append({
+                    "url": cs[6],
+                    "titulo_articulo": cs[2],
+                    "descripcion": " ".join(filter(None, [cs[0], cs[1], cs[3], cs[4]])).strip(),
+                })
+            elif len(cs) >= 5:
                 links.append({"url": cs[4], "titulo_articulo": cs[2],
                               "descripcion": f"{cs[0]} {cs[1]} {cs[3]}".strip()})
             elif cs:
@@ -485,17 +507,55 @@ def extraer_responsables(doc: Document) -> dict:
     return resp
 
 
+_METOD_KEYS = {
+    "aprendizaje", "estudio de", "clase expositiva", "taller",
+    "simulac", "tutor", "terreno", "juego de", "servicio",
+    "invertido", "colaborat", "cooperat", "problema", "proyecto",
+    "pausa", "portafolio", "seminario", "exposit",
+}
+
 def extraer_metodologias(doc: Document) -> list[str]:
     metods = []
     for t in doc.tables:
-        h = t.rows[0].cells[0].text.strip().lower()
-        if not ("basado" in h or "exposit" in h or "aprendizaje" in h or "taller" in h):
+        h0 = t.rows[0].cells[0].text.strip().lower()
+        # Excluir tabla de unidades y evaluaciones por su encabezado
+        if any(k in h0 for k in ("resultado", "desempeño", "evaluaci", "tipo de eval")):
             continue
-        for row in t.rows:
-            for cell in row.cells:
-                txt = cell.text.strip()
-                if txt and len(txt) > 4 and txt not in metods:
-                    metods.append(txt)
+
+        all_texts = [c.text.strip() for row in t.rows for c in row.cells]
+
+        # Verificar que la tabla contiene nombres de metodologías
+        has_metod = any(
+            any(k in txt.lower() for k in _METOD_KEYS)
+            for txt in all_texts if len(txt) > 3
+        )
+        if not has_metod:
+            continue
+
+        ncols = len(t.columns)
+        has_x = any(txt in ("X", "x", "✓") for txt in all_texts)
+
+        if has_x and ncols in (2, 4):
+            # Tabla de checkboxes: extraer solo las metodologías marcadas con X
+            for row in t.rows:
+                cells = [c.text.strip() for c in row.cells]
+                # Pares (nombre, marca): cols 0-1 y cols 2-3 para tablas de 4 columnas
+                pairs = []
+                if ncols >= 2:
+                    pairs.append((cells[0], cells[1]))
+                if ncols >= 4:
+                    pairs.append((cells[2], cells[3]))
+                for name, mark in pairs:
+                    if name and mark.upper() in ("X", "✓") and len(name) > 3:
+                        if name not in metods:
+                            metods.append(name)
+        else:
+            # Tabla de texto libre: extraer todas las celdas con contenido
+            for row in t.rows:
+                for cell in row.cells:
+                    txt = cell.text.strip()
+                    if txt and len(txt) > 4 and txt not in metods:
+                        metods.append(txt)
     return metods
 
 
