@@ -350,8 +350,15 @@ def extraer_identificacion(doc: Document, texto_completo: str, codigo: str, nomb
 
 
 def extraer_descripcion(doc: Document) -> str:
-    """Recoge tablas de 1 col que empiezan con 'La asignatura…'."""
+    """
+    Extrae la descripción de la asignatura. Busca primero en tablas de 1 columna
+    y, si no encuentra, en párrafos ubicados tras el encabezado
+    'DESCRIPCIÓN DE LA ASIGNATURA:'.
+    """
+    from docx.oxml.ns import qn as _qn
     partes = []
+
+    # Estrategia 1: tabla de 1 col que empieza con "La asignatura…"
     for t in doc.tables:
         if len(t.columns) == 1:
             txt = t.rows[0].cells[0].text.strip()
@@ -361,6 +368,32 @@ def extraer_descripcion(doc: Document) -> str:
                     p = row.cells[0].text.strip()
                     if p:
                         partes.append(p)
+    if partes:
+        return "\n".join(partes)
+
+    # Estrategia 2: párrafos entre "DESCRIPCIÓN DE LA ASIGNATURA:" y la siguiente sección
+    _STOP = {"aporte al perfil", "resultados de aprendizaje",
+             "programa de la asignatura", "unidades de aprendizaje",
+             "identificaci"}
+    capturing = False
+    for child in doc.element.body:
+        tag = child.tag.split('}')[-1]
+        if tag != 'p':
+            if capturing:
+                break   # encontramos una tabla → fin de la descripción
+            continue
+        txt = ''.join(r.text or '' for r in child.iter(_qn('w:t'))).strip()
+        if not txt:
+            continue
+        tl = txt.lower()
+        if "descripci" in tl and "asignatura" in tl and (tl.endswith(":") or tl.endswith("asignatura:")):
+            capturing = True
+            continue
+        if capturing:
+            if any(k in tl for k in _STOP):
+                break
+            partes.append(txt)
+
     return "\n".join(partes)
 
 
@@ -410,10 +443,18 @@ def extraer_unidades(doc: Document) -> list[dict]:
     return unidades
 
 
+_BIBLIO_HEADERS = {"autor", "título", "titulo", "editorial", "año", "anio",
+                   "isbn", "ejemplares", "n°", "nº", "nro", "número", "numero",
+                   "disponible", "biblioteca"}
+
 def _parsear_biblio_tabla(t) -> list[dict]:
     entradas = []
     for row in t.rows[1:]:
         cs = [c.text.strip() for c in row.cells]
+        # Saltar filas que parecen encabezados de columna
+        non_empty = [c.lower().rstrip('.') for c in cs if c]
+        if non_empty and sum(1 for c in non_empty if c in _BIBLIO_HEADERS) >= max(1, len(non_empty) // 2):
+            continue
         if len(cs) >= 7:
             n, autor, titulo, editorial, anio, isbn, ej = cs[:7]
         elif len(cs) >= 4:
@@ -449,19 +490,35 @@ def extraer_linkografia(doc: Document) -> list[dict]:
             continue
         for row in t.rows[1:]:
             cs = [c.text.strip() for c in row.cells]
-            # Tabla estándar UV: tipo(0) autor(1) titulo(2) año(3) titulo_revista(4) vol(5) url(6) disponible(7)
+            # Tabla estándar UV 8 cols:
+            # tipo(0) autor(1) titulo_articulo(2) año(3) titulo_revista(4) vol(5) url(6) disponible(7)
             if len(cs) >= 7:
                 links.append({
-                    "url": cs[6],
+                    "tipo_documento":  cs[0],
+                    "autor":           cs[1],
                     "titulo_articulo": cs[2],
-                    "descripcion": " ".join(filter(None, [cs[0], cs[1], cs[3], cs[4]])).strip(),
+                    "anio":            cs[3],
+                    "titulo_revista":  cs[4],
+                    "volumen":         cs[5] if len(cs) > 5 else "",
+                    "url":             cs[6],
+                    "disponible_en":   cs[7] if len(cs) > 7 else "",
                 })
-            elif len(cs) >= 5:
-                links.append({"url": cs[4], "titulo_articulo": cs[2],
-                              "descripcion": f"{cs[0]} {cs[1]} {cs[3]}".strip()})
+            elif len(cs) >= 3:
+                links.append({
+                    "tipo_documento": cs[0], "autor": "",
+                    "titulo_articulo": cs[2] if len(cs) > 2 else "",
+                    "anio": "", "titulo_revista": "",
+                    "volumen": "", "url": cs[4] if len(cs) > 4 else "",
+                    "disponible_en": "",
+                })
             elif cs:
-                for url in re.findall(r"https?://\S+", cs[0]):
-                    links.append({"url": url, "titulo_articulo": "", "descripcion": cs[0][:200]})
+                for url in re.findall(r"https?://\S+", " ".join(cs)):
+                    links.append({
+                        "tipo_documento": "", "autor": "",
+                        "titulo_articulo": "", "anio": "",
+                        "titulo_revista": "", "volumen": "",
+                        "url": url, "disponible_en": "",
+                    })
     # URLs en tablas de recursos libres (1 col)
     for t in doc.tables:
         if len(t.columns) != 1:
@@ -574,6 +631,38 @@ def extraer_evaluaciones(doc: Document) -> list[dict]:
     return evals
 
 
+def extraer_descripcion_evaluaciones(doc: Document) -> str:
+    """
+    Captura párrafos de texto libre que aparecen DESPUÉS de la tabla de
+    evaluaciones (p.ej. descripción de la nota final, política de IA, etc.)
+    y ANTES de la siguiente sección principal.
+    """
+    from docx.oxml.ns import qn as _qn
+    _STOP = {"recurso", "bibliograf", "linkograf", "otro recurso",
+             "datos actual", "responsable"}
+    eval_table_passed = False
+    capturing = False
+    texts = []
+
+    for child in doc.element.body:
+        tag = child.tag.split('}')[-1]
+        if tag == 'tbl':
+            all_text = ''.join(r.text or '' for r in child.iter(_qn('w:t'))).lower()
+            if 'evaluaci' in all_text and ('tipo' in all_text or 'porcentaje' in all_text):
+                eval_table_passed = True
+                capturing = True
+        elif tag == 'p' and capturing:
+            txt = ''.join(r.text or '' for r in child.iter(_qn('w:t'))).strip()
+            if not txt:
+                continue
+            tl = txt.lower()
+            if any(k in tl for k in _STOP):
+                break
+            texts.append(txt)
+
+    return "\n".join(texts)
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 #  PASO 5 — Parseo completo de un documento
 # ══════════════════════════════════════════════════════════════════════════════
@@ -614,19 +703,21 @@ def parsear_docx(ruta: Path, dicc: DiccionarioCodigos) -> dict:
             log.debug("  → RA encontrado: %s", cod[0] if cod else ra_id)
         conn_tmp.close()
 
+    biblio_basica, biblio_compl = extraer_bibliografia(doc)
     return {
-        "archivo":       nombre,
-        "identificacion": extraer_identificacion(doc, texto_completo, codigo, nombre_asig),
-        "descripcion":   extraer_descripcion(doc),
-        "ra_ids":        ra_ids,               # set[int] — IDs directos de la BD
-        "unidades":      extraer_unidades(doc),
-        "metodologias":  extraer_metodologias(doc),
-        "evaluaciones":  extraer_evaluaciones(doc),
-        "biblio_basica": extraer_bibliografia(doc)[0],
-        "biblio_compl":  extraer_bibliografia(doc)[1],
-        "linkografia":   extraer_linkografia(doc),
-        "otros_recursos":extraer_otros_recursos(doc),
-        "responsables":  extraer_responsables(doc),
+        "archivo":                  nombre,
+        "identificacion":           extraer_identificacion(doc, texto_completo, codigo, nombre_asig),
+        "descripcion":              extraer_descripcion(doc),
+        "descripcion_evaluaciones": extraer_descripcion_evaluaciones(doc),
+        "ra_ids":                   ra_ids,
+        "unidades":                 extraer_unidades(doc),
+        "metodologias":             extraer_metodologias(doc),
+        "evaluaciones":             extraer_evaluaciones(doc),
+        "biblio_basica":            biblio_basica,
+        "biblio_compl":             biblio_compl,
+        "linkografia":              extraer_linkografia(doc),
+        "otros_recursos":           extraer_otros_recursos(doc),
+        "responsables":             extraer_responsables(doc),
     }
 
 
@@ -643,24 +734,25 @@ def insertar_programa(conn: sqlite3.Connection, data: dict):
         INSERT INTO asignaturas
           (codigo, nombre, semestre, nivel, duracion, tipo, facultad, carrera,
            requisitos, horas_directa, horas_autonoma, semanas, creditos,
-           descripcion, otros_recursos, version, archivo_origen)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+           descripcion, descripcion_evaluaciones, otros_recursos, version, archivo_origen)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         ON CONFLICT(codigo) DO UPDATE SET
-          nombre         = excluded.nombre,
-          semestre       = excluded.semestre,
-          nivel          = excluded.nivel,
-          duracion       = excluded.duracion,
-          facultad       = excluded.facultad,
-          carrera        = excluded.carrera,
-          requisitos     = excluded.requisitos,
-          horas_directa  = excluded.horas_directa,
-          horas_autonoma = excluded.horas_autonoma,
-          semanas        = excluded.semanas,
-          creditos       = excluded.creditos,
-          descripcion    = excluded.descripcion,
-          otros_recursos = excluded.otros_recursos,
-          version        = excluded.version,
-          archivo_origen = excluded.archivo_origen
+          nombre                   = excluded.nombre,
+          semestre                 = excluded.semestre,
+          nivel                    = excluded.nivel,
+          duracion                 = excluded.duracion,
+          facultad                 = excluded.facultad,
+          carrera                  = excluded.carrera,
+          requisitos               = excluded.requisitos,
+          horas_directa            = excluded.horas_directa,
+          horas_autonoma           = excluded.horas_autonoma,
+          semanas                  = excluded.semanas,
+          creditos                 = excluded.creditos,
+          descripcion              = excluded.descripcion,
+          descripcion_evaluaciones = excluded.descripcion_evaluaciones,
+          otros_recursos           = excluded.otros_recursos,
+          version                  = excluded.version,
+          archivo_origen           = excluded.archivo_origen
     """, (
         codigo, nombre,
         ident.get("semestre"),       ident.get("nivel", ""),
@@ -669,6 +761,7 @@ def insertar_programa(conn: sqlite3.Connection, data: dict):
         ident.get("requisitos", ""), ident.get("horas_directa"),
         ident.get("horas_autonoma"), ident.get("semanas"),
         ident.get("creditos"),       data.get("descripcion", ""),
+        data.get("descripcion_evaluaciones", ""),
         data.get("otros_recursos",""),
         data.get("responsables", {}).get("version", ""),
         data.get("archivo", ""),
@@ -724,8 +817,14 @@ def insertar_programa(conn: sqlite3.Connection, data: dict):
 
     for lk in data.get("linkografia", []):
         conn.execute("""INSERT INTO linkografia
-            (asignatura_id, url, titulo_articulo, descripcion) VALUES (?,?,?,?)""",
-            (asig_id, lk.get("url",""), lk.get("titulo_articulo",""), lk.get("descripcion","")))
+            (asignatura_id, tipo_documento, autor, titulo_articulo, anio,
+             titulo_revista, volumen, url, disponible_en)
+            VALUES (?,?,?,?,?,?,?,?,?)""",
+            (asig_id,
+             lk.get("tipo_documento",""), lk.get("autor",""),
+             lk.get("titulo_articulo",""), lk.get("anio",""),
+             lk.get("titulo_revista",""), lk.get("volumen",""),
+             lk.get("url",""), lk.get("disponible_en","")))
 
     # Tributaciones desde ra_ids ya validados
     for ra_id in data.get("ra_ids", set()):

@@ -463,7 +463,9 @@ def _get_programa_data(asignatura_id):
     ).fetchall()
 
     linkografia = conn.execute(
-        "SELECT url, titulo_articulo FROM linkografia WHERE asignatura_id=? ORDER BY id",
+        """SELECT tipo_documento, autor, titulo_articulo, anio,
+                  titulo_revista, volumen, url, disponible_en
+           FROM linkografia WHERE asignatura_id=? ORDER BY id""",
         (asignatura_id,)
     ).fetchall()
 
@@ -699,29 +701,48 @@ def generar_programa_individual(asignatura_id, salida=None):
 
     _section_title(doc, "UNIDADES DE APRENDIZAJE Y CONTENIDOS:")
     if data["unidades"]:
-        t_uni = doc.add_table(rows=1, cols=3)
+        t_uni = doc.add_table(rows=1, cols=2)
         t_uni.style = "Table Grid"
-        headers_u = ["Resultado de aprendizaje y/o Desempeños", "Unidades de Aprendizaje y contenidos", "Al final del curso el(la) estudiante será capaz"]
-        for ci, h in enumerate(headers_u):
+        for ci, h in enumerate(["Resultado de aprendizaje y/o Desempeños",
+                                 "Unidades de Aprendizaje y contenidos"]):
             c = t_uni.cell(0, ci)
             _set_cell_bg(c, "1F4E79")
-            _cell_para(c, h, bold=True, size=9, color=RGBColor(255, 255, 255), align=WD_ALIGN_PARAGRAPH.CENTER)
+            _cell_para(c, h, bold=True, size=9, color=RGBColor(255, 255, 255),
+                       align=WD_ALIGN_PARAGRAPH.CENTER)
         for u in data["unidades"]:
             row = t_uni.add_row()
-            # Col 0: RA/desempeños de la unidad (texto extraído del documento original)
             _cell_para(row.cells[0], u.get("indicador_logro", "") or "", size=9)
-            contenido = (u.get("contenidos", "") or "").strip()
-            _cell_para(row.cells[1], contenido, size=9)
-            _cell_para(row.cells[2], "", size=9)
+            _cell_para(row.cells[1], (u.get("contenidos", "") or "").strip(), size=9)
     doc.add_paragraph()
 
-    _section_title(doc, "ESTRATEGIAS DE ENSEÑANZA Y APRENDIZAJE:")
-    for m in data["metodologias"]:
-        if m and m.strip():
-            p = doc.add_paragraph(style="List Bullet")
-            run = p.add_run(m.strip())
-            run.font.size = Pt(10)
-            run.font.name = "Calibri"
+    _section_title(doc, "METODOLOGÍA O ESTRATEGIA DE ENSEÑANZA - APRENDIZAJE:")
+    # Lista estándar UV de metodologías (formato tabla de checkboxes 4 columnas)
+    _UV_METODS = [
+        ("Procedimiento de Pausas.",                  "Aprendizaje por descubrimiento."),
+        ("Estudio de Casos.",                          "Aprendizaje basado en equipos."),
+        ("Juego de Roles.",                            "Clase expositiva activa."),
+        ("Aprendizaje colaborativo o cooperativo.",    "Simulación."),
+        ("Aprendizaje basado en Problemas (ABP).",     "Tutorías."),
+        ("Aprendizaje basado en Proyectos.",           "Salidas a terreno."),
+        ("Aprendizaje Servicio.",                      "Otro, especifique:"),
+        ("Aprendizaje Invertido.",                     ""),
+    ]
+    seleccionadas = {m.strip().rstrip('.').lower() for m in data["metodologias"] if m}
+
+    def _esta_marcada(nombre):
+        n = nombre.strip().rstrip('.').lower()
+        return any(n in s or s in n for s in seleccionadas)
+
+    t_met = doc.add_table(rows=len(_UV_METODS), cols=4)
+    t_met.style = "Table Grid"
+    for ri, (izq, der) in enumerate(_UV_METODS):
+        row = t_met.rows[ri]
+        _cell_para(row.cells[0], izq, size=9)
+        _cell_para(row.cells[1], "X" if _esta_marcada(izq) else "", size=9,
+                   align=WD_ALIGN_PARAGRAPH.CENTER)
+        _cell_para(row.cells[2], der, size=9)
+        _cell_para(row.cells[3], "X" if (der and _esta_marcada(der)) else "", size=9,
+                   align=WD_ALIGN_PARAGRAPH.CENTER)
     doc.add_paragraph()
 
     _section_title(doc, "METODOLOGÍA O ESTRATEGIA DE EVALUACIÓN:")
@@ -736,46 +757,64 @@ def generar_programa_individual(asignatura_id, salida=None):
             row = t_ev.add_row()
             _cell_para(row.cells[0], ev.get("tipo", "") or "", size=9)
             _cell_para(row.cells[1], ev.get("porcentaje", "") or "", size=9)
+    # Texto libre después de la tabla de evaluaciones (política de notas, IA, etc.)
+    desc_ev = (data["asig"].get("descripcion_evaluaciones") or "").strip()
+    if desc_ev:
+        p = doc.add_paragraph()
+        run = p.add_run(desc_ev)
+        run.font.size = Pt(10)
+        run.font.name = "Calibri"
     doc.add_paragraph()
+
+    _BIBLIO_HDRS = ["Autor", "Título", "Editorial", "Año", "ISBN", "Nº Ejemplares disponibles"]
+    _BIBLIO_KEYS = ["autor", "titulo", "editorial", "anio", "isbn", "ejemplares"]
 
     if data["bibliografia_basica"]:
         _section_title(doc, "BIBLIOGRAFÍA BÁSICA OBLIGATORIA:")
-        t_bib = doc.add_table(rows=1, cols=7)
+        t_bib = doc.add_table(rows=1, cols=6)
         t_bib.style = "Table Grid"
-        for ci, h in enumerate(["N°", "Autor", "Título", "Editorial", "Año", "ISBN", "Ejemplares disponibles"]):
+        for ci, h in enumerate(_BIBLIO_HDRS):
             c = t_bib.cell(0, ci)
             _set_cell_bg(c, "1F4E79")
             _cell_para(c, h, bold=True, size=8, color=RGBColor(255, 255, 255))
         for b in data["bibliografia_basica"]:
             row = t_bib.add_row()
-            for ci, k in enumerate(["numero", "autor", "titulo", "editorial", "anio", "isbn", "ejemplares"]):
+            for ci, k in enumerate(_BIBLIO_KEYS):
                 _cell_para(row.cells[ci], b.get(k, "") or "", size=8)
         doc.add_paragraph()
 
     if data["bibliografia_comp"]:
         _section_title(doc, "BIBLIOGRAFÍA COMPLEMENTARIA:")
-        t_bib2 = doc.add_table(rows=1, cols=7)
+        t_bib2 = doc.add_table(rows=1, cols=6)
         t_bib2.style = "Table Grid"
-        for ci, h in enumerate(["N°", "Autor", "Título", "Editorial", "Año", "ISBN", "Ejemplares disponibles"]):
+        for ci, h in enumerate(_BIBLIO_HDRS):
             c = t_bib2.cell(0, ci)
             _set_cell_bg(c, "1F4E79")
             _cell_para(c, h, bold=True, size=8, color=RGBColor(255, 255, 255))
         for b in data["bibliografia_comp"]:
             row = t_bib2.add_row()
-            for ci, k in enumerate(["numero", "autor", "titulo", "editorial", "anio", "isbn", "ejemplares"]):
+            for ci, k in enumerate(_BIBLIO_KEYS):
                 _cell_para(row.cells[ci], b.get(k, "") or "", size=8)
         doc.add_paragraph()
 
     if data["linkografia"]:
         _section_title(doc, "LINKOGRAFÍA:")
-        for l in data["linkografia"]:
-            p = doc.add_paragraph(style="List Bullet")
-            url = l.get("url", "") or ""
-            desc = l.get("titulo_articulo", "") or ""
-            texto = f"{desc}: {url}" if desc and url else (url or desc)
-            run = p.add_run(texto)
-            run.font.size = Pt(10)
-            run.font.name = "Calibri"
+        _LINK_HDRS = ["Tipo de Documento", "Autor", "Título Artículo / Documento / Sitio Web",
+                      "Año", "Título e-Revista / e-Libro", "Vol(Nº)",
+                      "Dirección Electrónica (URL)", "Disponible en"]
+        _LINK_KEYS = ["tipo_documento", "autor", "titulo_articulo", "anio",
+                      "titulo_revista", "volumen", "url", "disponible_en"]
+        t_lnk = doc.add_table(rows=1, cols=8)
+        t_lnk.style = "Table Grid"
+        for ci, h in enumerate(_LINK_HDRS):
+            c = t_lnk.cell(0, ci)
+            _set_cell_bg(c, "1F4E79")
+            _cell_para(c, h, bold=True, size=8, color=RGBColor(255, 255, 255),
+                       align=WD_ALIGN_PARAGRAPH.CENTER)
+        for lk in data["linkografia"]:
+            row = t_lnk.add_row()
+            for ci, k in enumerate(_LINK_KEYS):
+                _cell_para(row.cells[ci], lk.get(k, "") or "", size=8)
         doc.add_paragraph()
 
     if asig.get("otros_recursos"):

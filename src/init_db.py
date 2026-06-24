@@ -77,10 +77,11 @@ CREATE TABLE IF NOT EXISTS asignaturas (
     horas_autonoma  REAL,
     semanas         INTEGER,
     creditos        INTEGER,
-    descripcion     TEXT    DEFAULT '',
-    otros_recursos  TEXT    DEFAULT '',
-    version         TEXT    DEFAULT '',
-    archivo_origen  TEXT    DEFAULT ''
+    descripcion              TEXT    DEFAULT '',
+    descripcion_evaluaciones TEXT    DEFAULT '',
+    otros_recursos           TEXT    DEFAULT '',
+    version                  TEXT    DEFAULT '',
+    archivo_origen           TEXT    DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS responsables (
@@ -129,9 +130,14 @@ CREATE TABLE IF NOT EXISTS bibliografia (
 CREATE TABLE IF NOT EXISTS linkografia (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     asignatura_id   INTEGER NOT NULL REFERENCES asignaturas(id) ON DELETE CASCADE,
-    descripcion     TEXT    DEFAULT '',
+    tipo_documento  TEXT    DEFAULT '',
+    autor           TEXT    DEFAULT '',
+    titulo_articulo TEXT    DEFAULT '',
+    anio            TEXT    DEFAULT '',
+    titulo_revista  TEXT    DEFAULT '',
+    volumen         TEXT    DEFAULT '',
     url             TEXT    DEFAULT '',
-    titulo_articulo TEXT    DEFAULT ''
+    disponible_en   TEXT    DEFAULT ''
 );
 
 -- ============================================================
