@@ -4,10 +4,10 @@ INFO     parse_word_to_db.py  —  53 documentos
 INFO     =================================================================
 INFO     OK         CFG 111    Desarrollo Personal                      | RA:7   U:3   BB:2   BC:2
 INFO     OK         ING 111    Desafíos de Ingeniería                   | RA:7   U:3   BB:4   BC:1
-INFO     OK         MAT 111    Fundamentos de Matemática                | RA:6   U:6   BB:1   BC:1
+INFO     OK         MAT 111    Fundamentos de Matemática                | RA:3   U:6   BB:1   BC:1
 INFO     OK         PRO 111    Fundamentos de Programación              | RA:3   U:3   BB:5   BC:3
 INFO     OMITIDO   QUI 121 Química para Ingeniería - Laboratorios.docx
-INFO     OK         QUI 121    Química para Ingeniería                  | RA:11  U:4   BB:2   BC:1
+INFO     OK         QUI 121    Química para Ingeniería                  | RA:6   U:4   BB:2   BC:1
 INFO     OK         IMAT 415   Idioma IV                                | RA:5   U:1   BB:0   BC:0
 WARNING  SIN-RA    IMAT 513   Electivo de formación profesional III    (se carga sin tributaciones)
 INFO     OK         IMAT 513   Electivo de formación profesional III    | RA:0   U:0   BB:0   BC:0
@@ -26,7 +26,7 @@ INFO     OK         IMAT 221   Taller de Deducción Matemática           | RA:5
 INFO     OK         IMAT211    Programación para Ingeniería             | RA:3   U:3   BB:2   BC:0
 INFO     OK         MAT 211    Cálculo Integral y Series                | RA:3   U:4   BB:1   BC:2
 INFO     OK         MAT 212    Álgebra Lineal                           | RA:3   U:4   BB:3   BC:3
-INFO     OK         FIS 221    Física Calor y Ondas                     | RA:6   U:3   BB:2   BC:1
+INFO     OK         FIS 221    Física Calor y Ondas                     | RA:4   U:3   BB:2   BC:1
 WARNING  SIN-RA    IMAT 223   Idioma I                                 (se carga sin tributaciones)
 INFO     OK         IMAT 223   Idioma I                                 | RA:0   U:3   BB:3   BC:3
 INFO     OK         IMAT314    Estructuras Algebraicas                  | RA:4   U:3   BB:3   BC:2
@@ -47,11 +47,11 @@ INFO     OMITIDO   IMAT 423 Sistemas Dinámicos Continuos.docx
 INFO     OK         IMAT 323   Optimización                             | RA:7   U:4   BB:2   BC:4
 INFO     OK         IMAT413    Análisis Complejo                        | RA:4   U:4   BB:4   BC:1
 INFO     OK         IMAT 414   TIPE II                                  | RA:8   U:3   BB:1   BC:1
-INFO     OK         IMAT 412   Inferencia Estadística                   | RA:6   U:6   BB:3   BC:1
+INFO     OK         IMAT 412   Inferencia Estadística                   | RA:7   U:6   BB:3   BC:1
 INFO     OK         IMAT 325   Idioma III                               | RA:2   U:2   BB:2   BC:1
 INFO     OK         IMAT422    Procesos Estocásticos                    | RA:8   U:3   BB:1   BC:3
 INFO     OK         IMAT424    Taller de Integración al Perfil de Egre  | RA:8   U:3   BB:3   BC:0
-INFO     OK         IMAT 521   Optimización Combinatorial               | RA:12  U:4   BB:2   BC:1
+INFO     OK         IMAT 521   Optimización Combinatorial               | RA:13  U:4   BB:2   BC:1
 INFO     OK         IMAT421    Análisis Funcional                       | RA:8   U:3   BB:2   BC:1
 INFO     OK         IMAT 511   Grafos                                   | RA:4   U:5   BB:4   BC:0
 INFO     OK         IMAT512    Modelación Estocástica                   | RA:5   U:3   BB:2   BC:1
@@ -65,7 +65,7 @@ INFO     RESULTADO: 51 OK | 0 cuarentena | 2 omitidos | 0 errores
 INFO     
 INFO     ESTADO FINAL DE LA BD:
 INFO       asignaturas               51
-INFO       tributaciones             296
+INFO       tributaciones             288
 INFO       unidades                  176
 INFO       bibliografia              178
 INFO       linkografia               96

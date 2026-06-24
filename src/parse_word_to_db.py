@@ -26,6 +26,24 @@ from pathlib import Path
 from typing import Optional
 
 from docx import Document
+from docx.oxml.ns import qn as _qn
+
+_MC_FALLBACK = "{http://schemas.openxmlformats.org/markup-compatibility/2006}Fallback"
+_W_T = _qn('w:t')
+
+def _elem_text(elem) -> str:
+    """Get text from an XML element, skipping mc:Fallback to avoid AlternateContent doubling."""
+    parts = []
+    _collect_text(elem, parts)
+    return ''.join(parts)
+
+def _collect_text(node, parts):
+    if node.tag == _MC_FALLBACK:
+        return
+    if node.tag == _W_T and node.text:
+        parts.append(node.text)
+    for child in node:
+        _collect_text(child, parts)
 
 # ── Configuración ─────────────────────────────────────────────────────────────
 
@@ -77,11 +95,16 @@ class DiccionarioCodigos:
             self.niveles.setdefault(comp_cod, set()).add(nd_cod)
 
         # Mapa completo: codigo_completo → id
-        # Incluye variantes con N-prefix y RA. para máxima compatibilidad
+        # Incluye variantes con N-prefix y RA. para máxima compatibilidad.
+        # ORDER BY codigo_nivel ASC garantiza que ND1 se procese primero;
+        # las variantes "sin nivel" usan setdefault para que ND1 gane
+        # cuando el documento omite el nivel de dominio.
         self.ra_por_codigo: dict[str, int] = {}
         for ra_id, nd_id, cod_ra, cod_completo in conn.execute(
             """SELECT ra.id, ra.nivel_dominio_id, ra.codigo_ra, ra.codigo_completo
-               FROM resultados_aprendizaje ra"""
+               FROM resultados_aprendizaje ra
+               JOIN niveles_dominio nd ON nd.id = ra.nivel_dominio_id
+               ORDER BY nd.codigo_nivel ASC, ra.codigo_ra ASC"""
         ):
             # Forma canónica: "CE1, ND2, RA3"
             self.ra_por_codigo[_normalizar(cod_completo)] = ra_id
@@ -95,20 +118,20 @@ class DiccionarioCodigos:
 
             # Variantes N-prefix: "CE1, N2, RA3"
             self.ra_por_codigo[_normalizar(f"{comp}, N{num_nd}, {ra}")] = ra_id
-            # Sin nivel: "CE1, RA3" / "CE1, D1"
-            self.ra_por_codigo[_normalizar(f"{comp}, {ra}")] = ra_id
+            # Sin nivel: "CE1, RA3" / "CE1, D1" → setdefault para que ND1 gane
+            self.ra_por_codigo.setdefault(_normalizar(f"{comp}, {ra}"), ra_id)
             # Con punto: "CE1, ND2, RA.3"
             if ra.startswith("RA"):
                 num = ra[2:]
                 self.ra_por_codigo[_normalizar(f"{comp}, {nd}, RA.{num}")] = ra_id
                 self.ra_por_codigo[_normalizar(f"{comp}, N{num_nd}, RA.{num}")] = ra_id
-                self.ra_por_codigo[_normalizar(f"{comp}, RA.{num}")] = ra_id
+                self.ra_por_codigo.setdefault(_normalizar(f"{comp}, RA.{num}"), ra_id)
             # DC-codes: algunos docs usan "DC1" en vez de "D1"
             if ra.startswith("D"):
                 num = ra[1:]
                 self.ra_por_codigo[_normalizar(f"{comp}, {nd}, DC{num}")] = ra_id
                 self.ra_por_codigo[_normalizar(f"{comp}, N{num_nd}, DC{num}")] = ra_id
-                self.ra_por_codigo[_normalizar(f"{comp}, DC{num}")] = ra_id
+                self.ra_por_codigo.setdefault(_normalizar(f"{comp}, DC{num}"), ra_id)
 
         # Patron regex que detecta CUALQUIER mención a un código tipo RA.
         # Soporta separadores coma O guión: "CL1, N2, RA1" y "CG2-ND2-DC1".
@@ -355,7 +378,6 @@ def extraer_descripcion(doc: Document) -> str:
     y, si no encuentra, en párrafos ubicados tras el encabezado
     'DESCRIPCIÓN DE LA ASIGNATURA:'.
     """
-    from docx.oxml.ns import qn as _qn
     partes = []
 
     # Estrategia 1: tabla de 1 col que empieza con "La asignatura…"
@@ -382,7 +404,7 @@ def extraer_descripcion(doc: Document) -> str:
             if capturing:
                 break   # encontramos una tabla → fin de la descripción
             continue
-        txt = ''.join(r.text or '' for r in child.iter(_qn('w:t'))).strip()
+        txt = _elem_text(child).strip()
         if not txt:
             continue
         tl = txt.lower()
@@ -637,7 +659,6 @@ def extraer_descripcion_evaluaciones(doc: Document) -> str:
     evaluaciones (p.ej. descripción de la nota final, política de IA, etc.)
     y ANTES de la siguiente sección principal.
     """
-    from docx.oxml.ns import qn as _qn
     _STOP = {"recurso", "bibliograf", "linkograf", "otro recurso",
              "datos actual", "responsable"}
     eval_table_passed = False
@@ -647,12 +668,12 @@ def extraer_descripcion_evaluaciones(doc: Document) -> str:
     for child in doc.element.body:
         tag = child.tag.split('}')[-1]
         if tag == 'tbl':
-            all_text = ''.join(r.text or '' for r in child.iter(_qn('w:t'))).lower()
+            all_text = _elem_text(child).lower()
             if 'evaluaci' in all_text and ('tipo' in all_text or 'porcentaje' in all_text):
                 eval_table_passed = True
                 capturing = True
         elif tag == 'p' and capturing:
-            txt = ''.join(r.text or '' for r in child.iter(_qn('w:t'))).strip()
+            txt = _elem_text(child).strip()
             if not txt:
                 continue
             tl = txt.lower()
