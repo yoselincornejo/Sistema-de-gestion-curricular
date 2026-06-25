@@ -1,0 +1,73 @@
+INFO     Diccionario cargado: 8 competencias | 316 RA codes válidos
+INFO     =================================================================
+INFO     parse_word_to_db.py  —  53 documentos  
+INFO     =================================================================
+INFO     OK         CFG 111    Desarrollo Personal                      | RA:7   U:3   BB:2   BC:2
+INFO     OK         ING 111    Desafíos de Ingeniería                   | RA:7   U:3   BB:4   BC:1
+INFO     OK         MAT 111    Fundamentos de Matemática                | RA:3   U:6   BB:1   BC:1
+INFO     OK         PRO 111    Fundamentos de Programación              | RA:3   U:3   BB:5   BC:3
+INFO     OMITIDO   QUI 121 Química para Ingeniería - Laboratorios.docx
+INFO     OK         QUI 121    Química para Ingeniería                  | RA:6   U:4   BB:2   BC:1
+INFO     OK         IMAT 415   Idioma IV                                | RA:5   U:1   BB:0   BC:0
+WARNING  SIN-RA    IMAT 513   Electivo de formación profesional III    (se carga sin tributaciones)
+INFO     OK         IMAT 513   Electivo de formación profesional III    | RA:0   U:0   BB:0   BC:0
+INFO     OK         IMAT 523   Proyecto de Ingeniería                   | RA:18  U:1   BB:1   BC:0
+WARNING  SIN-RA    IMAT 524   Electivo de formación profesional II     (se carga sin tributaciones)
+INFO     OK         IMAT 524   Electivo de formación profesional II     | RA:0   U:0   BB:0   BC:0
+INFO     OK         IMAT 611   Taller de Título                         | RA:18  U:1   BB:1   BC:0
+INFO     OK         IMAT 612   Práctica Profesional                     | RA:12  U:3   BB:0   BC:0
+INFO     OK         FIS 111    Fundamentos de Física                    | RA:4   U:18  BB:2   BC:2
+INFO     OK         ING 121    Ingeniería, Innovación y Emprendimiento  | RA:10  U:4   BB:3   BC:3
+INFO     OK         MAT 121    Cálculo Diferencial                      | RA:3   U:3   BB:1   BC:2
+INFO     OK         MAT 122    Álgebra                                  | RA:3   U:6   BB:2   BC:2
+INFO     OK         PRO 121    Programación                             | RA:3   U:3   BB:4   BC:2
+INFO     OK         FIS 211    Física Mecánica                          | RA:4   U:5   BB:3   BC:0
+INFO     OK         IMAT 221   Taller de Deducción Matemática           | RA:5   U:3   BB:5   BC:2
+INFO     OK         IMAT211    Programación para Ingeniería             | RA:3   U:3   BB:2   BC:0
+INFO     OK         MAT 211    Cálculo Integral y Series                | RA:3   U:4   BB:1   BC:2
+INFO     OK         MAT 212    Álgebra Lineal                           | RA:3   U:4   BB:3   BC:3
+INFO     OK         FIS 221    Física Calor y Ondas                     | RA:4   U:3   BB:2   BC:1
+WARNING  SIN-RA    IMAT 223   Idioma I                                 (se carga sin tributaciones)
+INFO     OK         IMAT 223   Idioma I                                 | RA:0   U:3   BB:3   BC:3
+INFO     OK         IMAT314    Estructuras Algebraicas                  | RA:4   U:3   BB:3   BC:2
+INFO     OK         IMAT 212   Economía                                 | RA:4   U:2   BB:3   BC:1
+INFO     OK         MAT 221    Cálculo en Varias Variables              | RA:3   U:2   BB:2   BC:1
+INFO     OK         MAT 222    Ecuaciones Diferenciales Ordinarias      | RA:3   U:4   BB:2   BC:1
+INFO     OK         FIS 311    Física Electromagnetismo                 | RA:4   U:3   BB:1   BC:1
+INFO     OK         IMAT 311   Cálculo Avanzado                         | RA:3   U:3   BB:4   BC:0
+INFO     OK         IMAT 312   Métodos Numéricos                        | RA:8   U:3   BB:4   BC:1
+INFO     OK         IMAT321    Análisis                                 | RA:8   U:8   BB:5   BC:1
+INFO     OK         IMAT324    TIPE I                                   | RA:8   U:3   BB:1   BC:1
+INFO     OK         IMAT222    Evaluación de Proyectos                  | RA:4   U:2   BB:1   BC:1
+INFO     OK         IMAT313    Combinatoria y Algoritmos                | RA:8   U:4   BB:5   BC:3
+INFO     OK         IMAT 315   Idioma II                                | RA:2   U:2   BB:2   BC:1
+INFO     OK         IMAT322    Cálculo de Probabilidades                | RA:7   U:3   BB:1   BC:1
+INFO     OK         IMAT 411   Teoría de la Medida                      | RA:8   U:5   BB:5   BC:4
+INFO     OMITIDO   IMAT 423 Sistemas Dinámicos Continuos.docx
+INFO     OK         IMAT 323   Optimización                             | RA:7   U:4   BB:2   BC:4
+INFO     OK         IMAT413    Análisis Complejo                        | RA:4   U:4   BB:4   BC:1
+INFO     OK         IMAT 414   TIPE II                                  | RA:8   U:3   BB:1   BC:1
+INFO     OK         IMAT 412   Inferencia Estadística                   | RA:7   U:6   BB:3   BC:1
+INFO     OK         IMAT 325   Idioma III                               | RA:2   U:2   BB:2   BC:1
+INFO     OK         IMAT422    Procesos Estocásticos                    | RA:8   U:3   BB:1   BC:3
+INFO     OK         IMAT424    Taller de Integración al Perfil de Egre  | RA:8   U:3   BB:3   BC:0
+INFO     OK         IMAT 521   Optimización Combinatorial               | RA:13  U:4   BB:2   BC:1
+INFO     OK         IMAT421    Análisis Funcional                       | RA:8   U:3   BB:2   BC:1
+INFO     OK         IMAT 511   Grafos                                   | RA:4   U:5   BB:4   BC:0
+INFO     OK         IMAT512    Modelación Estocástica                   | RA:5   U:3   BB:2   BC:1
+WARNING  SIN-RA    IMAT 514   Electivo de Ingeniería I                 (se carga sin tributaciones)
+INFO     OK         IMAT 514   Electivo de Ingeniería I                 | RA:0   U:0   BB:0   BC:0
+INFO     OK         IMAT 515   Práctica Básica                          | RA:9   U:3   BB:0   BC:0
+INFO     OK         IMAT522    Ecuaciones en Derivadas Parciales        | RA:7   U:2   BB:2   BC:1
+INFO     
+INFO     =================================================================
+INFO     RESULTADO: 51 OK | 0 cuarentena | 2 omitidos | 0 errores
+INFO     
+INFO     ESTADO FINAL DE LA BD:
+INFO       asignaturas               51
+INFO       tributaciones             288
+INFO       unidades                  176
+INFO       bibliografia              178
+INFO       linkografia               96
+INFO       metodologias              155
+INFO       evaluaciones              225

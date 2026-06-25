@@ -441,7 +441,7 @@ def extraer_unidades(doc: Document) -> list[dict]:
                 continue
             # Si col 2 está vacía pero col 0 tiene texto de RA/desempeños, usarlo como indicador
             if not indicador and desempenos and not any(
-                k in desempenos.lower() for k in ("resultado", "desempeño", "unidad")
+                k in desempenos.lower() for k in ("resultado", "unidad")
             ):
                 indicador = desempenos
 
@@ -597,8 +597,16 @@ def extraer_metodologias(doc: Document) -> list[str]:
     metods = []
     for t in doc.tables:
         h0 = t.rows[0].cells[0].text.strip().lower()
-        # Excluir tabla de unidades y evaluaciones por su encabezado
-        if any(k in h0 for k in ("resultado", "desempeño", "evaluaci", "tipo de eval")):
+        # Excluir por tipo de encabezado conocido
+        if any(k in h0 for k in ("resultado", "desempeño", "evaluaci", "tipo de eval",
+                                   "experiencias de laboratorio", "tipo de documento",
+                                   "bibliograf", "linkograf", "responsable", "nombre",
+                                   "facultad", "programa de la")):
+            continue
+        # Excluir tablas cuyo primer encabezado es prosa descriptiva de la asignatura
+        _DESC_STARTERS = ("la asignatura", "esta asignatura", "al final de", "el programa",
+                          "aporte al perfil", "esta carrera", "el presente")
+        if any(h0.startswith(k) for k in _DESC_STARTERS):
             continue
 
         all_texts = [c.text.strip() for row in t.rows for c in row.cells]
@@ -638,18 +646,60 @@ def extraer_metodologias(doc: Document) -> list[str]:
     return metods
 
 
+_EVAL_HEADER_SKIP = {"porcentaje", "tipo de evaluaci", "evaluaciones formativas",
+                     "evaluaciones sumativas", "tipo", "tipo de eval"}
+
+def extraer_laboratorios(doc: Document) -> str:
+    """Extrae la tabla '3.1 EXPERIENCIAS DE LABORATORIO' si existe."""
+    for t in doc.tables:
+        h0 = t.rows[0].cells[0].text.strip().lower()
+        # Must be a dedicated lab section header (not just a table that mentions "laboratorio")
+        if "experiencias de laboratorio" not in h0:
+            continue
+        lines = []
+        for row in t.rows[1:]:
+            cs = [_elem_text(c._tc).strip() for c in row.cells]
+            unique = []
+            seen = set()
+            for c in cs:
+                if c and c not in seen:
+                    unique.append(c)
+                    seen.add(c)
+            if unique:
+                lines.append(" | ".join(unique))
+        if lines:
+            return "\n".join(lines)
+    return ""
+
+
 def extraer_evaluaciones(doc: Document) -> list[dict]:
     evals = []
     for t in doc.tables:
         h = t.rows[0].cells[0].text.strip().lower()
-        if "evaluaci" not in h or "tipo" not in h:
+        # Accept table if first cell mentions evaluación (relaxed: no longer requires "tipo")
+        if "evaluaci" not in h and "porcentaje" not in h:
             continue
         for row in t.rows[1:]:
-            if len(row.cells) >= 2:
-                tipo = row.cells[0].text.strip()
-                porc = row.cells[1].text.strip()
-                if tipo:
-                    evals.append({"tipo": tipo, "porcentaje": porc})
+            if len(row.cells) < 2:
+                continue
+            tc0 = row.cells[0]._tc
+            tc1 = row.cells[1]._tc
+            # Skip merged rows (description spanning both columns)
+            if tc0 is tc1:
+                continue
+            tipo = _elem_text(tc0).strip()
+            porc = _elem_text(tc1).strip()
+            if not tipo:
+                continue
+            # Skip sub-header rows (e.g. "Evaluaciones sumativas" / "Porcentaje (%)")
+            tipo_low = tipo.lower().rstrip('.')
+            porc_low = porc.lower()
+            if tipo_low in _EVAL_HEADER_SKIP or "porcentaje" in porc_low:
+                continue
+            # Skip rows that look like description text (very long tipo or starts with keywords)
+            if tipo.startswith("Descripción") or tipo.startswith("Nota") or len(tipo) > 120:
+                continue
+            evals.append({"tipo": tipo, "porcentaje": porc})
     return evals
 
 
@@ -730,6 +780,7 @@ def parsear_docx(ruta: Path, dicc: DiccionarioCodigos) -> dict:
         "identificacion":           extraer_identificacion(doc, texto_completo, codigo, nombre_asig),
         "descripcion":              extraer_descripcion(doc),
         "descripcion_evaluaciones": extraer_descripcion_evaluaciones(doc),
+        "laboratorios":             extraer_laboratorios(doc),
         "ra_ids":                   ra_ids,
         "unidades":                 extraer_unidades(doc),
         "metodologias":             extraer_metodologias(doc),
@@ -755,8 +806,9 @@ def insertar_programa(conn: sqlite3.Connection, data: dict):
         INSERT INTO asignaturas
           (codigo, nombre, semestre, nivel, duracion, tipo, facultad, carrera,
            requisitos, horas_directa, horas_autonoma, semanas, creditos,
-           descripcion, descripcion_evaluaciones, otros_recursos, version, archivo_origen)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+           descripcion, descripcion_evaluaciones, experiencias_laboratorio,
+           otros_recursos, version, archivo_origen)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         ON CONFLICT(codigo) DO UPDATE SET
           nombre                   = excluded.nombre,
           semestre                 = excluded.semestre,
@@ -771,6 +823,7 @@ def insertar_programa(conn: sqlite3.Connection, data: dict):
           creditos                 = excluded.creditos,
           descripcion              = excluded.descripcion,
           descripcion_evaluaciones = excluded.descripcion_evaluaciones,
+          experiencias_laboratorio = excluded.experiencias_laboratorio,
           otros_recursos           = excluded.otros_recursos,
           version                  = excluded.version,
           archivo_origen           = excluded.archivo_origen
@@ -783,6 +836,7 @@ def insertar_programa(conn: sqlite3.Connection, data: dict):
         ident.get("horas_autonoma"), ident.get("semanas"),
         ident.get("creditos"),       data.get("descripcion", ""),
         data.get("descripcion_evaluaciones", ""),
+        data.get("laboratorios", ""),
         data.get("otros_recursos",""),
         data.get("responsables", {}).get("version", ""),
         data.get("archivo", ""),

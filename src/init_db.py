@@ -79,6 +79,7 @@ CREATE TABLE IF NOT EXISTS asignaturas (
     creditos        INTEGER,
     descripcion              TEXT    DEFAULT '',
     descripcion_evaluaciones TEXT    DEFAULT '',
+    experiencias_laboratorio TEXT    DEFAULT '',
     otros_recursos           TEXT    DEFAULT '',
     version                  TEXT    DEFAULT '',
     archivo_origen           TEXT    DEFAULT ''

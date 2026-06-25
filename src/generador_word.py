@@ -715,6 +715,16 @@ def generar_programa_individual(asignatura_id, salida=None):
             _cell_para(row.cells[1], (u.get("contenidos", "") or "").strip(), size=9)
     doc.add_paragraph()
 
+    # Sección "3.1 EXPERIENCIAS DE LABORATORIO" si existe
+    lab_text = (data["asig"].get("experiencias_laboratorio") or "").strip()
+    if lab_text:
+        _section_title(doc, "3.1 EXPERIENCIAS DE LABORATORIO:")
+        p_lab = doc.add_paragraph()
+        run_lab = p_lab.add_run(lab_text)
+        run_lab.font.size = Pt(10)
+        run_lab.font.name = "Calibri"
+        doc.add_paragraph()
+
     _section_title(doc, "METODOLOGÍA O ESTRATEGIA DE ENSEÑANZA - APRENDIZAJE:")
     # Lista estándar UV de metodologías (formato tabla de checkboxes 4 columnas)
     _UV_METODS = [
@@ -727,22 +737,34 @@ def generar_programa_individual(asignatura_id, salida=None):
         ("Aprendizaje Servicio.",                      "Otro, especifique:"),
         ("Aprendizaje Invertido.",                     ""),
     ]
-    seleccionadas = {m.strip().rstrip('.').lower() for m in data["metodologias"] if m}
+    metod_texts = [m.strip() for m in data["metodologias"] if m.strip()]
+    seleccionadas = {m.rstrip('.').lower() for m in metod_texts}
 
     def _esta_marcada(nombre):
         n = nombre.strip().rstrip('.').lower()
         return any(n in s or s in n for s in seleccionadas)
 
-    t_met = doc.add_table(rows=len(_UV_METODS), cols=4)
-    t_met.style = "Table Grid"
-    for ri, (izq, der) in enumerate(_UV_METODS):
-        row = t_met.rows[ri]
-        _cell_para(row.cells[0], izq, size=9)
-        _cell_para(row.cells[1], "X" if _esta_marcada(izq) else "", size=9,
-                   align=WD_ALIGN_PARAGRAPH.CENTER)
-        _cell_para(row.cells[2], der, size=9)
-        _cell_para(row.cells[3], "X" if (der and _esta_marcada(der)) else "", size=9,
-                   align=WD_ALIGN_PARAGRAPH.CENTER)
+    n_marcadas = sum(1 for izq, der in _UV_METODS
+                     if _esta_marcada(izq) or (der and _esta_marcada(der)))
+
+    if n_marcadas > 0:
+        # Render UV checkbox table
+        t_met = doc.add_table(rows=len(_UV_METODS), cols=4)
+        t_met.style = "Table Grid"
+        for ri, (izq, der) in enumerate(_UV_METODS):
+            row = t_met.rows[ri]
+            _cell_para(row.cells[0], izq, size=9)
+            _cell_para(row.cells[1], "X" if _esta_marcada(izq) else "", size=9,
+                       align=WD_ALIGN_PARAGRAPH.CENTER)
+            _cell_para(row.cells[2], der, size=9)
+            _cell_para(row.cells[3], "X" if (der and _esta_marcada(der)) else "", size=9,
+                       align=WD_ALIGN_PARAGRAPH.CENTER)
+    elif metod_texts:
+        # Free-text methodology: render as paragraph
+        p_met = doc.add_paragraph()
+        run_met = p_met.add_run("\n".join(metod_texts))
+        run_met.font.size = Pt(10)
+        run_met.font.name = "Calibri"
     doc.add_paragraph()
 
     _section_title(doc, "METODOLOGÍA O ESTRATEGIA DE EVALUACIÓN:")
