@@ -97,6 +97,71 @@ def get_ras_con_asignaturas(comp_codigo):
     conn.close()
     return resultado
 
+def get_discrepancias():
+    """
+    Retorna dos listas para el panel de discrepancias del dashboard:
+    - sugerencias: RAs con 0 tributaciones de tipo 'titulo', con asignaturas propuestas.
+    - todas: todos los RAs con 0 tributaciones (cualquier tipo) + asignaturas sin tributaciones.
+    """
+    conn = conexion()
+
+    # RAs sin tributaciones
+    ras_vacios = conn.execute("""
+        SELECT ra.codigo_completo, ra.descripcion, c.codigo as comp, c.tipo,
+               nd.codigo_nivel,
+               (SELECT COUNT(*) FROM tributaciones t WHERE t.ra_id = ra.id) as n_trib
+        FROM resultados_aprendizaje ra
+        JOIN niveles_dominio nd ON nd.id = ra.nivel_dominio_id
+        JOIN competencias c ON c.id = nd.competencia_id
+        WHERE (SELECT COUNT(*) FROM tributaciones t WHERE t.ra_id = ra.id) = 0
+        ORDER BY c.tipo, c.codigo, nd.codigo_nivel, ra.codigo_ra
+    """).fetchall()
+
+    # Asignaturas sin ninguna tributación
+    asigs_sin = conn.execute("""
+        SELECT a.codigo, a.nombre
+        FROM asignaturas a
+        WHERE (SELECT COUNT(*) FROM tributaciones t WHERE t.asignatura_id = a.id) = 0
+        ORDER BY a.codigo
+    """).fetchall()
+
+    conn.close()
+    return [dict(r) for r in ras_vacios], [dict(r) for r in asigs_sin]
+
+# Sugerencias basadas en equivalencia con plan ICM
+_SUGERENCIAS_ICM = {
+    "CE1, ND2, RA2": {
+        "desc": "Plantea ecuaciones diferenciales (ordinarias o en derivadas parciales).",
+        "asigs": ["MAT 222 — Ecuaciones Diferenciales Ordinarias",
+                  "IMAT522 — Ecuaciones en Derivadas Parciales"],
+        "ref":  "ICM 324, ICM 414",
+    },
+    "CE1, ND2, RA7": {
+        "desc": "Maneja herramientas avanzadas de la Física, en contextos generales.",
+        "asigs": ["IMAT424 — TIPE ICM"],
+        "ref":  "ICM 425",
+    },
+    "CE2, ND1, RA1": {
+        "desc": "Maneja software matemáticos, estadísticos y lenguaje de programación.",
+        "asigs": ["PRO 111 — Fundamentos de Programación",
+                  "PRO 121 — Programación",
+                  "IMAT211 — Programación para Ingeniería"],
+        "ref":  "ICM 114, ICM 124, ICM 214",
+    },
+    "CE2, ND1, RA3": {
+        "desc": "Plantea problemas simplificados de ingeniería, matemáticamente.",
+        "asigs": ["ING 111 — Desafíos de Ingeniería"],
+        "ref":  "ICM 114",
+    },
+    "CE2, ND2, RA4": {
+        "desc": "Implementa métodos numéricos, computacionalmente, para simulación.",
+        "asigs": ["IMAT 312 — Métodos Numéricos",
+                  "IMAT424 — TIPE ICM"],
+        "ref":  "ICM 425",
+    },
+}
+
+
 def get_asignaturas_lista():
     conn = conexion()
     filas = conn.execute(
@@ -520,9 +585,13 @@ class Dashboard(param.Parameterized):
             embed=False,
         )
 
+        # ── Panel de discrepancias ────────────────────────────────
+        discr_panel = self._build_discrepancias()
+
         return pn.Column(
             pn.Row(*bloques, sizing_mode="stretch_width"),
             popup_pane,
+            discr_panel,
             pn.layout.Divider(),
             pn.Column(
                 pn.pane.HTML('<div class="card-title" style="text-align:center">Documentos Oficiales</div>'),
@@ -533,6 +602,153 @@ class Dashboard(param.Parameterized):
                 align="center"
             ),
             sizing_mode="stretch_width"
+        )
+
+    def _build_discrepancias(self):
+        ras_vacios, asigs_sin = get_discrepancias()
+
+        # ── Tabla 1: Sugerencias para RAs sin tributación (tipo título) ──
+        filas_suger = ""
+        for ra in ras_vacios:
+            if ra["codigo_completo"] not in _SUGERENCIAS_ICM:
+                continue
+            s = _SUGERENCIAS_ICM[ra["codigo_completo"]]
+            asigs_html = "".join(
+                f'<span style="display:inline-block;background:#F0FDF4;color:#166534;'
+                f'border:1px solid #BBF7D0;border-radius:5px;padding:2px 8px;'
+                f'font-size:11px;margin:2px">{a}</span>'
+                for a in s["asigs"]
+            )
+            filas_suger += f"""
+            <tr>
+              <td style="font-weight:700;color:#375623;white-space:nowrap;padding:8px 12px;
+                         border-bottom:1px solid #F1F5F9">{ra["codigo_completo"]}</td>
+              <td style="padding:8px 12px;border-bottom:1px solid #F1F5F9;
+                         font-size:12px;color:#475569">{s["desc"]}</td>
+              <td style="padding:8px 12px;border-bottom:1px solid #F1F5F9">{asigs_html}</td>
+              <td style="padding:8px 12px;border-bottom:1px solid #F1F5F9;
+                         font-size:11px;color:#94A3B8;white-space:nowrap">{s["ref"]}</td>
+            </tr>"""
+
+        tabla_suger = f"""
+        <div style="margin-bottom:6px">
+          <div class="card-title">Tributaciones faltantes sugeridas — referencia plan ICM</div>
+          <p style="font-size:12px;color:#64748B;margin-bottom:12px">
+            Los siguientes RAs no tienen ninguna asignatura tributante. Se propone vincularlos
+            a las asignaturas indicadas, por equivalencia con el plan original ICM.
+            Puedes confirmarlos desde <strong>Detalle de Asignatura → Tributación</strong>.
+          </p>
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead>
+              <tr style="background:#F8FAFC">
+                <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;
+                           text-transform:uppercase;letter-spacing:1px;color:#1F4E79;
+                           border-bottom:2px solid #E2E8F0">RA</th>
+                <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;
+                           text-transform:uppercase;letter-spacing:1px;color:#1F4E79;
+                           border-bottom:2px solid #E2E8F0">Descripción</th>
+                <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;
+                           text-transform:uppercase;letter-spacing:1px;color:#1F4E79;
+                           border-bottom:2px solid #E2E8F0">Asignaturas propuestas</th>
+                <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;
+                           text-transform:uppercase;letter-spacing:1px;color:#1F4E79;
+                           border-bottom:2px solid #E2E8F0">Ref. plan ICM</th>
+              </tr>
+            </thead>
+            <tbody>{filas_suger}</tbody>
+          </table>
+        </div>"""
+
+        # ── Tabla 2: Todas las discrepancias ──
+        COLOR_TIPO = {"titulo": "#375623", "licenciatura": "#1F4E79", "sello_uv": "#7B2C2C"}
+        BADGE_BG   = {"titulo": "#F0FDF4", "licenciatura": "#EFF6FF", "sello_uv": "#FFF1F2"}
+        BADGE_BDR  = {"titulo": "#BBF7D0", "licenciatura": "#BFDBFE", "sello_uv": "#FECDD3"}
+
+        filas_all = ""
+        for ra in ras_vacios:
+            tipo = ra["tipo"]
+            color = COLOR_TIPO.get(tipo, "#475569")
+            bg    = BADGE_BG.get(tipo, "#F8FAFC")
+            bdr   = BADGE_BDR.get(tipo, "#E2E8F0")
+            tipo_label = LABEL.get(tipo, tipo)
+            filas_all += f"""
+            <tr>
+              <td style="padding:7px 12px;border-bottom:1px solid #F1F5F9">
+                <span style="background:{bg};color:{color};border:1px solid {bdr};
+                  border-radius:5px;padding:2px 8px;font-size:11px;font-weight:700;
+                  white-space:nowrap">{tipo_label}</span>
+              </td>
+              <td style="font-weight:700;color:{color};padding:7px 12px;
+                         border-bottom:1px solid #F1F5F9;white-space:nowrap;
+                         font-size:13px">{ra["codigo_completo"]}</td>
+              <td style="padding:7px 12px;border-bottom:1px solid #F1F5F9;
+                         font-size:12px;color:#475569">{ra["descripcion"][:80]}{'…' if len(ra["descripcion"])>80 else ''}</td>
+              <td style="padding:7px 12px;border-bottom:1px solid #F1F5F9;
+                         text-align:center">
+                <span style="background:#FEF2F2;color:#991B1B;border:1px solid #FECACA;
+                  border-radius:10px;padding:2px 10px;font-size:11px;font-weight:700">0</span>
+              </td>
+              <td style="padding:7px 12px;border-bottom:1px solid #F1F5F9;
+                         font-size:11px;color:#94A3B8">
+                {"✅ Sugerencia disponible" if ra["codigo_completo"] in _SUGERENCIAS_ICM else "⚠ Sin sugerencia — revisar manualmente"}
+              </td>
+            </tr>"""
+
+        for asig in asigs_sin:
+            filas_all += f"""
+            <tr>
+              <td style="padding:7px 12px;border-bottom:1px solid #F1F5F9">
+                <span style="background:#FFFBEB;color:#92400E;border:1px solid #FDE68A;
+                  border-radius:5px;padding:2px 8px;font-size:11px;font-weight:700">
+                  Asignatura</span>
+              </td>
+              <td style="font-weight:700;color:#92400E;padding:7px 12px;
+                         border-bottom:1px solid #F1F5F9;font-size:13px">{asig["codigo"]}</td>
+              <td style="padding:7px 12px;border-bottom:1px solid #F1F5F9;
+                         font-size:12px;color:#475569">{asig["nombre"]}</td>
+              <td style="padding:7px 12px;border-bottom:1px solid #F1F5F9;
+                         text-align:center">
+                <span style="background:#FEF2F2;color:#991B1B;border:1px solid #FECACA;
+                  border-radius:10px;padding:2px 10px;font-size:11px;font-weight:700">0</span>
+              </td>
+              <td style="padding:7px 12px;border-bottom:1px solid #F1F5F9;
+                         font-size:11px;color:#64748B">
+                Sin tributaciones registradas (asignatura electiva / idioma)
+              </td>
+            </tr>"""
+
+        tabla_all = f"""
+        <div style="margin-top:20px">
+          <div class="card-title">Resumen de discrepancias — tributaciones nulas</div>
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead>
+              <tr style="background:#F8FAFC">
+                <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;
+                           text-transform:uppercase;letter-spacing:1px;color:#1F4E79;
+                           border-bottom:2px solid #E2E8F0">Tipo</th>
+                <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;
+                           text-transform:uppercase;letter-spacing:1px;color:#1F4E79;
+                           border-bottom:2px solid #E2E8F0">Código</th>
+                <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;
+                           text-transform:uppercase;letter-spacing:1px;color:#1F4E79;
+                           border-bottom:2px solid #E2E8F0">Descripción</th>
+                <th style="text-align:center;padding:8px 12px;font-size:11px;font-weight:700;
+                           text-transform:uppercase;letter-spacing:1px;color:#1F4E79;
+                           border-bottom:2px solid #E2E8F0">Tributaciones</th>
+                <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;
+                           text-transform:uppercase;letter-spacing:1px;color:#1F4E79;
+                           border-bottom:2px solid #E2E8F0">Estado</th>
+              </tr>
+            </thead>
+            <tbody>{filas_all}</tbody>
+          </table>
+        </div>"""
+
+        return pn.Column(
+            pn.pane.HTML(tabla_suger + tabla_all),
+            css_classes=["card"],
+            sizing_mode="stretch_width",
+            margin=(16, 0, 0, 0),
         )
 
 
