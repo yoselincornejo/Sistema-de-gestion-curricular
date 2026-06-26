@@ -705,23 +705,50 @@ def extraer_evaluaciones(doc: Document) -> list[dict]:
 
 def extraer_descripcion_evaluaciones(doc: Document) -> str:
     """
-    Captura párrafos de texto libre que aparecen DESPUÉS de la tabla de
-    evaluaciones (p.ej. descripción de la nota final, política de IA, etc.)
-    y ANTES de la siguiente sección principal.
+    Captura la descripción de la sección de evaluaciones. Busca en dos lugares:
+    1. Filas fusionadas (merged) dentro de la tabla de evaluaciones, que contienen
+       texto descriptivo (Descripción general, política de notas, IA, etc.)
+    2. Párrafos de texto libre que aparecen DESPUÉS de dicha tabla.
     """
     _STOP = {"recurso", "bibliograf", "linkograf", "otro recurso",
              "datos actual", "responsable"}
-    eval_table_passed = False
     capturing = False
     texts = []
+
+    _WTR = _qn('w:tr')
+    _WTC = _qn('w:tc')
 
     for child in doc.element.body:
         tag = child.tag.split('}')[-1]
         if tag == 'tbl':
-            all_text = _elem_text(child).lower()
-            if 'evaluaci' in all_text and ('tipo' in all_text or 'porcentaje' in all_text):
-                eval_table_passed = True
-                capturing = True
+            # Identificar tabla de evaluaciones por su PRIMERA FILA (no todo el texto)
+            first_trs = child.findall(_WTR)
+            if not first_trs:
+                continue
+            first_row_text = _elem_text(first_trs[0]).lower()
+            if 'evaluaci' not in first_row_text and 'porcentaje' not in first_row_text:
+                continue
+            # Excluir tablas que no son de evaluaciones (linkografia, bibliografía…)
+            if any(k in first_row_text for k in ("tipo de documento", "bibliograf",
+                                                   "linkograf", "autor", "responsable")):
+                continue
+            # Es la tabla de evaluaciones: buscar filas fusionadas o de descripción
+            for tr in child.findall(_WTR):
+                tcs = tr.findall(_WTC)
+                # Fila fusionada (gridSpan): solo 1 w:tc en el XML crudo
+                if len(tcs) == 1:
+                    txt = _elem_text(tcs[0]).strip()
+                    if txt:
+                        texts.append(txt)
+                    continue
+                if len(tcs) < 2:
+                    continue
+                # Fila con texto de descripción largo en col 0
+                tipo = _elem_text(tcs[0]).strip()
+                if (tipo.startswith("Descripción") or tipo.startswith("Nota")
+                        or len(tipo) > 120):
+                    texts.append(tipo)
+            capturing = True
         elif tag == 'p' and capturing:
             txt = _elem_text(child).strip()
             if not txt:
