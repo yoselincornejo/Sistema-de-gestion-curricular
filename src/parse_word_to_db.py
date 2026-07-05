@@ -429,6 +429,9 @@ def extraer_unidades(doc: Document) -> list[dict]:
         if not ("resultado" in h0 or "desempeño" in h0 or "ra" == h0[:2] or
                 "unidad" in h1 or "contenido" in h1):
             continue
+        # Skip content-detail tables whose h0 is already the unit/workshop title
+        if re.match(r"^(unidad|taller)\s+\d+", h0, re.IGNORECASE):
+            continue
         for i, row in enumerate(t.rows[1:], 1):
             cells = row.cells
             # Col 0: RA/desempeños por unidad (texto de los RAs que aplican)
@@ -440,10 +443,10 @@ def extraer_unidades(doc: Document) -> list[dict]:
             if not contenidos:
                 continue
             # Si col 2 está vacía pero col 0 tiene texto de RA/desempeños, usarlo como indicador
-            if not indicador and desempenos and not any(
-                k in desempenos.lower() for k in ("resultado", "unidad")
-            ):
-                indicador = desempenos
+            if not indicador and desempenos:
+                dl = desempenos.lower()
+                if not (dl.startswith("resultado") or dl.startswith("unidad")):
+                    indicador = desempenos
 
             m = re.search(r"Unidad\s+(\d+|[IVX]+)", contenidos, re.IGNORECASE)
             num = None
