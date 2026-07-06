@@ -16,7 +16,7 @@ WARNING  SIN-RA    IMAT 524   Electivo de formación profesional II     (se carg
 INFO     OK         IMAT 524   Electivo de formación profesional II     | RA:0   U:0   BB:0   BC:0
 INFO     OK         IMAT 611   Taller de Título                         | RA:18  U:1   BB:1   BC:0
 INFO     OK         IMAT 612   Práctica Profesional                     | RA:12  U:3   BB:0   BC:0
-INFO     OK         FIS 111    Fundamentos de Física                    | RA:4   U:18  BB:2   BC:2
+INFO     OK         FIS 111    Fundamentos de Física                    | RA:4   U:5   BB:2   BC:2
 INFO     OK         ING 121    Ingeniería, Innovación y Emprendimiento  | RA:10  U:4   BB:3   BC:3
 INFO     OK         MAT 121    Cálculo Diferencial                      | RA:3   U:3   BB:1   BC:2
 INFO     OK         MAT 122    Álgebra                                  | RA:3   U:6   BB:2   BC:2
@@ -66,8 +66,8 @@ INFO
 INFO     ESTADO FINAL DE LA BD:
 INFO       asignaturas               51
 INFO       tributaciones             288
-INFO       unidades                  176
+INFO       unidades                  163
 INFO       bibliografia              178
 INFO       linkografia               96
-INFO       metodologias              155
+INFO       metodologias              159
 INFO       evaluaciones              225
