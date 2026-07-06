@@ -330,6 +330,20 @@ body { background:var(--bg); font-family:-apple-system,BlinkMacSystemFont,"Segoe
 .btn-add { background:#FFFBEB !important; color:var(--orange) !important;
     border:1.5px dashed var(--orange) !important; border-radius:8px !important;
     font-weight:600 !important; }
+
+/* Tributaciones checkboxes — checked state highlighted in green */
+.bk-input-group input[type="checkbox"] {
+    width: 16px; height: 16px; cursor: pointer;
+    accent-color: #16a34a;
+    margin-right: 5px;
+}
+.bk-input-group input[type="checkbox"]:checked + span {
+    color: #16a34a !important;
+    font-weight: 700 !important;
+}
+.bk-input-group input[type="checkbox"]:not(:checked) + span {
+    color: #94a3b8;
+}
 """
 
 COLOR = {"licenciatura": "#1F4E79", "titulo": "#375623", "sello_uv": "#7B2C2C"}
