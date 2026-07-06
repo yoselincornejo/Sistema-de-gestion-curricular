@@ -331,19 +331,10 @@ body { background:var(--bg); font-family:-apple-system,BlinkMacSystemFont,"Segoe
     border:1.5px dashed var(--orange) !important; border-radius:8px !important;
     font-weight:600 !important; }
 
-/* Tributaciones checkboxes — checked state highlighted in green */
-.bk-input-group input[type="checkbox"] {
-    width: 16px; height: 16px; cursor: pointer;
-    accent-color: #16a34a;
-    margin-right: 5px;
-}
-.bk-input-group input[type="checkbox"]:checked + span {
-    color: #16a34a !important;
-    font-weight: 700 !important;
-}
-.bk-input-group input[type="checkbox"]:not(:checked) + span {
-    color: #94a3b8;
-}
+/* Tributaciones toggle buttons */
+.bk-btn-light { color: #94a3b8 !important; background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important; font-size: 12px !important; }
+.bk-btn-success { font-size: 12px !important; font-weight: 700 !important; }
 """
 
 COLOR = {"licenciatura": "#1F4E79", "titulo": "#375623", "sello_uv": "#7B2C2C"}
@@ -851,10 +842,18 @@ class EditorProgramas(param.Parameterized):
             color_comp = COLOR.get(tipo_comp, "#1F4E79")
             checks = []
             for ra in ras:
-                cb = pn.widgets.Checkbox(
+                checked = (ra["id"] in ra_ids_actuales)
+                cb = pn.widgets.Toggle(
                     name=ra["codigo_completo"],
-                    value=(ra["id"] in ra_ids_actuales)
+                    value=checked,
+                    button_type="success" if checked else "light",
+                    width=200, height=30, margin=(2, 4)
                 )
+                def _make_watcher(toggle):
+                    def _on_toggle(event):
+                        toggle.button_type = "success" if event.new else "light"
+                    return _on_toggle
+                cb.param.watch(_make_watcher(cb), "value")
                 ra_checks[ra["id"]] = cb
                 checks.append(cb)
             ra_cols.append(pn.Column(
@@ -862,7 +861,7 @@ class EditorProgramas(param.Parameterized):
                     f'<div style="font-weight:700;color:{color_comp};'
                     f'font-size:13px;margin-bottom:6px">{comp}</div>'
                 ),
-                *checks, width=300
+                *checks, width=220
             ))
 
         self._ra_checks = ra_checks
