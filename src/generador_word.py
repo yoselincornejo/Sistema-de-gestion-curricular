@@ -621,6 +621,46 @@ def _run(para, text, bold=False, underline=False, size=10, color=None):
     return run
 
 
+def _boxed_text(doc, text, size=10):
+    """Envuelve un bloque de texto plano en una celda con borde (Table Grid 1×1)."""
+    if not (text or "").strip():
+        return
+    tbl = doc.add_table(rows=1, cols=1)
+    tbl.style = "Table Grid"
+    cell = tbl.cell(0, 0)
+    p = cell.paragraphs[0]
+    run = p.add_run(text.strip())
+    run.font.size = Pt(size)
+    run.font.name = "Calibri"
+
+
+def _boxed_ra_list(doc, intro_text, ras, tipo_color_map):
+    """
+    Envuelve la sección de RAs (intro + lista) en una celda con borde.
+    ras: lista de dicts con 'codigo_completo', 'descripcion', 'tipo'
+    """
+    tbl = doc.add_table(rows=1, cols=1)
+    tbl.style = "Table Grid"
+    cell = tbl.cell(0, 0)
+
+    # Intro
+    p0 = cell.paragraphs[0]
+    _run(p0, intro_text, size=10)
+
+    # Bullets
+    for ra in ras:
+        p_ra = _add_cell_para(cell)
+        _run(p_ra, "• ", size=10)
+        r_cod = p_ra.add_run(ra["codigo_completo"])
+        r_cod.bold = True
+        r_cod.font.size = Pt(10)
+        r_cod.font.name = "Calibri"
+        tipo = ra.get("tipo", "licenciatura")
+        r_cod.font.color.rgb = tipo_color_map.get(tipo, UV_BLUE)
+        if ra.get("descripcion"):
+            _run(p_ra, f": {ra['descripcion']}", size=10)
+
+
 def _render_aporte_perfil(doc, bloques):
     """
     Renderiza la sección 'APORTE AL PERFIL DE EGRESO' como una tabla de
@@ -786,10 +826,7 @@ def generar_programa_individual(asignatura_id, salida=None):
 
     if asig.get("descripcion"):
         _section_title(doc, "DESCRIPCIÓN DE LA ASIGNATURA:")
-        p = doc.add_paragraph()
-        run = p.add_run(asig["descripcion"])
-        run.font.size = Pt(10)
-        run.font.name = "Calibri"
+        _boxed_text(doc, asig["descripcion"])
         doc.add_paragraph()
 
     _section_title(doc, "APORTE AL PERFIL DE EGRESO:")
@@ -809,22 +846,12 @@ def generar_programa_individual(asignatura_id, salida=None):
     doc.add_paragraph()
 
     _section_title(doc, "RESULTADOS DE APRENDIZAJE Y DESEMPEÑOS:")
-    p = doc.add_paragraph()
-    run = p.add_run("Al final de la asignatura los estudiantes serán capaces de demostrar los siguientes resultados:")
-    run.font.size = Pt(10)
-    run.font.name = "Calibri"
-    for ra in data["ras"]:
-        bp = doc.add_paragraph(style="List Bullet")
-        r1 = bp.add_run(ra["codigo_completo"])
-        r1.bold = True
-        r1.font.size = Pt(10)
-        r1.font.name = "Calibri"
-        tipo = ra.get("tipo", "licenciatura")
-        r1.font.color.rgb = TIPO_COLOR.get(tipo, UV_BLUE)
-        if ra.get("descripcion"):
-            r2 = bp.add_run(f": {ra['descripcion']}")
-            r2.font.size = Pt(10)
-            r2.font.name = "Calibri"
+    _boxed_ra_list(
+        doc,
+        "Al final de la asignatura los estudiantes serán capaces de demostrar los siguientes resultados:",
+        data["ras"],
+        TIPO_COLOR,
+    )
     doc.add_paragraph()
 
     _section_title(doc, "UNIDADES DE APRENDIZAJE Y CONTENIDOS:")
@@ -847,10 +874,7 @@ def generar_programa_individual(asignatura_id, salida=None):
     lab_text = (data["asig"].get("experiencias_laboratorio") or "").strip()
     if lab_text:
         _section_title(doc, "3.1 EXPERIENCIAS DE LABORATORIO:")
-        p_lab = doc.add_paragraph()
-        run_lab = p_lab.add_run(lab_text)
-        run_lab.font.size = Pt(10)
-        run_lab.font.name = "Calibri"
+        _boxed_text(doc, lab_text)
         doc.add_paragraph()
 
     _section_title(doc, "METODOLOGÍA O ESTRATEGIA DE ENSEÑANZA - APRENDIZAJE:")
@@ -888,11 +912,8 @@ def generar_programa_individual(asignatura_id, salida=None):
             _cell_para(row.cells[3], "X" if (der and _esta_marcada(der)) else "", size=9,
                        align=WD_ALIGN_PARAGRAPH.CENTER)
     elif metod_texts:
-        # Free-text methodology: render as paragraph
-        p_met = doc.add_paragraph()
-        run_met = p_met.add_run("\n".join(metod_texts))
-        run_met.font.size = Pt(10)
-        run_met.font.name = "Calibri"
+        # Free-text methodology: enclosed box
+        _boxed_text(doc, "\n".join(metod_texts))
     doc.add_paragraph()
 
     _section_title(doc, "METODOLOGÍA O ESTRATEGIA DE EVALUACIÓN:")
@@ -910,10 +931,16 @@ def generar_programa_individual(asignatura_id, salida=None):
     # Texto libre después de la tabla de evaluaciones (política de notas, IA, etc.)
     desc_ev = (data["asig"].get("descripcion_evaluaciones") or "").strip()
     if desc_ev:
-        p = doc.add_paragraph()
-        run = p.add_run(desc_ev)
-        run.font.size = Pt(10)
-        run.font.name = "Calibri"
+        if data["evaluaciones"]:
+            # Añade como fila fusionada al final de la tabla de evaluaciones
+            row_desc = t_ev.add_row()
+            merged = row_desc.cells[0].merge(row_desc.cells[1])
+            p_desc = merged.paragraphs[0]
+            run_desc = p_desc.add_run(desc_ev)
+            run_desc.font.size = Pt(9)
+            run_desc.font.name = "Calibri"
+        else:
+            _boxed_text(doc, desc_ev)
     doc.add_paragraph()
 
     _BIBLIO_HDRS = ["Autor", "Título", "Editorial", "Año", "ISBN", "Nº Ejemplares disponibles"]
@@ -969,10 +996,7 @@ def generar_programa_individual(asignatura_id, salida=None):
 
     if asig.get("otros_recursos"):
         _section_title(doc, "OTROS RECURSOS:")
-        p = doc.add_paragraph()
-        run = p.add_run(asig["otros_recursos"])
-        run.font.size = Pt(10)
-        run.font.name = "Calibri"
+        _boxed_text(doc, asig["otros_recursos"])
         doc.add_paragraph()
 
     _section_title(doc, "DATOS ACTUALIZACIÓN:")
