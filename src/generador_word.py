@@ -889,17 +889,26 @@ def generar_programa_individual(asignatura_id, salida=None):
         ("Aprendizaje Servicio.",                      "Otro, especifique:"),
         ("Aprendizaje Invertido.",                     ""),
     ]
-    metod_texts = [m.strip() for m in data["metodologias"] if m.strip()]
-    seleccionadas = {m.rstrip('.').lower() for m in metod_texts}
+    # Split each methodology block by newlines to get individual items
+    metod_items = []
+    for bloque in data["metodologias"]:
+        for line in bloque.split('\n'):
+            line = line.strip()
+            if line:
+                metod_items.append(line)
+
+    seleccionadas = {m.rstrip('.').lower() for m in metod_items}
 
     def _esta_marcada(nombre):
         n = nombre.strip().rstrip('.').lower()
-        return any(n in s or s in n for s in seleccionadas)
+        return any(n == s or (len(n) > 8 and (n in s or s in n)) for s in seleccionadas)
 
+    # Only use UV checkbox table when the majority of items match the template
+    n_uv_total = sum(1 for izq, der in _UV_METODS if izq or der)
     n_marcadas = sum(1 for izq, der in _UV_METODS
                      if _esta_marcada(izq) or (der and _esta_marcada(der)))
 
-    if n_marcadas > 0:
+    if n_marcadas >= 3:
         # Render UV checkbox table
         t_met = doc.add_table(rows=len(_UV_METODS), cols=4)
         t_met.style = "Table Grid"
@@ -911,9 +920,9 @@ def generar_programa_individual(asignatura_id, salida=None):
             _cell_para(row.cells[2], der, size=9)
             _cell_para(row.cells[3], "X" if (der and _esta_marcada(der)) else "", size=9,
                        align=WD_ALIGN_PARAGRAPH.CENTER)
-    elif metod_texts:
-        # Free-text methodology: enclosed box
-        _boxed_text(doc, "\n".join(metod_texts))
+    elif metod_items:
+        # Free-text methodology: enclosed box (matches official document format)
+        _boxed_text(doc, "\n".join(metod_items))
     doc.add_paragraph()
 
     _section_title(doc, "METODOLOGÍA O ESTRATEGIA DE EVALUACIÓN:")
