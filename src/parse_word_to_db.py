@@ -600,16 +600,19 @@ def extraer_metodologias(doc: Document) -> list[str]:
     metods = []
     for t in doc.tables:
         h0 = t.rows[0].cells[0].text.strip().lower()
+        # Use only the first line to identify the table type (avoid false positives
+        # when methodology items like "Experiencias de Laboratorio" appear in cell body)
+        h0_first = h0.split('\n')[0].strip()
         # Excluir por tipo de encabezado conocido
-        if any(k in h0 for k in ("resultado", "desempeño", "evaluaci", "tipo de eval",
-                                   "experiencias de laboratorio", "tipo de documento",
-                                   "bibliograf", "linkograf", "responsable", "nombre",
-                                   "facultad", "programa de la")):
+        if any(k in h0_first for k in ("resultado", "desempeño", "evaluaci", "tipo de eval",
+                                        "experiencias de laboratorio", "tipo de documento",
+                                        "bibliograf", "linkograf", "responsable", "nombre",
+                                        "facultad", "programa de la")):
             continue
         # Excluir tablas cuyo primer encabezado es prosa descriptiva de la asignatura
         _DESC_STARTERS = ("la asignatura", "esta asignatura", "al final de", "el programa",
                           "aporte al perfil", "esta carrera", "el presente")
-        if any(h0.startswith(k) for k in _DESC_STARTERS):
+        if any(h0_first.startswith(k) for k in _DESC_STARTERS):
             continue
 
         all_texts = [c.text.strip() for row in t.rows for c in row.cells]
