@@ -437,6 +437,24 @@ def _get_programa_data(asignatura_id):
         ORDER BY c.codigo, nd.codigo_nivel, ra.codigo_ra
     """, (asignatura_id,)).fetchall()
 
+    # Competencias+NDs con tributaciones (para la sección de aporte visual).
+    # comp_desc usa la descripción del ND más avanzado disponible como definición
+    # canónica de la competencia (ya que competencias.descripcion está vacío).
+    aporte_rows = conn.execute("""
+        SELECT DISTINCT c.codigo,
+               (SELECT nd2.descripcion FROM niveles_dominio nd2
+                WHERE nd2.competencia_id = c.id
+                ORDER BY nd2.codigo_nivel DESC LIMIT 1) AS comp_desc,
+               c.tipo,
+               nd.codigo_nivel, nd.descripcion AS nd_desc
+        FROM tributaciones ar
+        JOIN resultados_aprendizaje ra ON ra.id = ar.ra_id
+        JOIN niveles_dominio nd ON nd.id = ra.nivel_dominio_id
+        JOIN competencias c ON c.id = nd.competencia_id
+        WHERE ar.asignatura_id = ?
+        ORDER BY c.tipo, c.codigo, nd.codigo_nivel
+    """, (asignatura_id,)).fetchall()
+
     unidades = conn.execute(
         "SELECT orden, nombre, contenidos, indicador_logro FROM unidades WHERE asignatura_id=? ORDER BY orden",
         (asignatura_id,)
@@ -471,10 +489,56 @@ def _get_programa_data(asignatura_id):
 
     conn.close()
 
+    # Agrupar aporte_rows en bloques por tipo → competencia → niveles
+    _TIPO_ORDER = {"licenciatura": 0, "titulo": 1, "sello_uv": 2}
+    _TIPO_INTRO = {
+        "licenciatura": (
+            "Esta asignatura aporta al perfil de Licenciatura a través de resultados de "
+            "aprendizaje que tributan a las siguientes competencias específicas de licenciatura "
+            "en el primer nivel de dominio:"
+        ),
+        "titulo": (
+            "Esta asignatura aporta al perfil de Título a través de resultados de aprendizaje "
+            "que tributan a las siguientes competencias específicas del título profesional:"
+        ),
+        "sello_uv": (
+            "Esta asignatura aporta al logro del perfil de egreso y licenciatura a través de "
+            "indicadores de desempeño que tributan a las siguientes competencias genéricas en su "
+            "nivel inicial de desempeño:"
+        ),
+    }
+    _TIPO_LABEL = {
+        "licenciatura": "Competencia de Licenciatura:",
+        "titulo":       "Competencia de Título:",
+        "sello_uv":     "Competencia Genérica:",
+    }
+    _bloques: dict = {}
+    for row in aporte_rows:
+        comp_cod, comp_desc, tipo, nd_cod, nd_desc = row
+        if tipo not in _bloques:
+            _bloques[tipo] = {}
+        if comp_cod not in _bloques[tipo]:
+            _bloques[tipo][comp_cod] = {"descripcion": comp_desc or "", "niveles": []}
+        _bloques[tipo][comp_cod]["niveles"].append({"codigo": nd_cod, "descripcion": nd_desc or ""})
+
+    aporte_bloques = []
+    for tipo in sorted(_bloques, key=lambda t: _TIPO_ORDER.get(t, 99)):
+        comps = []
+        for comp_cod, comp_data in _bloques[tipo].items():
+            comps.append({"codigo": comp_cod, "descripcion": comp_data["descripcion"],
+                          "niveles": comp_data["niveles"]})
+        aporte_bloques.append({
+            "tipo": tipo,
+            "intro": _TIPO_INTRO.get(tipo, ""),
+            "label": _TIPO_LABEL.get(tipo, "Competencia:"),
+            "competencias": comps,
+        })
+
     return {
         "asig": dict(asig),
         "responsables": {r["rol"]: r["nombre"] for r in responsables},
         "ras": [dict(r) for r in ras],
+        "aporte_bloques": aporte_bloques,
         "unidades": [dict(u) for u in unidades],
         "metodologias": [m["descripcion"] for m in metodologias],
         "evaluaciones": [dict(e) for e in evaluaciones],
@@ -530,6 +594,86 @@ def _section_title(doc, text):
     run.font.size = Pt(10)
     run.font.name = "Calibri"
     run.font.color.rgb = UV_BLUE
+
+
+def _add_cell_para(cell, indent_cm=0.0):
+    """Añade un párrafo nuevo al final de una celda y lo retorna."""
+    p = OxmlElement("w:p")
+    if indent_cm:
+        pPr = OxmlElement("w:pPr")
+        ind = OxmlElement("w:ind")
+        ind.set(qn("w:left"), str(int(indent_cm * 567)))  # 1 cm ≈ 567 twips
+        pPr.append(ind)
+        p.append(pPr)
+    cell._tc.append(p)
+    from docx.text.paragraph import Paragraph as _Paragraph
+    return _Paragraph(p, cell)
+
+
+def _run(para, text, bold=False, underline=False, size=10, color=None):
+    run = para.add_run(text)
+    run.bold = bold
+    run.underline = underline
+    run.font.size = Pt(size)
+    run.font.name = "Calibri"
+    if color:
+        run.font.color.rgb = color
+    return run
+
+
+def _render_aporte_perfil(doc, bloques):
+    """
+    Renderiza la sección 'APORTE AL PERFIL DE EGRESO' como una tabla de
+    1 columna con bordes negros, donde cada fila es un bloque por tipo de
+    competencia (licenciatura / título / sello UV), separados por línea
+    horizontal interna, imitando el diseño de la plantilla UV.
+    """
+    if not bloques:
+        p = doc.add_paragraph()
+        _run(p, "Sin tributaciones registradas.", size=10)
+        return
+
+    tbl = doc.add_table(rows=len(bloques), cols=1)
+    tbl.style = "Table Grid"
+    tbl.alignment = WD_TABLE_ALIGNMENT.LEFT
+
+    for i, bloque in enumerate(bloques):
+        cell = tbl.cell(i, 0)
+
+        # ── Párrafo 1: checkmark + texto introductorio ─────────────
+        p0 = cell.paragraphs[0]
+        p0.paragraph_format.space_before = Pt(2)
+        p0.paragraph_format.space_after  = Pt(2)
+        _run(p0, "✓  ", bold=True, size=10)   # ✓
+        _run(p0, bloque["intro"], size=10)
+
+        # ── Párrafo vacío de separación ────────────────────────────
+        _add_cell_para(cell)
+
+        # ── Etiqueta de competencia (subrayada) ─────────────────────
+        p_label = _add_cell_para(cell)
+        _run(p_label, bloque["label"], underline=True, size=10)
+
+        # ── Cada competencia ────────────────────────────────────────
+        for comp in bloque["competencias"]:
+            # "- CL1. descripcion"
+            p_comp = _add_cell_para(cell, indent_cm=0.5)
+            _run(p_comp, "- ", size=10)
+            _run(p_comp, f"{comp['codigo']}.", bold=True, size=10)
+            if comp["descripcion"]:
+                _run(p_comp, f" {comp['descripcion']}", size=10)
+
+            # "  - N1. descripcion"
+            for nd in comp["niveles"]:
+                nd_label = nd["codigo"].replace("ND", "N")
+                p_nd = _add_cell_para(cell, indent_cm=1.25)
+                _run(p_nd, "- ", size=10)
+                _run(p_nd, f"{nd_label}.", bold=True, size=10)
+                if nd["descripcion"]:
+                    _run(p_nd, f" {nd['descripcion']}", size=10)
+
+        # Pequeño margen al final de la celda
+        _add_cell_para(cell)
 
 
 def generar_programa_individual(asignatura_id, salida=None):
@@ -649,23 +793,7 @@ def generar_programa_individual(asignatura_id, salida=None):
         doc.add_paragraph()
 
     _section_title(doc, "APORTE AL PERFIL DE EGRESO:")
-    if data["ras"]:
-        p = doc.add_paragraph()
-        run = p.add_run("Esta asignatura aporta al perfil de egreso a través de los siguientes resultados de aprendizaje:")
-        run.font.size = Pt(10)
-        run.font.name = "Calibri"
-        for ra in data["ras"]:
-            bp = doc.add_paragraph(style="List Bullet")
-            r1 = bp.add_run(ra["codigo_completo"])
-            r1.bold = True
-            r1.font.size = Pt(10)
-            r1.font.name = "Calibri"
-            tipo = ra.get("tipo", "licenciatura")
-            r1.font.color.rgb = TIPO_COLOR.get(tipo, UV_BLUE)
-            if ra.get("descripcion"):
-                r2 = bp.add_run(f": {ra['descripcion']}")
-                r2.font.size = Pt(10)
-                r2.font.name = "Calibri"
+    _render_aporte_perfil(doc, data.get("aporte_bloques", []))
     doc.add_paragraph()
 
     # ── SECCIÓN 2: PROGRAMA DE LA ASIGNATURA ─────────────────────
