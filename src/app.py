@@ -128,6 +128,21 @@ def get_discrepancias():
     conn.close()
     return [dict(r) for r in ras_vacios], [dict(r) for r in asigs_sin]
 
+# Inconsistencias documentadas entre la sección DESCRIPCIÓN GENERAL y el PROGRAMA
+# de los .docx fuente, detectadas durante auditoría QA manual.
+# Formato: { "CODIGO": { "seccion": ..., "desc_general": ..., "programa": ..., "nota": ... } }
+_INCONSISTENCIAS_DOCX = {
+    "IMAT 212": {
+        "asignatura": "Economía",
+        "seccion": "APORTE AL PERFIL DE EGRESO",
+        "desc_general": "CL1, CG SELLO UV N°3 (CG3), CG SELLO UV N°4 (CG4)",
+        "programa":     "CL1 ND1 RA2, CG2 ND1 D1, CG3 ND1 D1, CG3 ND1 D3",
+        "nota": "La Descripción General menciona CG3 y CG4, pero los RAs codificados "
+                "en el Programa usan CG2 y CG3. El sistema cargó los códigos del Programa. "
+                "Posible error de codificación en el .docx fuente.",
+    },
+}
+
 # Sugerencias basadas en equivalencia con plan ICM
 _SUGERENCIAS_ICM = {
     "CE1, ND2, RA2": {
@@ -749,8 +764,62 @@ class Dashboard(param.Parameterized):
           </table>
         </div>"""
 
+        # ── Tabla 3: Inconsistencias documentadas ──
+        filas_incons = ""
+        for codigo, inc in _INCONSISTENCIAS_DOCX.items():
+            filas_incons += f"""
+            <tr>
+              <td style="font-weight:700;color:#1F4E79;padding:8px 12px;
+                         border-bottom:1px solid #F1F5F9;white-space:nowrap;font-size:13px">
+                {codigo}</td>
+              <td style="padding:8px 12px;border-bottom:1px solid #F1F5F9;
+                         font-size:12px;color:#475569">{inc['asignatura']}</td>
+              <td style="padding:8px 12px;border-bottom:1px solid #F1F5F9;
+                         font-size:12px;color:#475569">{inc['seccion']}</td>
+              <td style="padding:8px 12px;border-bottom:1px solid #F1F5F9;font-size:12px">
+                <span style="color:#7B2C2C;font-weight:600">Descripción:</span>
+                <span style="color:#475569"> {inc['desc_general']}</span><br>
+                <span style="color:#375623;font-weight:600">Programa:</span>
+                <span style="color:#475569"> {inc['programa']}</span>
+              </td>
+              <td style="padding:8px 12px;border-bottom:1px solid #F1F5F9;
+                         font-size:11px;color:#92400E;background:#FFFBEB">{inc['nota']}</td>
+            </tr>"""
+
+        tabla_incons = f"""
+        <div style="margin-top:20px">
+          <div class="card-title">Inconsistencias documentadas — conflicto entre secciones del .docx</div>
+          <p style="font-size:12px;color:#64748B;margin-bottom:12px">
+            Discrepancias detectadas durante auditoría QA entre la sección
+            <strong>Descripción General</strong> y el <strong>Programa</strong> del mismo .docx fuente.
+            El sistema cargó los datos del Programa (códigos explícitos). Requieren revisión manual del archivo original.
+          </p>
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead>
+              <tr style="background:#FFFBEB">
+                <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;
+                           text-transform:uppercase;letter-spacing:1px;color:#92400E;
+                           border-bottom:2px solid #FDE68A">Código</th>
+                <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;
+                           text-transform:uppercase;letter-spacing:1px;color:#92400E;
+                           border-bottom:2px solid #FDE68A">Asignatura</th>
+                <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;
+                           text-transform:uppercase;letter-spacing:1px;color:#92400E;
+                           border-bottom:2px solid #FDE68A">Sección</th>
+                <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;
+                           text-transform:uppercase;letter-spacing:1px;color:#92400E;
+                           border-bottom:2px solid #FDE68A">Datos en conflicto</th>
+                <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;
+                           text-transform:uppercase;letter-spacing:1px;color:#92400E;
+                           border-bottom:2px solid #FDE68A">Nota</th>
+              </tr>
+            </thead>
+            <tbody>{filas_incons}</tbody>
+          </table>
+        </div>"""
+
         return pn.Column(
-            pn.pane.HTML(tabla_suger + tabla_all),
+            pn.pane.HTML(tabla_suger + tabla_all + tabla_incons),
             css_classes=["card"],
             sizing_mode="stretch_width",
             margin=(16, 0, 0, 0),
