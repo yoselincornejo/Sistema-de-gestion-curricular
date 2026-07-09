@@ -629,61 +629,7 @@ class Dashboard(param.Parameterized):
     def _build_discrepancias(self):
         ras_vacios, asigs_sin = get_discrepancias()
 
-        # ── Tabla 1: Sugerencias para RAs sin tributación (tipo título) ──
-        filas_suger = ""
-        for ra in ras_vacios:
-            if ra["codigo_completo"] not in _SUGERENCIAS_ICM:
-                continue
-            s = _SUGERENCIAS_ICM[ra["codigo_completo"]]
-            asigs_html = "".join(
-                f'<span style="display:inline-block;background:#F0FDF4;color:#166534;'
-                f'border:1px solid #BBF7D0;border-radius:5px;padding:2px 8px;'
-                f'font-size:11px;margin:2px">{a}</span>'
-                for a in s["asigs"]
-            )
-            filas_suger += f"""
-            <tr>
-              <td style="font-weight:700;color:#375623;white-space:nowrap;padding:8px 12px;
-                         border-bottom:1px solid #F1F5F9">{ra["codigo_completo"]}</td>
-              <td style="padding:8px 12px;border-bottom:1px solid #F1F5F9;
-                         font-size:12px;color:#475569">{s["desc"]}</td>
-              <td style="padding:8px 12px;border-bottom:1px solid #F1F5F9">{asigs_html}</td>
-              <td style="padding:8px 12px;border-bottom:1px solid #F1F5F9;
-                         font-size:11px;color:#94A3B8;white-space:nowrap">{s["ref"]}</td>
-            </tr>"""
-
-        tabla_suger = f"""
-        <div style="margin-bottom:6px">
-          <div class="card-title">Resultados de aprendizaje sin cobertura — con asignatura propuesta</div>
-          <p style="font-size:12px;color:#64748B;margin-bottom:12px">
-            Estos resultados de aprendizaje del <strong>Título Profesional</strong> no tienen ninguna
-            asignatura que los trabaje actualmente. Para cada uno se propone una o más asignaturas
-            del plan que podrían cubrirlos, tomando como referencia el plan anterior ICM.
-            Estas son <em>sugerencias</em> — deben ser revisadas y confirmadas editando la tributación
-            de cada asignatura desde el <strong>Editor de Programas</strong>.
-          </p>
-          <table style="width:100%;border-collapse:collapse;font-size:13px">
-            <thead>
-              <tr style="background:#F8FAFC">
-                <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;
-                           text-transform:uppercase;letter-spacing:1px;color:#1F4E79;
-                           border-bottom:2px solid #E2E8F0">RA</th>
-                <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;
-                           text-transform:uppercase;letter-spacing:1px;color:#1F4E79;
-                           border-bottom:2px solid #E2E8F0">Descripción</th>
-                <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;
-                           text-transform:uppercase;letter-spacing:1px;color:#1F4E79;
-                           border-bottom:2px solid #E2E8F0">Asignaturas propuestas</th>
-                <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;
-                           text-transform:uppercase;letter-spacing:1px;color:#1F4E79;
-                           border-bottom:2px solid #E2E8F0">Ref. plan ICM</th>
-              </tr>
-            </thead>
-            <tbody>{filas_suger}</tbody>
-          </table>
-        </div>"""
-
-        # ── Tabla 2: Todas las discrepancias ──
+        # ── Tabla 1: Todas las discrepancias ──
         COLOR_TIPO = {"titulo": "#375623", "licenciatura": "#1F4E79", "sello_uv": "#7B2C2C"}
         BADGE_BG   = {"titulo": "#F0FDF4", "licenciatura": "#EFF6FF", "sello_uv": "#FFF1F2"}
         BADGE_BDR  = {"titulo": "#BBF7D0", "licenciatura": "#BFDBFE", "sello_uv": "#FECDD3"}
@@ -712,10 +658,6 @@ class Dashboard(param.Parameterized):
                 <span style="background:#FEF2F2;color:#991B1B;border:1px solid #FECACA;
                   border-radius:10px;padding:2px 10px;font-size:11px;font-weight:700">0</span>
               </td>
-              <td style="padding:7px 12px;border-bottom:1px solid #F1F5F9;
-                         font-size:11px;color:#94A3B8">
-                {"✅ Sugerencia disponible" if ra["codigo_completo"] in _SUGERENCIAS_ICM else "⚠ Sin sugerencia — revisar manualmente"}
-              </td>
             </tr>"""
 
         for asig in asigs_sin:
@@ -734,10 +676,6 @@ class Dashboard(param.Parameterized):
                          text-align:center">
                 <span style="background:#FEF2F2;color:#991B1B;border:1px solid #FECACA;
                   border-radius:10px;padding:2px 10px;font-size:11px;font-weight:700">0</span>
-              </td>
-              <td style="padding:7px 12px;border-bottom:1px solid #F1F5F9;
-                         font-size:11px;color:#64748B">
-                Sin tributaciones registradas (asignatura electiva / idioma)
               </td>
             </tr>"""
 
@@ -766,9 +704,6 @@ class Dashboard(param.Parameterized):
                 <th style="text-align:center;padding:8px 12px;font-size:11px;font-weight:700;
                            text-transform:uppercase;letter-spacing:1px;color:#1F4E79;
                            border-bottom:2px solid #E2E8F0">Tributaciones</th>
-                <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;
-                           text-transform:uppercase;letter-spacing:1px;color:#1F4E79;
-                           border-bottom:2px solid #E2E8F0">Estado</th>
               </tr>
             </thead>
             <tbody>{filas_all}</tbody>
@@ -831,7 +766,7 @@ class Dashboard(param.Parameterized):
         </div>"""
 
         return pn.Column(
-            pn.pane.HTML(tabla_suger + tabla_all + tabla_incons),
+            pn.pane.HTML(tabla_all + tabla_incons),
             css_classes=["card"],
             sizing_mode="stretch_width",
             margin=(16, 0, 0, 0),
