@@ -143,6 +143,18 @@ _INCONSISTENCIAS_DOCX = {
                 "La sección 'Aporte al Perfil de Egreso' y la sección 'Resultados de Aprendizaje' "
                 "son consistentes entre sí (CL1 ND1, CL2 ND1, CG2 ND1, CG4 ND1).",
     },
+    "IMAT 222": {
+        "asignatura": "Evaluación de Proyectos",
+        "seccion": "RESULTADOS DE APRENDIZAJE / UNIDADES DE APRENDIZAJE Y CONTENIDOS",
+        "desc_general": "CL1 ND2, CG3 ND2 D2, CG4 ND2 D1, CG4 ND2 D2",
+        "programa":     "CL1 ND2 RA2 · CG3 ND2 D2 · CG4 ND2 D1 · CG4 ND2 D2 (sección RA)",
+        "nota": "En el documento oficial de la asignatura se encontró una discrepancia: "
+                "el desempeño CG4 ND2 D3 no aparece en la sección 'Resultados de Aprendizaje', "
+                "pero sí se menciona en la sección 'Unidades de Aprendizaje y Contenidos' "
+                "como una tributación presente en los resultados de aprendizaje de la Unidad 1. "
+                "Las tributaciones declaradas en la sección 'Resultados de Aprendizaje' son: "
+                "CL1 ND2 RA2, CG3 ND2 D2, CG4 ND2 D1, CG4 ND2 D2.",
+    },
 }
 
 # Sugerencias basadas en equivalencia con plan ICM
