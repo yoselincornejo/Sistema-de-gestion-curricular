@@ -794,8 +794,7 @@ class EditorProgramas(param.Parameterized):
 
         buscador = pn.widgets.AutocompleteInput(
             placeholder="Buscar por código o nombre (ej: FIS 311, Física)…",
-            completions=etiquetas,
-            case_sensitive=False,
+            options=etiquetas,
             min_characters=1,
             width=640, margin=(0, 0, 20, 0),
         )
