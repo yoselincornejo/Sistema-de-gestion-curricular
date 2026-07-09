@@ -788,29 +788,58 @@ class EditorProgramas(param.Parameterized):
         self._status           = pn.pane.HTML("")
 
     def _build_selector(self):
+        import unicodedata
+
+        def _norm(s):
+            return unicodedata.normalize("NFD", s.lower()).encode("ascii", "ignore").decode()
+
         asigs = get_asignaturas_lista()
-        etiquetas = [f"{a['codigo']} -- {a['nombre']}" for a in asigs]
         etiqueta_a_id = {f"{a['codigo']} -- {a['nombre']}": a["id"] for a in asigs}
+
+        opciones_sel = {"— Elige una asignatura —": 0}
+        opciones_sel.update(etiqueta_a_id)
 
         buscador = pn.widgets.AutocompleteInput(
             placeholder="Buscar por código o nombre (ej: FIS 311, Física)…",
-            options=etiquetas,
+            options=list(etiqueta_a_id.keys()),
             min_characters=1,
+            width=460, margin=(0, 8, 0, 0),
+        )
+
+        sel = pn.widgets.Select(
+            name="",
+            options=dict(opciones_sel),
             width=640, margin=(0, 0, 20, 0),
         )
 
-        def on_change(event):
+        _updating = [False]
+
+        def on_buscador(event):
             asig_id = etiqueta_a_id.get(event.new)
-            if asig_id:
+            if asig_id and not _updating[0]:
+                _updating[0] = True
+                sel.value = asig_id
+                _updating[0] = False
                 self.asignatura_id = asig_id
                 self._cargar_editor()
 
-        buscador.param.watch(on_change, "value")
+        def on_sel(event):
+            if event.new and not _updating[0]:
+                _updating[0] = True
+                etiqueta = next((k for k, v in etiqueta_a_id.items() if v == event.new), None)
+                if etiqueta:
+                    buscador.value = etiqueta
+                _updating[0] = False
+                self.asignatura_id = event.new
+                self._cargar_editor()
+
+        buscador.param.watch(on_buscador, "value")
+        sel.param.watch(on_sel, "value")
 
         return pn.Column(
             pn.pane.HTML('<label style="font-size:13px;font-weight:600;color:#475569;">'
                          'Selecciona una asignatura</label>'),
-            buscador,
+            pn.Row(buscador, sel, align="end"),
             margin=(0, 0, 8, 0)
         )
 
