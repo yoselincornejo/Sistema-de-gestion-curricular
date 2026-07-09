@@ -51,9 +51,8 @@ RUTA_DB          = Path("data/sistema.db")
 CARPETA_DOCS     = Path("data/programas")
 LOG_REVISION     = Path("data/output/revision_manual.txt")
 LOG_PARSE        = Path("data/output/parse_word_to_db.log")
-# IMAT 423: excluido por solicitud expresa.
 # QUI 121 Lab: documento auxiliar sin estructura de programa (1 tabla).
-EXCLUIDOS = {"IMAT 423", "QUI 121 Química para Ingeniería - Laboratorios"}
+EXCLUIDOS = {"QUI 121 Química para Ingeniería - Laboratorios"}
 
 Path("data/output").mkdir(parents=True, exist_ok=True)
 
