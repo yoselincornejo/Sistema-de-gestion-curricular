@@ -212,7 +212,15 @@ def extraer_texto_completo(doc: Document) -> str:
             partes.append(t)
 
     # Cada celda de cada tabla (sin importar profundidad ni estructura)
+    # Excluir tablas de unidades de aprendizaje: sus celdas mezclan RAs con
+    # contenidos de unidades y pueden incluir desempeños extra no declarados
+    # formalmente en la sección de resultados de aprendizaje.
+    _HEADER_UNIDADES = {"unidades de aprendizaje", "contenidos"}
     for tabla in doc.tables:
+        if tabla.rows:
+            header_cells = {c.text.strip().lower() for c in tabla.rows[0].cells}
+            if any(any(k in h for k in _HEADER_UNIDADES) for h in header_cells):
+                continue
         for fila in tabla.rows:
             for celda in fila.cells:
                 t = celda.text.strip()
