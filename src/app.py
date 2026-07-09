@@ -155,6 +155,18 @@ _INCONSISTENCIAS_DOCX = {
                 "Las tributaciones declaradas en la sección 'Resultados de Aprendizaje' son: "
                 "CL1 ND2 RA2, CG3 ND2 D2, CG4 ND2 D1, CG4 ND2 D2.",
     },
+    "IMAT 324": {
+        "asignatura": "Ecuaciones Diferenciales Ordinarias",
+        "seccion": "RESULTADOS DE APRENDIZAJE / UNIDADES DE APRENDIZAJE Y CONTENIDOS",
+        "desc_general": "CG1 ND2 D1, CG2 ND2 D1, CG2 ND2 D2, CG2 ND2 D3, CG3 ND2 D1, CG3 ND2 D2, CG3 ND2 D3",
+        "programa":     "Mismas tributaciones declaradas en sección RA (sin CG4 ND2 D3)",
+        "nota": "En el documento oficial de la asignatura se encontró una discrepancia: "
+                "el desempeño CG4 ND2 D3 no aparece en la sección 'Resultados de Aprendizaje', "
+                "pero sí se menciona en la sección 'Unidades de Aprendizaje y Contenidos' "
+                "como un resultado de aprendizaje de la Unidad 1. "
+                "Adicionalmente, CG4 ND2 D3 no está definido en el perfil de egreso del plan "
+                "(CG4 ND2 solo contempla D1 y D2).",
+    },
 }
 
 # Sugerencias basadas en equivalencia con plan ICM
