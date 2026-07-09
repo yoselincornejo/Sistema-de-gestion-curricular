@@ -150,26 +150,6 @@ _INCONSISTENCIAS_DOCX = {
                 "'Resultados de Aprendizaje' solo están marcados CG4 ND1 D1 y D3 — "
                 "el desempeño CG4 ND1 D2 no aparece seleccionado.",
     },
-    "MAT 111": {
-        "asignatura": "Fundamentos de Matemática",
-        "seccion": "APORTE AL PERFIL DE EGRESO / RESULTADOS DE APRENDIZAJE",
-        "desc_general": "CL1 ND1, CG4 ND1",
-        "programa":     "CL1 ND1, CG4 ND1 (sección Aporte) · CL1 ND1 RA1, RA2 · CG4 ND1 D1 (sección RA)",
-        "nota": "En el documento oficial de la asignatura se encontró una discrepancia: "
-                "la sección 'Aporte al Perfil de Egreso' declara CG4 ND1 sin especificar desempeños, "
-                "mientras que la sección 'Resultados de Aprendizaje' solo tiene marcado CG4 ND1 D1 — "
-                "no queda claro si los desempeños D2 y D3 de CG4 ND1 también deberían estar incluidos.",
-    },
-    "PRO 111": {
-        "asignatura": "Fundamentos de Programación",
-        "seccion": "APORTE AL PERFIL DE EGRESO / RESULTADOS DE APRENDIZAJE",
-        "desc_general": "CL1 ND1, CG2 ND1",
-        "programa":     "CL1 ND1, CG2 ND1 (sección Aporte) · CL1 ND1 RA1, RA2 · CG2 ND1 D2 (sección RA)",
-        "nota": "En el documento oficial de la asignatura se encontró una discrepancia: "
-                "la sección 'Aporte al Perfil de Egreso' declara CG2 ND1 sin especificar desempeños, "
-                "mientras que la sección 'Resultados de Aprendizaje' solo tiene marcado CG2 ND1 D2 — "
-                "no queda claro si los desempeños D1 y D3 de CG2 ND1 también deberían estar incluidos.",
-    },
     "QUI 121": {
         "asignatura": "Química para Ingeniería",
         "seccion": "RESULTADOS DE APRENDIZAJE / UNIDADES DE APRENDIZAJE Y CONTENIDOS",
