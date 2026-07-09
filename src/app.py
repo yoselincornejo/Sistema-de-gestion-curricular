@@ -827,7 +827,7 @@ class EditorProgramas(param.Parameterized):
                 self.asignatura_id = event.new
                 self._cargar_editor()
 
-        buscador.param.watch(on_buscar, "value")
+        buscador.param.watch(on_buscar, "value_input")
         sel.param.watch(on_change, "value")
 
         return pn.Column(
