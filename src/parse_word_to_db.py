@@ -334,13 +334,39 @@ def _to_int(s: str) -> Optional[int]:
         return None
 
 def _semestre_desde_nivel(nivel: str) -> Optional[int]:
-    rom = {"I":1,"II":2,"III":3,"IV":4,"V":5,"VI":6,"VII":7,"VIII":8,"IX":9,"X":10}
-    m_anio = re.search(r"(\d+)[°º]\s*Año", nivel)
-    m_sem  = re.match(r"(I{1,3}V?|VI{0,3}|IX|X)\s+Semestre", nivel)
-    anio      = int(m_anio.group(1)) if m_anio else None
-    sem_en_anio = rom.get(m_sem.group(1), 1) if m_sem else 1
-    if anio:
-        return (anio - 1) * 2 + sem_en_anio
+    if not nivel:
+        return None
+    n = nivel.strip()
+    ROM = {"I":1,"II":2,"III":3,"IV":4,"V":5,"VI":6,"VII":7,
+           "VIII":8,"IX":9,"X":10,"XI":11,"XII":12}
+
+    # Numeral romano antes de "semestre": "III Semestre", "X Semestre del 3° Ciclo"
+    m = re.search(r"\b(XII|XI|X|IX|VIII|VII|VI|V|IV|III|II|I)\s+[Ss]emestre", n)
+    if m:
+        return ROM.get(m.group(1).upper())
+
+    # "Semestre N" (dígito después): "Semestre 3", "Semestre 9 de 3er ciclo"
+    m = re.search(r"[Ss]emestre\s+(\d+)", n)
+    if m:
+        return int(m.group(1))
+
+    # Dígito ordinal antes de "semestre": "3er Semestre", "4to semestre", "4º Semestre"
+    m = re.search(r"(\d+)[°º\w.]*\s+[Ss]emestre", n, re.IGNORECASE)
+    if m:
+        return int(m.group(1))
+
+    # Palabra ordinal: "Primer Semestre", "Cuarto Semestre"
+    _ORD = {"primer":1,"segundo":2,"tercer":3,"cuarto":4,"quinto":5,
+            "sexto":6,"séptimo":7,"octavo":8,"noveno":9,"décimo":10}
+    for word, num in _ORD.items():
+        if re.search(rf"\b{word}\b", n, re.IGNORECASE):
+            return num
+
+    # Año numérico como fallback: "1° Año" → S1, "2° Año" → S3 (primer sem del año)
+    m_anio = re.search(r"(\d+)[°º]\s*[Aa]ño", n)
+    if m_anio:
+        return (int(m_anio.group(1)) - 1) * 2 + 1
+
     return None
 
 def extraer_identificacion(doc: Document, texto_completo: str, codigo: str, nombre: str) -> dict:
