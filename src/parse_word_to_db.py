@@ -152,6 +152,11 @@ class DiccionarioCodigos:
         Reconstruye la clave canónica desde los grupos nombrados, por lo que
         los separadores guión/coma son transparentes para la búsqueda.
         """
+        # Normalizar variantes como "CG 1 SUV" → "CG1" y "CG4 SUV" → "CG4":
+        # 1) colapsar espacio entre letras y número: "CG 1" → "CG1"
+        texto = re.sub(r"\b(C[EGL][A-Z]?)\s+(\d)\b", r"\1\2", texto, flags=re.IGNORECASE)
+        # 2) quitar sufijo " SUV" que ya queda pegado al código: "CG1 SUV" → "CG1"
+        texto = re.sub(r"\b(C[EGL]\d)\s+SUV\b", r"\1", texto, flags=re.IGNORECASE)
         encontrados = set()
         for m in self._PATRON_RA.finditer(texto):
             comp  = m.group("comp").upper().strip()
