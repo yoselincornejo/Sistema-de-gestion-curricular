@@ -654,11 +654,13 @@ class Dashboard(param.Parameterized):
 
         tabla_suger = f"""
         <div style="margin-bottom:6px">
-          <div class="card-title">Tributaciones faltantes sugeridas — referencia plan ICM</div>
+          <div class="card-title">Resultados de aprendizaje sin cobertura — con asignatura propuesta</div>
           <p style="font-size:12px;color:#64748B;margin-bottom:12px">
-            Los siguientes RAs no tienen ninguna asignatura tributante. Se propone vincularlos
-            a las asignaturas indicadas, por equivalencia con el plan original ICM.
-            Puedes confirmarlos desde <strong>Detalle de Asignatura → Tributación</strong>.
+            Estos resultados de aprendizaje del <strong>Título Profesional</strong> no tienen ninguna
+            asignatura que los trabaje actualmente. Para cada uno se propone una o más asignaturas
+            del plan que podrían cubrirlos, tomando como referencia el plan anterior ICM.
+            Estas son <em>sugerencias</em> — deben ser revisadas y confirmadas editando la tributación
+            de cada asignatura desde el <strong>Editor de Programas</strong>.
           </p>
           <table style="width:100%;border-collapse:collapse;font-size:13px">
             <thead>
@@ -741,7 +743,14 @@ class Dashboard(param.Parameterized):
 
         tabla_all = f"""
         <div style="margin-top:20px">
-          <div class="card-title">Resumen de discrepancias — tributaciones nulas</div>
+          <div class="card-title">Inventario completo de brechas de cobertura</div>
+          <p style="font-size:12px;color:#64748B;margin-bottom:12px">
+            Lista de <strong>todos</strong> los resultados de aprendizaje y asignaturas que actualmente
+            tienen cobertura cero — es decir, ninguna asignatura del plan los trabaja (o la asignatura
+            no tributa a ningún resultado). Incluye tanto los casos con sugerencia de la tabla anterior
+            como los que requieren revisión manual. Las asignaturas electivas e idiomas aparecen aquí
+            porque su naturaleza variable no permite asignarles tributaciones fijas.
+          </p>
           <table style="width:100%;border-collapse:collapse;font-size:13px">
             <thead>
               <tr style="background:#F8FAFC">
