@@ -638,15 +638,20 @@ _METOD_KEYS = {
 def extraer_metodologias(doc: Document) -> list[str]:
     metods = []
     for t in doc.tables:
-        h0 = t.rows[0].cells[0].text.strip().lower()
-        # Use only the first line to identify the table type (avoid false positives
-        # when methodology items like "Experiencias de Laboratorio" appear in cell body)
-        h0_first = h0.split('\n')[0].strip()
-        # Excluir por tipo de encabezado conocido
-        if any(k in h0_first for k in ("resultado", "desempeño", "evaluaci", "tipo de eval",
-                                        "experiencias de laboratorio", "tipo de documento",
-                                        "bibliograf", "linkograf", "responsable", "nombre",
-                                        "facultad", "programa de la")):
+        # Construir encabezado desde toda la primera fila (no solo la primera celda),
+        # usando solo la primera línea de cada celda para evitar falsos positivos.
+        header_cells = [c.text.strip().lower().split('\n')[0].strip() for c in t.rows[0].cells]
+        h0_first = header_cells[0]
+        header_all = " ".join(header_cells)
+
+        # Excluir por tipo de encabezado conocido (cualquier celda de la fila)
+        if any(k in header_all for k in ("resultado", "desempeño", "evaluaci", "tipo de eval",
+                                         "experiencias de laboratorio", "tipo de documento",
+                                         "bibliograf", "linkograf", "responsable",
+                                         "facultad", "programa de la",
+                                         "unidades de aprendizaje", "contenidos")):
+            continue
+        if any(k in h0_first for k in ("nombre", "unidad")):
             continue
         # Excluir tablas cuyo primer encabezado es prosa descriptiva de la asignatura
         _DESC_STARTERS = ("la asignatura", "esta asignatura", "al final de", "el programa",
@@ -668,16 +673,24 @@ def extraer_metodologias(doc: Document) -> list[str]:
         has_x = any(txt in ("X", "x", "✓") for txt in all_texts)
 
         if has_x and ncols in (2, 4):
-            # Tabla de checkboxes: extraer solo las metodologías marcadas con X
+            # Tabla de checkboxes: extraer solo las metodologías marcadas con X.
+            # El layout puede ser (nombre, marca) o (marca, nombre) — se detecta
+            # inspeccionando cuál columna del par es la más corta (la marca).
+            def _par_nombre_marca(a, b):
+                """Devuelve (nombre, marca) independientemente del orden en la tabla."""
+                a_es_marca = len(a) <= 2 or a.upper() in ("X", "✓", "")
+                b_es_marca = len(b) <= 2 or b.upper() in ("X", "✓", "")
+                if a_es_marca and not b_es_marca:
+                    return b, a
+                return a, b
+
             for row in t.rows:
                 cells = [c.text.strip() for c in row.cells]
-                # Pares (nombre, marca): cols 0-1 y cols 2-3 para tablas de 4 columnas
-                pairs = []
-                if ncols >= 2:
-                    pairs.append((cells[0], cells[1]))
+                pares_celdas = [(cells[0], cells[1])]
                 if ncols >= 4:
-                    pairs.append((cells[2], cells[3]))
-                for name, mark in pairs:
+                    pares_celdas.append((cells[2], cells[3]))
+                for ca, cb in pares_celdas:
+                    name, mark = _par_nombre_marca(ca, cb)
                     if name and mark.upper() in ("X", "✓") and len(name) > 3:
                         if name not in metods:
                             metods.append(name)

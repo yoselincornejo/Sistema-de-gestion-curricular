@@ -36,15 +36,15 @@ INFO     OK         MAT 222    Ecuaciones Diferenciales Ordinarias      | RA:3  
 INFO     OK         FIS 311    Física Electromagnetismo                 | RA:4   U:3   BB:1   BC:1
 INFO     OK         IMAT 311   Cálculo Avanzado                         | RA:3   U:3   BB:4   BC:0
 INFO     OK         IMAT 312   Métodos Numéricos                        | RA:7   U:3   BB:4   BC:1
-INFO     OK         IMAT321    Análisis                                 | RA:4   U:8   BB:5   BC:1
+INFO     OK         IMAT321    Análisis                                 | RA:8   U:8   BB:5   BC:1
 INFO     OK         IMAT324    TIPE I                                   | RA:8   U:3   BB:1   BC:1
 INFO     OK         IMAT222    Evaluación de Proyectos                  | RA:4   U:2   BB:1   BC:1
 INFO     OK         IMAT313    Combinatoria y Algoritmos                | RA:8   U:4   BB:5   BC:3
 INFO     OK         IMAT 315   Idioma II                                | RA:2   U:2   BB:2   BC:1
 INFO     OK         IMAT322    Cálculo de Probabilidades                | RA:7   U:3   BB:1   BC:1
-INFO     OK         IMAT 411   Teoría de la Medida                      | RA:4   U:5   BB:5   BC:4
+INFO     OK         IMAT 411   Teoría de la Medida                      | RA:8   U:5   BB:5   BC:4
 INFO     OMITIDO   IMAT 423 Sistemas Dinámicos Continuos.docx
-INFO     OK         IMAT 323   Optimización                             | RA:7   U:4   BB:2   BC:4
+INFO     OK         IMAT 323   Optimización                             | RA:9   U:4   BB:2   BC:4
 INFO     OK         IMAT413    Análisis Complejo                        | RA:4   U:4   BB:4   BC:1
 INFO     OK         IMAT 414   TIPE II                                  | RA:8   U:3   BB:1   BC:1
 INFO     OK         IMAT 412   Inferencia Estadística                   | RA:6   U:6   BB:3   BC:1
@@ -52,7 +52,7 @@ INFO     OK         IMAT 325   Idioma III                               | RA:2  
 INFO     OK         IMAT422    Procesos Estocásticos                    | RA:8   U:3   BB:1   BC:3
 INFO     OK         IMAT424    Taller de Integración al Perfil de Egre  | RA:8   U:3   BB:3   BC:0
 INFO     OK         IMAT 521   Optimización Combinatorial               | RA:8   U:4   BB:2   BC:1
-INFO     OK         IMAT421    Análisis Funcional                       | RA:4   U:3   BB:2   BC:1
+INFO     OK         IMAT421    Análisis Funcional                       | RA:8   U:3   BB:2   BC:1
 INFO     OK         IMAT 511   Grafos                                   | RA:4   U:5   BB:4   BC:0
 INFO     OK         IMAT512    Modelación Estocástica                   | RA:5   U:3   BB:2   BC:1
 WARNING  SIN-RA    IMAT 514   Electivo de Ingeniería I                 (se carga sin tributaciones)
@@ -65,9 +65,9 @@ INFO     RESULTADO: 51 OK | 0 cuarentena | 2 omitidos | 0 errores
 INFO     
 INFO     ESTADO FINAL DE LA BD:
 INFO       asignaturas               51
-INFO       tributaciones             263
+INFO       tributaciones             277
 INFO       unidades                  163
 INFO       bibliografia              178
 INFO       linkografia               96
-INFO       metodologias              159
+INFO       metodologias              102
 INFO       evaluaciones              225
