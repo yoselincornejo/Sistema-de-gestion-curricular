@@ -140,6 +140,26 @@ _INCONSISTENCIAS_DOCX = {
                 "la sección 'Perfil de Egreso' menciona CG3 y CG4, mientras que la sección "
                 "'Resultados de Aprendizaje' codifica CG2 y CG3.",
     },
+    "ING 111": {
+        "asignatura": "Desafíos de Ingeniería",
+        "seccion": "APORTE AL PERFIL DE EGRESO / RESULTADOS DE APRENDIZAJE",
+        "desc_general": "CL1 ND1, CG2 N1, CG4 ND1",
+        "programa":     "CL1 ND1 RA1, RA2 · CG2 ND1 D1, D2, D3 · CG4 ND1 D1, D3 (D2 no marcado)",
+        "nota": "En el documento oficial de la asignatura se encontró una discrepancia: "
+                "la sección 'Aporte al Perfil de Egreso' declara CG4 ND1, pero en la sección "
+                "'Resultados de Aprendizaje' solo están marcados CG4 ND1 D1 y D3 — "
+                "el desempeño CG4 ND1 D2 no aparece seleccionado.",
+    },
+    "QUI 121": {
+        "asignatura": "Química para Ingeniería",
+        "seccion": "RESULTADOS DE APRENDIZAJE / UNIDADES DE APRENDIZAJE Y CONTENIDOS",
+        "desc_general": "CG2 ND1 D2, CG4 ND1 D1",
+        "programa":     "CG2 ND1 D2, CG4 ND1 D1 (sección RA) · CG2 ND1 D2, CG2 ND1 D3, CG4 ND1 D1 (sección Unidades)",
+        "nota": "En el documento oficial de la asignatura se encontró una discrepancia: "
+                "el desempeño CG2 ND1 D3 no aparece en la sección 'Resultados de Aprendizaje', "
+                "pero sí se menciona en la sección 'Unidades de Aprendizaje y Contenidos' "
+                "como una tributación presente en los resultados de aprendizaje de la Unidad 2.",
+    },
 }
 
 # Sugerencias basadas en equivalencia con plan ICM
