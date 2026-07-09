@@ -165,7 +165,13 @@ _INCONSISTENCIAS_DOCX = {
                 "pero sí se menciona en la sección 'Unidades de Aprendizaje y Contenidos' "
                 "como un resultado de aprendizaje de la Unidad 1. "
                 "Adicionalmente, CG4 ND2 D3 no está definido en el perfil de egreso del plan "
-                "(CG4 ND2 solo contempla D1 y D2).",
+                "(CG4 ND2 solo contempla D1 y D2). "
+                "La descripción indicada en el documento para CG4 ND2 D3 es: "
+                "'Expresa con claridad y respeto las propias necesidades y requerimientos en el trabajo colaborativo en contextos académicos y socioculturales.' "
+                "Esta descripción es estructuralmente similar a CG4 ND3 D3 del perfil de egreso "
+                "('Expresa con claridad y respeto las propias necesidades y requerimientos en el trabajo profesional en contextos nacionales e internacionales'), "
+                "pero difiere en el contexto ('colaborativo/académico' vs. 'profesional/nacional e internacional'), "
+                "lo que sugiere que el documento hace referencia a un desempeño de nivel ND2 que no existe formalmente en el plan.",
     },
 }
 
