@@ -131,25 +131,6 @@ def get_discrepancias():
 # Inconsistencias documentadas en documentos oficiales: discrepancia entre
 # tributaciones en 'Perfil de Egreso' vs 'Resultados de Aprendizaje'.
 _INCONSISTENCIAS_DOCX = {
-    "IMAT 212": {
-        "asignatura": "Economía",
-        "seccion": "APORTE AL PERFIL DE EGRESO",
-        "desc_general": "CL1, CG SELLO UV N°3 (CG3), CG SELLO UV N°4 (CG4)",
-        "programa":     "CL1 ND1 RA2, CG2 ND1 D1, CG3 ND1 D1, CG3 ND1 D3",
-        "nota": "En el documento oficial de la asignatura se encontró una discrepancia: "
-                "la sección 'Perfil de Egreso' menciona CG3 y CG4, mientras que la sección "
-                "'Resultados de Aprendizaje' codifica CG2 y CG3.",
-    },
-    "ING 111": {
-        "asignatura": "Desafíos de Ingeniería",
-        "seccion": "APORTE AL PERFIL DE EGRESO / RESULTADOS DE APRENDIZAJE",
-        "desc_general": "CL1 ND1, CG2 N1, CG4 ND1",
-        "programa":     "CL1 ND1 RA1, RA2 · CG2 ND1 D1, D2, D3 · CG4 ND1 D1, D3 (D2 no marcado)",
-        "nota": "En el documento oficial de la asignatura se encontró una discrepancia: "
-                "la sección 'Aporte al Perfil de Egreso' declara CG4 ND1, pero en la sección "
-                "'Resultados de Aprendizaje' solo están marcados CG4 ND1 D1 y D3 — "
-                "el desempeño CG4 ND1 D2 no aparece seleccionado.",
-    },
     "QUI 121": {
         "asignatura": "Química para Ingeniería",
         "seccion": "RESULTADOS DE APRENDIZAJE / UNIDADES DE APRENDIZAJE Y CONTENIDOS",
