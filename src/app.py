@@ -844,25 +844,54 @@ class EditorProgramas(param.Parameterized):
         self._status           = pn.pane.HTML("")
 
     def _build_selector(self):
-        asigs   = get_asignaturas_lista()
-        opciones = {"— Elige una asignatura —": 0}
-        for a in asigs:
-            nivel = nivel_desde_semestre(a["semestre"])
-            opciones[f"{a['codigo']} -- {a['nombre']}"] = a["id"]
+        import unicodedata
+
+        def _normalizar_texto(s):
+            return unicodedata.normalize("NFD", s.lower()).encode("ascii", "ignore").decode()
+
+        asigs = get_asignaturas_lista()
+
+        def _opciones_filtradas(filtro=""):
+            f = _normalizar_texto(filtro.strip())
+            resultado = {"— Elige una asignatura —": 0}
+            for a in asigs:
+                etiqueta = f"{a['codigo']} -- {a['nombre']}"
+                if not f or f in _normalizar_texto(etiqueta):
+                    resultado[etiqueta] = a["id"]
+            return resultado
+
+        buscador = pn.widgets.TextInput(
+            placeholder="Buscar por código o nombre (ej: FIS 311, Física)…",
+            width=460, margin=(0, 8, 0, 0)
+        )
 
         sel = pn.widgets.Select(
-            name="Selecciona una asignatura",
-            options=opciones,
-            width=640, margin=(0,0,20,0)
+            name="",
+            options=_opciones_filtradas(),
+            width=640, margin=(0, 0, 20, 0)
         )
+
+        def on_buscar(event):
+            valor_actual = sel.value
+            nuevas = _opciones_filtradas(event.new)
+            sel.options = nuevas
+            if valor_actual in nuevas.values():
+                sel.value = valor_actual
 
         def on_change(event):
             if event.new:
                 self.asignatura_id = event.new
                 self._cargar_editor()
 
+        buscador.param.watch(on_buscar, "value")
         sel.param.watch(on_change, "value")
-        return sel
+
+        return pn.Column(
+            pn.pane.HTML('<label style="font-size:13px;font-weight:600;color:#475569;">'
+                         'Selecciona una asignatura</label>'),
+            pn.Row(buscador, sel, align="end"),
+            margin=(0, 0, 8, 0)
+        )
 
     def _cargar_editor(self):
         if not self.asignatura_id:
