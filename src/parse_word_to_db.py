@@ -595,15 +595,30 @@ def extraer_linkografia(doc: Document) -> list[dict]:
 
 
 def extraer_otros_recursos(doc: Document) -> str:
-    for t in doc.tables:
-        if len(t.columns) != 1:
-            continue
-        txt = t.rows[0].cells[0].text.strip()
-        lwr = txt.lower()
-        if "material" in lwr or "recurso" in lwr or "otro" in lwr:
-            return " ".join(
-                c.text.strip() for row in t.rows for c in row.cells if c.text.strip()
-            )
+    # Buscar el párrafo etiquetado "OTROS RECURSOS" y luego la primera tabla
+    # que le sigue en el documento (usando el XML del body para preservar orden).
+    from docx.oxml.ns import qn
+    body = doc.element.body
+    found_label = False
+    for child in body:
+        tag = child.tag.split("}")[-1] if "}" in child.tag else child.tag
+        if tag == "p":
+            text = "".join(r.text or "" for r in child.iter(qn("w:t"))).strip().lower()
+            if "otro" in text and "recurso" in text:
+                found_label = True
+        elif tag == "tbl" and found_label:
+            # Primera tabla tras la etiqueta: extraer todo su texto
+            from docx.table import Table
+            tbl = Table(child, doc)
+            lines = []
+            for row in tbl.rows:
+                for cell in row.cells:
+                    txt = cell.text.strip()
+                    if txt:
+                        lines.append(txt)
+            if lines:
+                return "\n".join(lines)
+            found_label = False  # tabla vacía, seguir buscando
     return ""
 
 

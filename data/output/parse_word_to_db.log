@@ -43,7 +43,7 @@ INFO     OK         IMAT313    Combinatoria y Algoritmos                | RA:8  
 INFO     OK         IMAT 315   Idioma II                                | RA:2   U:2   BB:2   BC:1
 INFO     OK         IMAT322    Cálculo de Probabilidades                | RA:7   U:3   BB:1   BC:1
 INFO     OK         IMAT 411   Teoría de la Medida                      | RA:8   U:5   BB:5   BC:4
-INFO     OMITIDO   IMAT 423 Sistemas Dinámicos Continuos.docx
+INFO     OK         IMAT 423   Sistemas Dinámicos Continuos             | RA:5   U:5   BB:4   BC:1
 INFO     OK         IMAT 323   Optimización                             | RA:9   U:4   BB:2   BC:4
 INFO     OK         IMAT413    Análisis Complejo                        | RA:4   U:4   BB:4   BC:1
 INFO     OK         IMAT 414   TIPE II                                  | RA:8   U:3   BB:1   BC:1
@@ -61,13 +61,13 @@ INFO     OK         IMAT 515   Práctica Básica                          | RA:8
 INFO     OK         IMAT522    Ecuaciones en Derivadas Parciales        | RA:7   U:2   BB:2   BC:1
 INFO     
 INFO     =================================================================
-INFO     RESULTADO: 51 OK | 0 cuarentena | 2 omitidos | 0 errores
+INFO     RESULTADO: 52 OK | 0 cuarentena | 1 omitidos | 0 errores
 INFO     
 INFO     ESTADO FINAL DE LA BD:
-INFO       asignaturas               51
-INFO       tributaciones             277
-INFO       unidades                  163
-INFO       bibliografia              178
-INFO       linkografia               96
-INFO       metodologias              102
-INFO       evaluaciones              225
+INFO       asignaturas               52
+INFO       tributaciones             282
+INFO       unidades                  168
+INFO       bibliografia              183
+INFO       linkografia               98
+INFO       metodologias              108
+INFO       evaluaciones              229
