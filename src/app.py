@@ -185,6 +185,22 @@ _INCONSISTENCIAS_DOCX = {
                 "que no existe formalmente en el plan. "
                 "La tributación CG4-ND2-DC3 no se carga en la BD al no tener equivalente válido.",
     },
+    "IMAT 415": {
+        "asignatura": "Idioma IV",
+        "seccion": "UNIDADES DE APRENDIZAJE Y CONTENIDOS",
+        "desc_general": "CG4 ND2 D1 y CG4 ND2 D2 mencionados en Unidades pero no en Resultados de Aprendizaje",
+        "programa":     "CG4 ND3 D1 · CG4 ND3 D2 · CG4 ND3 D3",
+        "nota": "En el documento oficial de la asignatura se encontró una discrepancia: "
+                "los desempeños CG4 ND2 D1 ('Escucha atentamente a los distintos actores involucrados "
+                "en el trabajo académico y en diversos contextos socioculturales') y CG4 ND2 D2 "
+                "('Empatiza ante las necesidades y requerimientos que se expresan en el trabajo académico "
+                "y en diversos contextos socioculturales') aparecen en la columna 'Desempeños clave' de "
+                "la tabla de Unidades de Aprendizaje y Contenidos, junto con CG4 N3 D3. "
+                "Sin embargo, la sección 'Resultados de Aprendizaje' declara únicamente CG4 ND3 D1, "
+                "CG4 ND3 D2 y CG4 ND3 D3 — sin mencionar CG4 ND2 D1 ni CG4 ND2 D2. "
+                "Las tributaciones cargadas en la BD corresponden a las de la sección oficial "
+                "'Resultados de Aprendizaje'; CG4 ND2 D1 y CG4 ND2 D2 no se incluyen.",
+    },
     "IMAT 515": {
         "asignatura": "Práctica Básica",
         "seccion": "UNIDADES DE APRENDIZAJE Y CONTENIDOS",
