@@ -174,9 +174,11 @@ class DiccionarioCodigos:
             if comp.startswith("CG") and ra.startswith("RA"):
                 ra = "D" + ra[2:]
 
-            # Intentar con nivel primero, luego sin nivel
+            # Si el documento especifica nivel, solo buscar con ese nivel exacto.
+            # No hacer fallback a otro nivel: si CG4-ND2-D3 no existe, no mapear
+            # silenciosamente a CG4-ND1-D3 (sería una tributación incorrecta).
             claves = (
-                [f"{comp}, {nivel}, {ra}", f"{comp}, {ra}"] if nivel
+                [f"{comp}, {nivel}, {ra}"] if nivel
                 else [f"{comp}, {ra}"]
             )
             ra_id = next((self.ra_por_codigo.get(c) for c in claves

@@ -169,6 +169,22 @@ _INCONSISTENCIAS_DOCX = {
                 "Las tributaciones no pueden cargarse automáticamente sin una tabla de equivalencia oficial "
                 "entre el Sello UV anterior y el vigente.",
     },
+    "IMAT 414": {
+        "asignatura": "Taller de Integración al Perfil de Egreso Sello UV II (TIPE Sello UV II)",
+        "seccion": "RESULTADOS DE APRENDIZAJE / UNIDADES DE APRENDIZAJE Y CONTENIDOS",
+        "desc_general": "CG1 ND2 D1, CG2 ND2 D1-D3, CG3 ND2 D1-D3, CG4 ND2 DC3 (no existe en el plan)",
+        "programa":     "CG1-ND2, CG2-ND2-DC1/DC2/DC3, CG3-ND2-DC1/DC2/DC3, CG4-ND2-DC3",
+        "nota": "El documento de IMAT 414 tributa el desempeño CG4-ND2-DC3, cuya descripción es: "
+                "'Expresa con claridad y respeto las propias necesidades y requerimientos en el trabajo "
+                "colaborativo en contextos académicos y socioculturales.' "
+                "Sin embargo, CG4 ND2 D3 no está definido en el plan de egreso vigente "
+                "(CG4 ND2 solo contempla D1 y D2). "
+                "Esta misma situación ocurre en IMAT 324 — la descripción es estructuralmente similar "
+                "a CG4 ND3 D3 ('...en el trabajo profesional en contextos nacionales e internacionales'), "
+                "lo que sugiere que el documento hace referencia a un desempeño de nivel ND2 "
+                "que no existe formalmente en el plan. "
+                "La tributación CG4-ND2-DC3 no se carga en la BD al no tener equivalente válido.",
+    },
     "IMAT 324": {
         "asignatura": "Ecuaciones Diferenciales Ordinarias",
         "seccion": "RESULTADOS DE APRENDIZAJE / UNIDADES DE APRENDIZAJE Y CONTENIDOS",
