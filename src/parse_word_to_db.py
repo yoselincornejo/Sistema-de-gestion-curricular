@@ -401,9 +401,16 @@ def extraer_identificacion(doc: Document, texto_completo: str, codigo: str, nomb
         data["requisitos"]= _txt_t(t0, 3, 1)
         data["semestre"]  = _semestre_desde_nivel(data["nivel"])
 
-        # Última fila → horas y créditos
-        fila_vals = [c.text.strip() for c in t0.rows[-1].cells]
-        if len(fila_vals) >= 6:
+        # Fila de horas → buscar de abajo hacia arriba la primera fila
+        # cuya primera celda tenga un valor numérico (maneja tablas con
+        # fila extra de descripción al final, como IMAT 413).
+        fila_vals = None
+        for row in reversed(t0.rows):
+            vals = [c.text.strip() for c in row.cells]
+            if len(vals) >= 6 and _to_float(vals[0]) is not None:
+                fila_vals = vals
+                break
+        if fila_vals:
             data["horas_directa"]  = _to_float(fila_vals[0])
             data["horas_autonoma"] = _to_float(fila_vals[1])
             data["semanas"]        = _to_int(fila_vals[3])
