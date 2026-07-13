@@ -53,7 +53,7 @@ INFO     OK         IMAT 422   Procesos Estocásticos                    | RA:8 
 INFO     OK         IMAT 424   Taller de Integración al Perfil de Egre  | RA:8   U:3   BB:3   BC:0
 INFO     OK         IMAT 521   Optimización Combinatorial               | RA:8   U:4   BB:2   BC:1
 INFO     OK         IMAT 421   Análisis Funcional                       | RA:8   U:3   BB:2   BC:1
-INFO     OK         IMAT 511   Grafos                                   | RA:4   U:5   BB:4   BC:0
+INFO     OK         IMAT 511   Grafos                                   | RA:6   U:5   BB:4   BC:0
 INFO     OK         IMAT 512   Modelación Estocástica                   | RA:5   U:3   BB:2   BC:1
 WARNING  SIN-RA    IMAT 514   Electivo de Ingeniería I                 (se carga sin tributaciones)
 INFO     OK         IMAT 514   Electivo de Ingeniería I                 | RA:0   U:0   BB:0   BC:0
@@ -65,7 +65,7 @@ INFO     RESULTADO: 52 OK | 0 cuarentena | 1 omitidos | 0 errores
 INFO     
 INFO     ESTADO FINAL DE LA BD:
 INFO       asignaturas               52
-INFO       tributaciones             278
+INFO       tributaciones             280
 INFO       unidades                  168
 INFO       bibliografia              183
 INFO       linkografia               98
