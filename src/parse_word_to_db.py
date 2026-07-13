@@ -308,8 +308,10 @@ def _extraer_codigo_y_nombre(doc: Document, texto_completo: str) -> tuple[str, s
         if m:
             codigo = m.group(1).strip()
 
-    # Limpiar espacios internos del código: "MAT 111" → "MAT 111" (mantener)
+    # Normalizar código: colapsar espacios y asegurar espacio entre letras y números
+    # "IMAT413" → "IMAT 413", "MAT  111" → "MAT 111"
     codigo = re.sub(r"\s+", " ", codigo).strip()
+    codigo = re.sub(r"([A-Za-z])(\d)", r"\1 \2", codigo)
 
     return codigo, nombre
 
