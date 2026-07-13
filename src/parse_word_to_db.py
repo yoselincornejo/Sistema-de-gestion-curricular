@@ -421,11 +421,11 @@ def extraer_descripcion(doc: Document) -> str:
     partes = []
 
     # Estrategia 1: tabla de 1 col que empieza con "La asignatura…"
+    # "Esta asignatura aporta…" es la sección de Aporte al Perfil, NO la descripción.
     for t in doc.tables:
         if len(t.columns) == 1:
             txt = t.rows[0].cells[0].text.strip()
-            if txt.lower().startswith("la asignatura") or \
-               txt.lower().startswith("esta asignatura aporta"):
+            if txt.lower().startswith("la asignatura"):
                 for row in t.rows:
                     p = row.cells[0].text.strip()
                     if p:
