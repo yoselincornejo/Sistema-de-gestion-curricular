@@ -455,22 +455,60 @@ def extraer_descripcion(doc: Document) -> str:
                 if len(resto) > 1 and resto[1].strip():
                     return resto[1].strip()
 
-    # Estrategia 3: párrafos entre "DESCRIPCIÓN DE LA ASIGNATURA:" y la siguiente sección
+    # Estrategia 3: párrafos (o tabla 1-col inmediata) tras "DESCRIPCIÓN DE LA ASIGNATURA:"
+    # El encabezado puede estar como párrafo libre O dentro de una celda de tabla
+    # (ej. IMAT 223: heading dentro de la tabla de identificación, descripción en párrafo siguiente)
     _STOP = {"aporte al perfil", "resultados de aprendizaje",
              "programa de la asignatura", "unidades de aprendizaje",
              "identificaci"}
+    from docx.oxml.ns import qn as _qn
+
+    def _tbl_has_desc_heading(tbl_elem):
+        for tc in tbl_elem.iter(_qn('w:tc')):
+            ct = "".join(r.text for r in tc.iter(_qn('w:t'))).strip().lower()
+            if "descripci" in ct and "asignatura" in ct:
+                return True
+        return False
+
     capturing = False
     for child in doc.element.body:
         tag = child.tag.split('}')[-1]
+        if tag == 'tbl':
+            if capturing and not partes:
+                # La descripción está en una tabla 1-col inmediatamente tras el encabezado
+                # (ej. IMAT 421: tabla 1×1 con "Este es un curso de pregrado…")
+                seen = set()
+                cell_texts = []
+                for tc in child.iter(_qn('w:tc')):
+                    t = "".join(r.text for r in tc.iter(_qn('w:t'))).strip()
+                    if t and t not in seen:
+                        seen.add(t)
+                        cell_texts.append(t)
+                tbl_txt = "\n".join(cell_texts).strip()
+                if tbl_txt and not any(k in tbl_txt.lower() for k in _STOP):
+                    partes.append(tbl_txt)
+                break
+            if capturing:
+                break
+            # El encabezado puede estar dentro de esta tabla (ej. IMAT 223)
+            if _tbl_has_desc_heading(child):
+                capturing = True
+            continue
         if tag != 'p':
             if capturing:
-                break   # encontramos una tabla → fin de la descripción
+                break
             continue
         txt = _elem_text(child).strip()
         if not txt:
             continue
         tl = txt.lower()
         if "descripci" in tl and "asignatura" in tl and (tl.endswith(":") or tl.endswith("asignatura:")):
+            # El párrafo puede contener la descripción + el heading en el mismo elemento
+            # (ej. IMAT 223: AlternateContent con texto de descripción seguido de "2. DESCRIPCIÓN...")
+            before = re.split(r"DESCRIPCI[OÓ]N DE LA ASIGNATURA", txt, flags=re.IGNORECASE, maxsplit=1)[0].strip()
+            if before and len(before) > 50 and not any(k in before.lower() for k in _STOP):
+                partes.append(before)
+                break
             capturing = True
             continue
         if capturing:
