@@ -416,9 +416,10 @@ def extraer_identificacion(doc: Document, texto_completo: str, codigo: str, nomb
 
 def extraer_descripcion(doc: Document) -> str:
     """
-    Extrae la descripción de la asignatura. Busca primero en tablas de 1 columna
-    y, si no encuentra, en párrafos ubicados tras el encabezado
-    'DESCRIPCIÓN DE LA ASIGNATURA:'.
+    Extrae la descripción de la asignatura. Busca en tres estrategias:
+    1. Tabla 1-col que empieza con "La asignatura…"
+    2. Celda dentro de tabla multi-col que contiene "DESCRIPCIÓN DE LA ASIGNATURA"
+    3. Párrafos ubicados tras el encabezado "DESCRIPCIÓN DE LA ASIGNATURA:"
     """
     partes = []
 
@@ -435,7 +436,19 @@ def extraer_descripcion(doc: Document) -> str:
     if partes:
         return "\n".join(partes)
 
-    # Estrategia 2: párrafos entre "DESCRIPCIÓN DE LA ASIGNATURA:" y la siguiente sección
+    # Estrategia 2: celda en tabla multi-col que contiene "DESCRIPCIÓN DE LA ASIGNATURA"
+    # (patrón: tabla de identificación donde la última fila tiene la descripción fusionada)
+    for t in doc.tables:
+        for row in t.rows:
+            cell_txt = row.cells[0].text.strip()
+            if re.search(r"DESCRIPCI[OÓ]N DE LA ASIGNATURA", cell_txt, re.IGNORECASE):
+                # Saltar el encabezado "DESCRIPCIÓN DE LA ASIGNATURA:" y tomar el resto
+                resto = re.split(r"DESCRIPCI[OÓ]N DE LA ASIGNATURA\s*[:\n]+", cell_txt,
+                                 flags=re.IGNORECASE, maxsplit=1)
+                if len(resto) > 1 and resto[1].strip():
+                    return resto[1].strip()
+
+    # Estrategia 3: párrafos entre "DESCRIPCIÓN DE LA ASIGNATURA:" y la siguiente sección
     _STOP = {"aporte al perfil", "resultados de aprendizaje",
              "programa de la asignatura", "unidades de aprendizaje",
              "identificaci"}
