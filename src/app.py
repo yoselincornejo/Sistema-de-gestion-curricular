@@ -185,6 +185,21 @@ _INCONSISTENCIAS_DOCX = {
                 "que no existe formalmente en el plan. "
                 "La tributación CG4-ND2-DC3 no se carga en la BD al no tener equivalente válido.",
     },
+    "IMAT 523": {
+        "asignatura": "Proyecto de Ingeniería",
+        "seccion": "UNIDADES DE APRENDIZAJE Y CONTENIDOS",
+        "desc_general": "CG1 N3 D3, CG5 N3 D1/D2, CG6 N3 D1/D2/D3 — no declarados en Resultados de Aprendizaje ni en el perfil de egreso vigente",
+        "programa":     "CE1 ND3 RA1-RA3 · CE2 ND3 RA1-RA6 · CG1 ND3 D1/D2 · CG2 ND3 D1/D2 · CG3 ND3 D1/D2 · CG4 ND3 D1/D2/D3",
+        "nota": "En el documento oficial de la asignatura se encontró una discrepancia: "
+                "la columna 'Resultado de aprendizaje y/o desempeños' de la tabla de Unidades de "
+                "Aprendizaje y Contenidos menciona los siguientes códigos que NO aparecen en la "
+                "sección oficial 'Resultados de Aprendizaje': "
+                "CG1 N3 D3, CG5 N3 D1, CG5 N3 D2, CG6 N3 D1, CG6 N3 D2, CG6 N3 D3. "
+                "Adicionalmente, ninguno de estos códigos existe en el perfil de egreso vigente: "
+                "CG1 ND3 solo contempla D1 y D2 (no D3), y las competencias CG5 y CG6 no están "
+                "definidas en el plan de egreso actual (el Sello UV vigente tiene CG1–CG4). "
+                "Estos códigos no se cargan en la BD al no tener equivalente válido.",
+    },
     "IMAT 415": {
         "asignatura": "Idioma IV",
         "seccion": "UNIDADES DE APRENDIZAJE Y CONTENIDOS",
