@@ -29,7 +29,7 @@ INFO     OK         MAT 212    Álgebra Lineal                           | RA:3 
 INFO     OK         FIS 221    Física Calor y Ondas                     | RA:4   U:3   BB:2   BC:1
 WARNING  SIN-RA    IMAT 223   Idioma I                                 (se carga sin tributaciones)
 INFO     OK         IMAT 223   Idioma I                                 | RA:0   U:3   BB:3   BC:3
-INFO     OK         IMAT 314   Estructuras Algebraicas                  | RA:4   U:3   BB:3   BC:2
+INFO     OK         IMAT 314   Estructuras Algebraicas                  | RA:3   U:3   BB:3   BC:2
 INFO     OK         IMAT 212   Economía                                 | RA:4   U:2   BB:3   BC:1
 INFO     OK         MAT 221    Cálculo en Varias Variables              | RA:3   U:2   BB:2   BC:1
 INFO     OK         MAT 222    Ecuaciones Diferenciales Ordinarias      | RA:3   U:4   BB:2   BC:1
@@ -37,8 +37,8 @@ INFO     OK         FIS 311    Física Electromagnetismo                 | RA:4 
 INFO     OK         IMAT 311   Cálculo Avanzado                         | RA:3   U:3   BB:4   BC:0
 INFO     OK         IMAT 312   Métodos Numéricos                        | RA:7   U:3   BB:4   BC:1
 INFO     OK         IMAT 321   Análisis                                 | RA:8   U:8   BB:5   BC:1
-INFO     OK         IMAT 324   TIPE I                                   | RA:8   U:3   BB:1   BC:1
-INFO     OK         IMAT 222   Evaluación de Proyectos                  | RA:4   U:2   BB:1   BC:1
+INFO     OK         IMAT 324   TIPE I                                   | RA:7   U:3   BB:1   BC:1
+INFO     OK         IMAT 222   Evaluación de Proyectos                  | RA:3   U:2   BB:1   BC:1
 INFO     OK         IMAT 313   Combinatoria y Algoritmos                | RA:8   U:4   BB:5   BC:3
 INFO     OK         IMAT 315   Idioma II                                | RA:2   U:2   BB:2   BC:1
 INFO     OK         IMAT 322   Cálculo de Probabilidades                | RA:7   U:3   BB:1   BC:1
@@ -46,7 +46,7 @@ INFO     OK         IMAT 411   Teoría de la Medida                      | RA:8 
 INFO     OK         IMAT 423   Sistemas Dinámicos Continuos             | RA:5   U:5   BB:4   BC:1
 INFO     OK         IMAT 323   Optimización                             | RA:9   U:4   BB:2   BC:4
 INFO     OK         IMAT 413   Análisis Complejo                        | RA:4   U:4   BB:4   BC:1
-INFO     OK         IMAT 414   TIPE II                                  | RA:8   U:3   BB:1   BC:1
+INFO     OK         IMAT 414   TIPE II                                  | RA:7   U:3   BB:1   BC:1
 INFO     OK         IMAT 412   Inferencia Estadística                   | RA:6   U:6   BB:3   BC:1
 INFO     OK         IMAT 325   Idioma III                               | RA:2   U:2   BB:2   BC:1
 INFO     OK         IMAT 422   Procesos Estocásticos                    | RA:8   U:3   BB:1   BC:3
@@ -65,7 +65,7 @@ INFO     RESULTADO: 52 OK | 0 cuarentena | 1 omitidos | 0 errores
 INFO     
 INFO     ESTADO FINAL DE LA BD:
 INFO       asignaturas               52
-INFO       tributaciones             282
+INFO       tributaciones             278
 INFO       unidades                  168
 INFO       bibliografia              183
 INFO       linkografia               98
