@@ -669,11 +669,17 @@ def extraer_metodologias(doc: Document) -> list[str]:
             continue
         # Excluir tablas cuyo primer encabezado es prosa descriptiva de la asignatura
         _DESC_STARTERS = ("la asignatura", "esta asignatura", "al final de", "el programa",
-                          "aporte al perfil", "esta carrera", "el presente")
+                          "aporte al perfil", "esta carrera", "el presente",
+                          "este curso", "este programa", "el curso")
         if any(h0_first.startswith(k) for k in _DESC_STARTERS):
             continue
 
         all_texts = [c.text.strip() for row in t.rows for c in row.cells]
+        full_text = " ".join(all_texts)
+
+        # Excluir tablas que son bibliografía/linkografía (contienen URLs)
+        if re.search(r"https?://", full_text):
+            continue
 
         # Verificar que la tabla contiene nombres de metodologías
         has_metod = any(
