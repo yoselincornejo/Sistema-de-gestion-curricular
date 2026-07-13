@@ -185,6 +185,20 @@ _INCONSISTENCIAS_DOCX = {
                 "que no existe formalmente en el plan. "
                 "La tributación CG4-ND2-DC3 no se carga en la BD al no tener equivalente válido.",
     },
+    "IMAT 515": {
+        "asignatura": "Práctica Básica",
+        "seccion": "UNIDADES DE APRENDIZAJE Y CONTENIDOS",
+        "desc_general": "CG4 ND2 D2 mencionado en Actividad Curricular I pero no en Resultados de Aprendizaje",
+        "programa":     "CE1 ND3 RA1 · CG2 ND2 D3 · CG3 ND3 D1 · CG4 ND1 D1 · CG4 ND1 D3 · CG4 ND3 D1 · CG4 ND3 D2 · CG4 ND3 D3",
+        "nota": "En el documento oficial de la asignatura se encontró una discrepancia: "
+                "el desempeño CG4 ND2 D2 ('Escucha atentamente a los distintos actores involucrados en el "
+                "trabajo académico y en diversos contextos socioculturales') aparece en la columna "
+                "'Resultado de aprendizaje y/o desempeños' de la Actividad Curricular I (sección "
+                "'Unidades de Aprendizaje y Contenidos'), pero no está declarado en la sección oficial "
+                "'Resultados de Aprendizaje'. "
+                "Las tributaciones cargadas en la BD corresponden únicamente a las declaradas en la "
+                "sección 'Resultados de Aprendizaje'; CG4 ND2 D2 no se incluye.",
+    },
     "IMAT 324": {
         "asignatura": "Ecuaciones Diferenciales Ordinarias",
         "seccion": "RESULTADOS DE APRENDIZAJE / UNIDADES DE APRENDIZAJE Y CONTENIDOS",
