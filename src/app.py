@@ -155,6 +155,20 @@ _INCONSISTENCIAS_DOCX = {
                 "Las tributaciones declaradas en la sección 'Resultados de Aprendizaje' son: "
                 "CL1 ND2 RA2, CG3 ND2 D2, CG4 ND2 D1, CG4 ND2 D2.",
     },
+    "IMAT 223": {
+        "asignatura": "Idioma I",
+        "seccion": "RESULTADOS DE APRENDIZAJE Y DESEMPEÑOS",
+        "desc_general": "Nomenclatura antigua del Sello UV — códigos CG9.C, CG10, CG11 no reconocidos",
+        "programa":     "CG9.C D1, CG9.C D2, CG10 D4, CG10 D5 (Unidades 1-2) · CG9.C D2, CG11 D2 (Unidad 3)",
+        "nota": "El documento de IMAT 223 usa la nomenclatura anterior del Sello UV (CG9.C, CG10, CG11) "
+                "con descriptores numerados globalmente (D1–D5), incompatible con el sistema actual (CG1–CG4, "
+                "descriptores por nivel de dominio). "
+                "El mapeo tentativo es: CG9.C → CG4 (Comunicación), CG10 → CG1 (Aprendizaje Continuo), "
+                "CG11 → CG2 (Trabajo en Equipo). Sin embargo, los descriptores D4 y D5 referenciados para "
+                "CG10 no existen en el plan de egreso actual (CG1 tiene máximo D2 por nivel de dominio). "
+                "Las tributaciones no pueden cargarse automáticamente sin una tabla de equivalencia oficial "
+                "entre el Sello UV anterior y el vigente.",
+    },
     "IMAT 324": {
         "asignatura": "Ecuaciones Diferenciales Ordinarias",
         "seccion": "RESULTADOS DE APRENDIZAJE / UNIDADES DE APRENDIZAJE Y CONTENIDOS",
