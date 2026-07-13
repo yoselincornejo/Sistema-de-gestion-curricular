@@ -832,50 +832,64 @@ class EditorProgramas(param.Parameterized):
         self._status           = pn.pane.HTML("")
 
     def _build_selector(self):
-        import unicodedata
+        import unicodedata, re as _re
 
         def _norm(s):
-            return unicodedata.normalize("NFD", s.lower()).encode("ascii", "ignore").decode()
+            # Quita espacios, pasa a minúsculas y elimina acentos para comparación flexible
+            s = unicodedata.normalize("NFD", s).encode("ascii", "ignore").decode()
+            return _re.sub(r"\s+", "", s).lower()
 
         asigs = get_asignaturas_lista()
         etiqueta_a_id = {f"{a['codigo']} -- {a['nombre']}": a["id"] for a in asigs}
+        todas_opciones = {"— Elige una asignatura —": 0, **etiqueta_a_id}
 
-        opciones_sel = {"— Elige una asignatura —": 0}
-        opciones_sel.update(etiqueta_a_id)
-
-        buscador = pn.widgets.AutocompleteInput(
-            placeholder="Buscar por código o nombre (ej: FIS 311, Física)…",
-            options=list(etiqueta_a_id.keys()),
-            min_characters=1,
+        buscador = pn.widgets.TextInput(
+            placeholder="Buscar por código o nombre (ej: IMAT413, imat 413, Inferencia)…",
             width=460, margin=(0, 8, 0, 0),
         )
 
         sel = pn.widgets.Select(
             name="",
-            options=dict(opciones_sel),
+            options=dict(todas_opciones),
             width=640, margin=(0, 0, 20, 0),
         )
 
         _updating = [False]
 
         def on_buscador(event):
-            asig_id = etiqueta_a_id.get(event.new)
-            if asig_id and not _updating[0]:
+            if _updating[0]:
+                return
+            q = _norm(event.new or "")
+            if not q:
                 _updating[0] = True
-                sel.value = asig_id
+                sel.options = dict(todas_opciones)
+                sel.value = 0
                 _updating[0] = False
-                self.asignatura_id = asig_id
+                return
+            filtradas = {k: v for k, v in etiqueta_a_id.items() if q in _norm(k)}
+            if not filtradas:
+                return
+            _updating[0] = True
+            sel.options = {"— Elige una asignatura —": 0, **filtradas}
+            if len(filtradas) == 1:
+                único_id = list(filtradas.values())[0]
+                sel.value = único_id
+                self.asignatura_id = único_id
                 self._cargar_editor()
+            _updating[0] = False
 
         def on_sel(event):
-            if event.new and not _updating[0]:
-                _updating[0] = True
-                etiqueta = next((k for k, v in etiqueta_a_id.items() if v == event.new), None)
-                if etiqueta:
-                    buscador.value = etiqueta
-                _updating[0] = False
-                self.asignatura_id = event.new
-                self._cargar_editor()
+            if _updating[0] or not event.new:
+                return
+            _updating[0] = True
+            etiqueta = next((k for k, v in etiqueta_a_id.items() if v == event.new), None)
+            if etiqueta:
+                buscador.value = etiqueta
+            sel.options = dict(todas_opciones)
+            sel.value = event.new
+            _updating[0] = False
+            self.asignatura_id = event.new
+            self._cargar_editor()
 
         buscador.param.watch(on_buscador, "value")
         sel.param.watch(on_sel, "value")
