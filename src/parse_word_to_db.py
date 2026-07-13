@@ -754,6 +754,19 @@ def extraer_evaluaciones(doc: Document) -> list[dict]:
     evals = []
     for t in doc.tables:
         h = t.rows[0].cells[0].text.strip().lower()
+
+        # Formato celda única: tabla 1×1 donde cada línea contiene "Tipo\t\tN%"
+        if len(t.columns) == 1 and len(t.rows) == 1 and "%" in h:
+            for line in t.rows[0].cells[0].text.strip().splitlines():
+                parts = re.split(r'\t+', line.strip())
+                if len(parts) >= 2:
+                    tipo = parts[0].strip()
+                    porc = parts[-1].strip()
+                    if tipo and re.search(r'\d+\s*%', porc):
+                        evals.append({"tipo": tipo, "porcentaje": porc})
+            if evals:
+                return evals
+
         # Accept table if first cell mentions evaluación (relaxed: no longer requires "tipo")
         if "evaluaci" not in h and "porcentaje" not in h:
             continue
