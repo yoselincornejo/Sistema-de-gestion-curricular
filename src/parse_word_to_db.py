@@ -135,7 +135,7 @@ class DiccionarioCodigos:
         # Patron regex que detecta CUALQUIER mención a un código tipo RA.
         # Soporta separadores coma O guión: "CL1, N2, RA1" y "CG2-ND2-DC1".
         comp_alternativa = "|".join(sorted(self.competencias, key=len, reverse=True))
-        SEP = r"[\s]*[-,][\s]*"   # separador flexible: coma o guión con espacios opcionales
+        SEP = r"[\s]*[-,:][\s]*"   # separador flexible: coma, guión o dos puntos con espacios opcionales
         self._PATRON_RA = re.compile(
             rf"(?P<comp>{comp_alternativa})"        # competencia: CL1, CE2, CG4…
             rf"(?:{SEP}"                            # separador opcional
