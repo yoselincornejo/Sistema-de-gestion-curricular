@@ -783,6 +783,36 @@ def extraer_metodologias(doc: Document) -> list[str]:
                     txt = cell.text.strip()
                     if txt and len(txt) > 4 and txt not in metods:
                         metods.append(txt)
+
+    # Fallback: si no se encontró ninguna metodología por keyword, buscar la primera
+    # tabla que siga a un párrafo de heading "METODOLOGÍA" en el body del documento.
+    # Cubre documentos como IMAT 523/611 donde se usa texto libre sin keywords estándar.
+    if not metods:
+        from docx.oxml.ns import qn as _qn2
+        from docx.table import Table as _Table
+        _METOD_HEADING = ("metodolog", "enseñanza", "estrategia")
+        _SKIP_STARTERS = ("la asignatura", "esta asignatura", "al final", "el curso",
+                          "el programa", "este programa")
+        capturing = False
+        for child in doc.element.body:
+            tag = child.tag.split('}')[-1]
+            if tag == 'p':
+                txt = ''.join(r.text or '' for r in child.iter(_qn2('w:t'))).strip().lower()
+                if any(k in txt for k in _METOD_HEADING):
+                    capturing = True
+            elif tag == 'tbl' and capturing:
+                t = _Table(child, doc)
+                first_cell = t.rows[0].cells[0].text.strip().lower()
+                # Saltar tablas de descripción/aporte
+                if not any(first_cell.startswith(s) for s in _SKIP_STARTERS):
+                    for row in t.rows:
+                        for cell in row.cells:
+                            for line in cell.text.strip().split('\n'):
+                                line = line.strip()
+                                if line and len(line) > 4 and line not in metods:
+                                    metods.append(line)
+                capturing = False  # solo tomar la primera tabla tras el heading
+
     return metods
 
 
