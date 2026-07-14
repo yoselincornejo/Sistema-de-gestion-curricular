@@ -384,7 +384,7 @@ def extraer_identificacion(doc: Document, texto_completo: str, codigo: str, nomb
         "facultad": "", "carrera": "", "nivel": "",
         "duracion": "", "requisitos": "", "semestre": None,
         "horas_directa": None, "horas_autonoma": None,
-        "semanas": None, "creditos": None,
+        "semanas": None, "creditos": None, "total_horas": None,
     }
 
     if not doc.tables:
@@ -414,14 +414,9 @@ def extraer_identificacion(doc: Document, texto_completo: str, codigo: str, nomb
             data["horas_directa"]  = _to_float(fila_vals[0])
             data["horas_autonoma"] = _to_float(fila_vals[1])
             data["semanas"]        = _to_int(fila_vals[3])
+            data["total_horas"]    = _to_float(fila_vals[4])
             data["creditos"]       = _to_int(fila_vals[5])
 
-        # IMAT 612: el documento tiene A=40, B=0,5, D=12 pero E=324 (no 486).
-        # El total semestral oficial es 324 h = 27 h/sem × 12 sem, consistente
-        # con F=E/27=12 créditos. Los campos A y B son un error del documento.
-        if codigo == "IMAT 612":
-            data["horas_directa"]  = 27.0
-            data["horas_autonoma"] = 0.0
     except (IndexError, AttributeError):
         pass
 
@@ -1022,10 +1017,10 @@ def insertar_programa(conn: sqlite3.Connection, data: dict):
     conn.execute("""
         INSERT INTO asignaturas
           (codigo, nombre, semestre, nivel, duracion, tipo, facultad, carrera,
-           requisitos, horas_directa, horas_autonoma, semanas, creditos,
+           requisitos, horas_directa, horas_autonoma, semanas, creditos, total_horas,
            descripcion, descripcion_evaluaciones, experiencias_laboratorio,
            otros_recursos, version, archivo_origen)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         ON CONFLICT(codigo) DO UPDATE SET
           nombre                   = excluded.nombre,
           semestre                 = excluded.semestre,
@@ -1038,6 +1033,7 @@ def insertar_programa(conn: sqlite3.Connection, data: dict):
           horas_autonoma           = excluded.horas_autonoma,
           semanas                  = excluded.semanas,
           creditos                 = excluded.creditos,
+          total_horas              = excluded.total_horas,
           descripcion              = excluded.descripcion,
           descripcion_evaluaciones = excluded.descripcion_evaluaciones,
           experiencias_laboratorio = excluded.experiencias_laboratorio,
@@ -1051,7 +1047,8 @@ def insertar_programa(conn: sqlite3.Connection, data: dict):
         ident.get("facultad", ""),   ident.get("carrera", ""),
         ident.get("requisitos", ""), ident.get("horas_directa"),
         ident.get("horas_autonoma"), ident.get("semanas"),
-        ident.get("creditos"),       data.get("descripcion", ""),
+        ident.get("creditos"),       ident.get("total_horas"),
+        data.get("descripcion", ""),
         data.get("descripcion_evaluaciones", ""),
         data.get("laboratorios", ""),
         data.get("otros_recursos",""),

@@ -810,7 +810,9 @@ def generar_programa_individual(asignatura_id, salida=None):
     sem = asig.get("semanas")
     cred = asig.get("creditos")
     total_h = (hd or 0) + (ha or 0)
-    total_sem = total_h * sem if (total_h and sem) else None
+    # Usar total_horas leído directamente del documento (campo E) cuando está
+    # disponible, ya que algunos documentos tienen A y B incorrectos (ej. IMAT 612).
+    total_sem = asig.get("total_horas") or (total_h * sem if (total_h and sem) else None)
     vals = [
         str(hd).replace(".", ",") if hd else "",
         str(ha).replace(".", ",") if ha else "",
