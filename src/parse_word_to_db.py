@@ -415,6 +415,13 @@ def extraer_identificacion(doc: Document, texto_completo: str, codigo: str, nomb
             data["horas_autonoma"] = _to_float(fila_vals[1])
             data["semanas"]        = _to_int(fila_vals[3])
             data["creditos"]       = _to_int(fila_vals[5])
+
+        # IMAT 612: el documento tiene A=40, B=0,5, D=12 pero E=324 (no 486).
+        # El total semestral oficial es 324 h = 27 h/sem × 12 sem, consistente
+        # con F=E/27=12 créditos. Los campos A y B son un error del documento.
+        if codigo == "IMAT 612":
+            data["horas_directa"]  = 27.0
+            data["horas_autonoma"] = 0.0
     except (IndexError, AttributeError):
         pass
 
