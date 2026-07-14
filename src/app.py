@@ -248,6 +248,18 @@ _INCONSISTENCIAS_DOCX = {
                 "pero difiere en el contexto ('colaborativo/académico' vs. 'profesional/nacional e internacional'), "
                 "lo que sugiere que el documento hace referencia a un desempeño de nivel ND2 que no existe formalmente en el plan.",
     },
+    "IMAT 612": {
+        "asignatura": "Proyecto de Título",
+        "seccion": "UNIDADES DE APRENDIZAJE Y CONTENIDOS",
+        "desc_general": "CG4 N2 D2 mencionado en Unidades de Aprendizaje pero no en Resultados de Aprendizaje",
+        "programa":     "Tributaciones declaradas en sección Resultados de Aprendizaje (sin CG4 N2 D2)",
+        "nota": "En el documento oficial de la asignatura se encontró una discrepancia: "
+                "el desempeño CG4 N2 D2 aparece en la columna 'Resultado de aprendizaje y/o desempeños' "
+                "de la sección 'Unidades de Aprendizaje y Contenidos', pero no está declarado en la "
+                "sección anterior 'Resultados de Aprendizaje'. "
+                "Las tributaciones cargadas en la BD corresponden únicamente a las declaradas en la "
+                "sección 'Resultados de Aprendizaje'; CG4 N2 D2 no se incluye.",
+    },
 }
 
 # Sugerencias basadas en equivalencia con plan ICM
