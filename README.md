@@ -5,6 +5,43 @@ Aplicación web local para gestionar el currículo de Ingeniería Civil Matemát
 Todos los documentos se generan **desde la base de datos** (`data/sistema.db`), que es la única fuente de verdad del sistema — los Word originales en `data/programas/` son solo respaldo histórico.
 
 ---
+## RESUMEN DE COMANDOS 
+
+# CLONAR REPO
+
+git clone https://github.com/yoselincornejo/Sistema-de-gestion-curricular.git
+cd Sistema-de-gestion-curricular
+
+# ACTIVAR ENTORNO
+
+**macOS / Linux**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+**Windows (PowerShell)**
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+**Windows (CMD)**
+
+```cmd
+python -m venv .venv
+.venv\Scripts\activate.bat
+```
+
+# INSTALAR LIBRERIAS
+
+pip install -r requirements.txt
+
+# LEVANTAR APP
+
+panel serve src/app.py --show --autoreload
 
 ## Requisitos previos
 
