@@ -347,7 +347,10 @@ def get_programa_completo(asig_id):
                 for r in ras_raw]
     todos_ras = [{"id": r[0], "codigo_completo": r[1], "comp": r[2], "tipo": r[3]}
                  for r in todos_ras_raw]
-    return asig, unidades, metodologias, evaluaciones, ras, todos_ras
+    bibliografia = [dict(r) for r in conn.execute(
+        "SELECT id, tipo, numero, autor, titulo, editorial, anio, isbn, ejemplares FROM bibliografia WHERE asignatura_id=? ORDER BY tipo, id",
+        (asig_id,)).fetchall()]
+    return asig, unidades, metodologias, evaluaciones, ras, todos_ras, bibliografia
 
 def guardar_programa(asig_id, datos):
     conn = conexion()
@@ -383,6 +386,16 @@ def guardar_programa(asig_id, datos):
             conn.execute(
                 "INSERT OR IGNORE INTO tributaciones (asignatura_id, ra_id) VALUES (?,?)",
                 (asig_id, ra_id))
+        conn.execute("DELETE FROM bibliografia WHERE asignatura_id=?", (asig_id,))
+        for b in datos.get("bibliografia", []):
+            if b["titulo"].strip():
+                conn.execute("""
+                    INSERT INTO bibliografia
+                    (asignatura_id, tipo, numero, autor, titulo, editorial, anio, isbn, ejemplares)
+                    VALUES (?,?,?,?,?,?,?,?,?)
+                """, (asig_id, b["tipo"], b.get("numero",""), b.get("autor",""),
+                      b["titulo"], b.get("editorial",""), b.get("anio",""),
+                      b.get("isbn",""), b.get("ejemplares","")))
         conn.commit()
         return True, "Cambios guardados correctamente"
     except Exception as e:
@@ -979,7 +992,7 @@ class EditorProgramas(param.Parameterized):
             self._contenido_editor.objects = []
             return
 
-        asig, unidades, metodologias, evaluaciones, ras_actuales, todos_ras = \
+        asig, unidades, metodologias, evaluaciones, ras_actuales, todos_ras, bibliografia = \
             get_programa_completo(self.asignatura_id)
 
         ra_ids_actuales = {r["id"] for r in ras_actuales}
@@ -1129,6 +1142,74 @@ class EditorProgramas(param.Parameterized):
             css_classes=["card"], sizing_mode="stretch_width"
         )
 
+        # ── Bibliografía ──────────────────────────────────────────
+        self._biblio_widgets = []
+        col_biblio = pn.Column(sizing_mode="stretch_width")
+
+        CAMPOS_BIBLIO = [
+            ("autor",      "Autor(es)",       400, False),
+            ("titulo",     "Título",          400, False),
+            ("editorial",  "Editorial",       200, False),
+            ("anio",       "Año",              80, False),
+            ("isbn",       "ISBN",            160, False),
+            ("ejemplares", "Ejemplares/Acceso",140, False),
+        ]
+
+        def crear_entrada_biblio(tipo, autor="", titulo="", editorial="",
+                                  anio="", isbn="", ejemplares=""):
+            ws = {
+                "tipo":       tipo,
+                "autor":      pn.widgets.TextInput(name="Autor(es)",        value=str(autor),      width=400),
+                "titulo":     pn.widgets.TextInput(name="Título",           value=str(titulo),     sizing_mode="stretch_width"),
+                "editorial":  pn.widgets.TextInput(name="Editorial",        value=str(editorial),  width=200),
+                "anio":       pn.widgets.TextInput(name="Año",              value=str(anio),       width=80),
+                "isbn":       pn.widgets.TextInput(name="ISBN",             value=str(isbn),       width=160),
+                "ejemplares": pn.widgets.TextInput(name="Ejemplares/Acceso",value=str(ejemplares), width=140),
+            }
+            label_color = "#1F4E79" if tipo == "basica" else "#375623"
+            label_txt = "Básica" if tipo == "basica" else "Complementaria"
+            panel = pn.Column(
+                pn.pane.HTML(f'<span style="font-size:11px;font-weight:600;color:{label_color};text-transform:uppercase">{label_txt}</span>'),
+                pn.Row(ws["autor"], ws["titulo"]),
+                pn.Row(ws["editorial"], ws["anio"], ws["isbn"], ws["ejemplares"]),
+                css_classes=["card"], margin=(0, 0, 8, 0), sizing_mode="stretch_width"
+            )
+            ws["panel"] = panel
+            return ws
+
+        for b in bibliografia:
+            w = crear_entrada_biblio(
+                b.get("tipo","basica"), b.get("autor",""), b.get("titulo",""),
+                b.get("editorial",""), b.get("anio",""), b.get("isbn",""),
+                b.get("ejemplares",""))
+            self._biblio_widgets.append(w)
+            col_biblio.append(w["panel"])
+
+        btn_add_basica = pn.widgets.Button(
+            name="➕ Básica", css_classes=["btn-add"], width=140, height=38)
+        btn_add_compl = pn.widgets.Button(
+            name="➕ Complementaria", css_classes=["btn-add"], width=180, height=38)
+
+        def on_add_basica(event):
+            w = crear_entrada_biblio("basica")
+            self._biblio_widgets.append(w)
+            col_biblio.append(w["panel"])
+
+        def on_add_compl(event):
+            w = crear_entrada_biblio("complementaria")
+            self._biblio_widgets.append(w)
+            col_biblio.append(w["panel"])
+
+        btn_add_basica.on_click(on_add_basica)
+        btn_add_compl.on_click(on_add_compl)
+
+        sec_biblio = pn.Column(
+            pn.pane.HTML('<div class="card-title">Bibliografía</div>'),
+            col_biblio,
+            pn.Row(pn.layout.HSpacer(), btn_add_basica, btn_add_compl, pn.layout.HSpacer()),
+            css_classes=["card"], sizing_mode="stretch_width"
+        )
+
         # ── Acciones ──────────────────────────────────────────────
         self._widgets = {
             "nombre": w_nombre, "semestre": w_sem, "nivel": w_nivel,
@@ -1172,7 +1253,12 @@ class EditorProgramas(param.Parameterized):
                 "evaluaciones": [{"tipo": e["tipo"].value,
                                   "porcentaje": e["porcentaje"].value}
                                  for e in self._eval_widgets],
-                "ra_ids": [rid for rid, cb in self._ra_checks.items() if cb.value]
+                "ra_ids": [rid for rid, cb in self._ra_checks.items() if cb.value],
+                "bibliografia": [{"tipo": b["tipo"], "autor": b["autor"].value,
+                                   "titulo": b["titulo"].value, "editorial": b["editorial"].value,
+                                   "anio": b["anio"].value, "isbn": b["isbn"].value,
+                                   "ejemplares": b["ejemplares"].value}
+                                  for b in self._biblio_widgets]
             }
             ok, msg = guardar_programa(self.asignatura_id, datos)
             self._status.object = (
@@ -1194,6 +1280,7 @@ class EditorProgramas(param.Parameterized):
         self._contenido_editor.objects = [
             sec_ident, sec_ras,
             # sec_unidades, sec_metod, sec_eval,  # temporalmente ocultas
+            sec_biblio,
             sec_acciones
         ]
 
