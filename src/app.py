@@ -318,6 +318,9 @@ def get_programa_completo(asig_id):
     evaluaciones = [dict(r) for r in conn.execute(
         "SELECT * FROM evaluaciones WHERE asignatura_id=? ORDER BY id",
         (asig_id,)).fetchall()]
+    bibliografia = [dict(r) for r in conn.execute(
+        "SELECT id, tipo, numero, autor, titulo, editorial, anio, isbn, ejemplares FROM bibliografia WHERE asignatura_id=? ORDER BY tipo, id",
+        (asig_id,)).fetchall()]
     conn.row_factory = None
     ras_raw = conn.execute("""
         SELECT ra.id, ra.codigo_completo, c.codigo, c.tipo
@@ -342,15 +345,11 @@ def get_programa_completo(asig_id):
                 ELSE 3
             END, c.codigo, ra.codigo_completo
     """).fetchall()
-    bibliografia_raw = conn.execute(
-        "SELECT id, tipo, numero, autor, titulo, editorial, anio, isbn, ejemplares FROM bibliografia WHERE asignatura_id=? ORDER BY tipo, id",
-        (asig_id,)).fetchall()
     conn.close()
     ras      = [{"id": r[0], "codigo_completo": r[1], "comp": r[2], "tipo": r[3]}
                 for r in ras_raw]
     todos_ras = [{"id": r[0], "codigo_completo": r[1], "comp": r[2], "tipo": r[3]}
                  for r in todos_ras_raw]
-    bibliografia = [dict(r) for r in bibliografia_raw]
     return asig, unidades, metodologias, evaluaciones, ras, todos_ras, bibliografia
 
 def guardar_programa(asig_id, datos):
