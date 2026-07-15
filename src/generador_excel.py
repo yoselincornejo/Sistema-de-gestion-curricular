@@ -94,7 +94,7 @@ def _obtener_datos():
     """).fetchall()
 
     asigs = conn.execute("""
-        SELECT id, codigo, nombre, semestre
+        SELECT id, codigo, nombre, semestre, creditos
         FROM asignaturas
         ORDER BY semestre, codigo
     """).fetchall()
@@ -284,11 +284,11 @@ def generar_matriz(salida=None):
 
     # ── Filas de asignaturas ──────────────────────────────────────────
     sem_filas = OrderedDict()
-    for idx, (asig_id, cod, nom, sem) in enumerate(asigs):
+    for idx, (asig_id, cod, nom, sem, cred) in enumerate(asigs):
         sem_filas.setdefault(sem, []).append(ROW_DATOS + idx)
 
     sem_actual = None
-    for idx, (asig_id, cod, nom, sem) in enumerate(asigs):
+    for idx, (asig_id, cod, nom, sem, cred) in enumerate(asigs):
         fila = ROW_DATOS + idx
         ws.row_dimensions[fila].height = 18
 
@@ -321,8 +321,9 @@ def generar_matriz(salida=None):
                font=_font(size=10),
                align=_align(h="left", wrap=True), border=_border_thin())
 
-        _write(ws, fila, COL_CRED, None,
-               fill=_fill(HEX_GRIS), border=_border_thin())
+        _write(ws, fila, COL_CRED, cred,
+               font=_font(size=9), fill=_fill(HEX_GRIS),
+               align=_align(h="center"), border=_border_thin())
 
         gl = get_column_letter(COL_LIC)
         sl = get_column_letter(COL_SELLO)
