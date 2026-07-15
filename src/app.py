@@ -1167,7 +1167,7 @@ class EditorProgramas(param.Parameterized):
                 "ejemplares": pn.widgets.TextInput(name="Ejemplares/Acceso",value=str(ejemplares), width=140),
             }
             label_color = "#1F4E79" if tipo == "basica" else "#375623"
-            label_txt = "Básica" if tipo == "basica" else "Complementaria"
+            label_txt = "Básica Obligatoria" if tipo == "basica" else "Complementaria"
             panel = pn.Column(
                 pn.pane.HTML(f'<span style="font-size:11px;font-weight:600;color:{label_color};text-transform:uppercase">{label_txt}</span>'),
                 pn.Row(ws["autor"], ws["titulo"]),
