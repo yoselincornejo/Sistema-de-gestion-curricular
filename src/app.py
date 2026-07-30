@@ -231,22 +231,20 @@ _INCONSISTENCIAS_DOCX = {
                 "sección 'Resultados de Aprendizaje'; CG4 ND2 D2 no se incluye.",
     },
     "IMAT 324": {
-        "asignatura": "Ecuaciones Diferenciales Ordinarias",
-        "seccion": "RESULTADOS DE APRENDIZAJE / UNIDADES DE APRENDIZAJE Y CONTENIDOS",
-        "desc_general": "CG1 ND2 D1, CG2 ND2 D1, CG2 ND2 D2, CG2 ND2 D3, CG3 ND2 D1, CG3 ND2 D2, CG3 ND2 D3",
-        "programa":     "Mismas tributaciones declaradas en sección RA (sin CG4 ND2 D3)",
-        "nota": "En el documento oficial de la asignatura se encontró una discrepancia: "
-                "el desempeño CG4 ND2 D3 no aparece en la sección 'Resultados de Aprendizaje', "
-                "pero sí se menciona en la sección 'Unidades de Aprendizaje y Contenidos' "
-                "como un resultado de aprendizaje de la Unidad 1. "
-                "Adicionalmente, CG4 ND2 D3 no está definido en el perfil de egreso del plan "
+        "asignatura": "TIPE I",
+        "seccion": "RESULTADOS DE APRENDIZAJE",
+        "desc_general": "CG4-ND2-DC3 declarado en Resultados de Aprendizaje pero no existe en el plan de egreso vigente",
+        "programa":     "CG1 ND2 D1 · CG2 ND2 D1 · CG2 ND2 D2 · CG2 ND2 D3 · CG3 ND2 D1 · CG3 ND2 D2 · CG3 ND2 D3 (sin CG4 ND2 D3)",
+        "nota": "El documento oficial de la asignatura declara CG4-ND2-DC3 como desempeño clave en la sección "
+                "'Resultados de Aprendizaje', junto con CG1-ND2, CG2-ND2-DC1/DC2/DC3 y CG3-ND2-DC1/DC2/DC3. "
+                "Sin embargo, CG4-ND2-D3 no está definido en el perfil de egreso vigente "
                 "(CG4 ND2 solo contempla D1 y D2). "
                 "La descripción indicada en el documento para CG4 ND2 D3 es: "
                 "'Expresa con claridad y respeto las propias necesidades y requerimientos en el trabajo colaborativo en contextos académicos y socioculturales.' "
                 "Esta descripción es estructuralmente similar a CG4 ND3 D3 del perfil de egreso "
                 "('Expresa con claridad y respeto las propias necesidades y requerimientos en el trabajo profesional en contextos nacionales e internacionales'), "
-                "pero difiere en el contexto ('colaborativo/académico' vs. 'profesional/nacional e internacional'), "
-                "lo que sugiere que el documento hace referencia a un desempeño de nivel ND2 que no existe formalmente en el plan.",
+                "lo que sugiere que el documento referencia un desempeño de nivel ND2 que no existe formalmente en el plan. "
+                "Por esta razón, CG4-ND2-D3 no puede cargarse en la BD ni marcarse en las casillas de la aplicación.",
     },
     "IMAT 612": {
         "asignatura": "Proyecto de Título",
