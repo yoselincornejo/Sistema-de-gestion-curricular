@@ -247,7 +247,7 @@ _INCONSISTENCIAS_DOCX = {
                 "sección 'Resultados de Aprendizaje'; CG4 ND2 D2 no se incluye.",
     },
     "IMAT 612": {
-        "asignatura": "Proyecto de Título",
+        "asignatura": "Práctica Profesional",
         "seccion": "UNIDADES DE APRENDIZAJE Y CONTENIDOS",
         "desc_general": "CG4 N2 D2 mencionado en Unidades de Aprendizaje pero no en Resultados de Aprendizaje",
         "programa":     "Tributaciones declaradas en sección Resultados de Aprendizaje (sin CG4 N2 D2)",
