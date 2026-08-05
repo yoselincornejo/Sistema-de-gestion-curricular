@@ -1077,6 +1077,9 @@ class EditorProgramas(param.Parameterized):
             categorias.setdefault(tipo_comp, {})[comp] = ras
 
         ra_checks = {}
+        _modal_trigger  = [None]   # se llena después de crear el modal
+        _last_deselected = [None]  # id del último RA deseleccionado
+
         bloques_categoria = []
         for tipo_cat, comps in categorias.items():
             bg    = BG_CATEGORIA.get(tipo_cat, "#f5f5f5")
@@ -1095,11 +1098,17 @@ class EditorProgramas(param.Parameterized):
                         button_type="success" if checked else "light",
                         width=195, height=30, margin=(2, 3)
                     )
-                    def _make_watcher(toggle):
+                    def _make_watcher(toggle, rid):
                         def _on_toggle(event):
                             toggle.button_type = "success" if event.new else "light"
+                            if not event.new:
+                                _last_deselected[0] = rid
+                                if _modal_trigger[0] and all(
+                                    not cb2.value for cb2 in ra_checks.values()
+                                ):
+                                    _modal_trigger[0]()
                         return _on_toggle
-                    cb.param.watch(_make_watcher(cb), "value")
+                    cb.param.watch(_make_watcher(cb, ra["id"]), "value")
                     ra_checks[ra["id"]] = cb
                     checks.append(cb)
                 comp_cols.append(pn.Column(
@@ -1148,6 +1157,68 @@ class EditorProgramas(param.Parameterized):
                 pn.state.notifications.error(msg, duration=4000)
 
         btn_guardar_ras.on_click(on_guardar_ras)
+
+        # ── Modal: advertencia 0 RAs seleccionados ────────────────
+        modal_backdrop = pn.pane.HTML(
+            '<div style="position:fixed;top:0;left:0;width:100vw;height:100vh;'
+            'background:rgba(0,0,0,0.55);z-index:9998"></div>',
+            visible=False,
+        )
+
+        btn_modal_si = pn.widgets.Button(
+            name="Sí, mantén el cambio realizado.",
+            button_type="warning", width=280, height=44)
+        btn_modal_no = pn.widgets.Button(
+            name="No, deshace el último cambio",
+            button_type="success", width=260, height=44)
+
+        modal_dialog = pn.Column(
+            pn.pane.HTML(
+                '<div style="font-size:36px;margin-bottom:8px">⚠️</div>'
+                '<div style="font-size:17px;font-weight:700;color:#92400e;margin-bottom:12px">'
+                'Deseleccionaste el último RA de este programa de asignatura.</div>'
+                '<div style="font-size:14px;color:#374151;margin-bottom:20px">'
+                'Esta asignatura actualmente tributa <strong>0 Resultados de Aprendizaje</strong>.'
+                '<br>¿Estás seguro?</div>'
+            ),
+            pn.Row(btn_modal_si, pn.Spacer(width=16), btn_modal_no, align="center"),
+            visible=False,
+            styles={
+                "position": "fixed",
+                "top": "50%",
+                "left": "50%",
+                "transform": "translate(-50%, -50%)",
+                "z-index": "9999",
+                "background": "#fffbeb",
+                "border": "2px solid #f59e0b",
+                "border-radius": "14px",
+                "padding": "36px 40px",
+                "box-shadow": "0 12px 40px rgba(0,0,0,0.4)",
+                "min-width": "500px",
+                "text-align": "center",
+            },
+        )
+
+        def _show_modal():
+            modal_backdrop.visible = True
+            modal_dialog.visible   = True
+
+        def _hide_modal():
+            modal_backdrop.visible = False
+            modal_dialog.visible   = False
+
+        def on_modal_si(event):
+            _hide_modal()
+
+        def on_modal_no(event):
+            last_id = _last_deselected[0]
+            if last_id and last_id in ra_checks:
+                ra_checks[last_id].value = True
+            _hide_modal()
+
+        btn_modal_si.on_click(on_modal_si)
+        btn_modal_no.on_click(on_modal_no)
+        _modal_trigger[0] = _show_modal
 
         flex_bloques = pn.FlexBox(
             *bloques_categoria,
@@ -1420,6 +1491,7 @@ class EditorProgramas(param.Parameterized):
         )
 
         self._contenido_editor.objects = [
+            modal_backdrop, modal_dialog,
             sec_ident, sec_ras,
             # sec_unidades, sec_metod, sec_eval,  # temporalmente ocultas
             sec_biblio,
