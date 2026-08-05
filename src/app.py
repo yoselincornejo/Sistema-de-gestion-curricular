@@ -1093,9 +1093,19 @@ class EditorProgramas(param.Parameterized):
             bloques_categoria.append(bloque)
 
         self._ra_checks = ra_checks
+        flex_bloques = pn.FlexBox(
+            *bloques_categoria,
+            flex_direction="row",
+            flex_wrap="wrap",
+            sizing_mode="stretch_width",
+        )
+        for bloque in bloques_categoria:
+            bloque.min_width = 300
+            bloque.sizing_mode = "stretch_width"
+            bloque.styles = {**bloque.styles, "flex": "1 1 280px", "margin": "0 6px 8px 0"}
         sec_ras = pn.Column(
             pn.pane.HTML('<div class="card-title">Tributación — Resultados de Aprendizaje</div>'),
-            *bloques_categoria,
+            flex_bloques,
             css_classes=["card"], sizing_mode="stretch_width"
         )
 
