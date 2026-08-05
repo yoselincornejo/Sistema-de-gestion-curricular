@@ -1025,9 +1025,9 @@ class EditorProgramas(param.Parameterized):
 
         # ── Tributación ───────────────────────────────────────────
         # Colores de fondo por categoría de competencia
-        BG_CATEGORIA     = {"cl": "#BBDEFB", "titulo": "#C8E6C9", "cg": "#F8BBD0", "ce": "#C8E6C9"}
-        BORDER_CATEGORIA = {"cl": "#1565C0", "titulo": "#2E7D32", "cg": "#880E4F", "ce": "#2E7D32"}
-        LABEL_CATEGORIA  = {"cl": "Licenciatura (CL)", "titulo": "Título Profesional (CE)", "ce": "Título Profesional (CE)", "cg": "Sello UV (CG)"}
+        BG_CATEGORIA     = {"licenciatura": "#BBDEFB", "titulo": "#C8E6C9", "sello_uv": "#F8BBD0"}
+        BORDER_CATEGORIA = {"licenciatura": "#1565C0", "titulo": "#2E7D32", "sello_uv": "#880E4F"}
+        LABEL_CATEGORIA  = {"licenciatura": "Licenciatura (CL)", "titulo": "Título Profesional (CE)", "sello_uv": "Sello UV (CG)"}
 
         grupos_ra = {}
         for ra in todos_ras:
