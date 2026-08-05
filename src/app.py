@@ -350,6 +350,43 @@ def get_programa_completo(asig_id):
                  for r in todos_ras_raw]
     return asig, unidades, metodologias, evaluaciones, ras, todos_ras, bibliografia
 
+def guardar_tributaciones(asig_id, ra_ids):
+    conn = conexion()
+    try:
+        conn.execute("DELETE FROM tributaciones WHERE asignatura_id=?", (asig_id,))
+        for ra_id in ra_ids:
+            conn.execute(
+                "INSERT OR IGNORE INTO tributaciones (asignatura_id, ra_id) VALUES (?,?)",
+                (asig_id, ra_id))
+        conn.commit()
+        return True, "Tributaciones guardadas correctamente"
+    except Exception as e:
+        conn.rollback()
+        return False, str(e)
+    finally:
+        conn.close()
+
+def guardar_bibliografia(asig_id, bibliografia):
+    conn = conexion()
+    try:
+        conn.execute("DELETE FROM bibliografia WHERE asignatura_id=?", (asig_id,))
+        for b in bibliografia:
+            if b["titulo"].strip():
+                conn.execute("""
+                    INSERT INTO bibliografia
+                    (asignatura_id, tipo, numero, autor, titulo, editorial, anio, isbn, ejemplares)
+                    VALUES (?,?,?,?,?,?,?,?,?)
+                """, (asig_id, b["tipo"], b.get("numero",""), b.get("autor",""),
+                      b["titulo"], b.get("editorial",""), b.get("anio",""),
+                      b.get("isbn",""), b.get("ejemplares","")))
+        conn.commit()
+        return True, "Bibliografía guardada correctamente"
+    except Exception as e:
+        conn.rollback()
+        return False, str(e)
+    finally:
+        conn.close()
+
 def guardar_programa(asig_id, datos):
     conn = conexion()
     try:
@@ -1093,6 +1130,25 @@ class EditorProgramas(param.Parameterized):
             bloques_categoria.append(bloque)
 
         self._ra_checks = ra_checks
+
+        _BTN_COLORS_RAS = ["success", "primary", "warning", "danger", "light"]
+        _btn_ras_color_idx = [0]
+        btn_guardar_ras = pn.widgets.Button(
+            name="💾 Guardar tributaciones",
+            button_type=_BTN_COLORS_RAS[0], width=230, height=38)
+
+        def on_guardar_ras(event):
+            ra_ids = [rid for rid, cb in self._ra_checks.items() if cb.value]
+            ok, msg = guardar_tributaciones(self.asignatura_id, ra_ids)
+            _btn_ras_color_idx[0] = (_btn_ras_color_idx[0] + 1) % len(_BTN_COLORS_RAS)
+            btn_guardar_ras.button_type = _BTN_COLORS_RAS[_btn_ras_color_idx[0]]
+            if ok:
+                pn.state.notifications.success(msg, duration=4000)
+            else:
+                pn.state.notifications.error(msg, duration=4000)
+
+        btn_guardar_ras.on_click(on_guardar_ras)
+
         flex_bloques = pn.FlexBox(
             *bloques_categoria,
             flex_direction="row",
@@ -1106,6 +1162,7 @@ class EditorProgramas(param.Parameterized):
         sec_ras = pn.Column(
             pn.pane.HTML('<div class="card-title">Tributación — Resultados de Aprendizaje</div>'),
             flex_bloques,
+            pn.Row(pn.layout.HSpacer(), btn_guardar_ras),
             css_classes=["card"], sizing_mode="stretch_width"
         )
 
@@ -1245,10 +1302,33 @@ class EditorProgramas(param.Parameterized):
         btn_add_basica.on_click(on_add_basica)
         btn_add_compl.on_click(on_add_compl)
 
+        _BTN_COLORS_BIB = ["success", "primary", "warning", "danger", "light"]
+        _btn_bib_color_idx = [0]
+        btn_guardar_bib = pn.widgets.Button(
+            name="💾 Guardar bibliografía",
+            button_type=_BTN_COLORS_BIB[0], width=210, height=38)
+
+        def on_guardar_bib(event):
+            bib = [{"tipo": b["tipo"], "autor": b["autor"].value,
+                    "titulo": b["titulo"].value, "editorial": b["editorial"].value,
+                    "anio": b["anio"].value, "isbn": b["isbn"].value,
+                    "ejemplares": b["ejemplares"].value}
+                   for b in self._biblio_widgets]
+            ok, msg = guardar_bibliografia(self.asignatura_id, bib)
+            _btn_bib_color_idx[0] = (_btn_bib_color_idx[0] + 1) % len(_BTN_COLORS_BIB)
+            btn_guardar_bib.button_type = _BTN_COLORS_BIB[_btn_bib_color_idx[0]]
+            if ok:
+                pn.state.notifications.success(msg, duration=4000)
+            else:
+                pn.state.notifications.error(msg, duration=4000)
+
+        btn_guardar_bib.on_click(on_guardar_bib)
+
         sec_biblio = pn.Column(
             pn.pane.HTML('<div class="card-title">Bibliografía</div>'),
             col_biblio,
             pn.Row(pn.layout.HSpacer(), btn_add_basica, btn_add_compl, pn.layout.HSpacer()),
+            pn.Row(pn.layout.HSpacer(), btn_guardar_bib),
             css_classes=["card"], sizing_mode="stretch_width"
         )
 
