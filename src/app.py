@@ -1338,8 +1338,11 @@ class EditorProgramas(param.Parameterized):
             "duracion": w_dur, "requisitos": w_req, "metodologia": w_metod
         }
 
+        _BTN_COLORS_ALL = ["success", "primary", "warning", "danger", "light"]
+        _btn_all_color_idx = [0]
         btn_guardar = pn.widgets.Button(
-            name="💾 Guardar cambios", css_classes=["btn-p"], width=270, height=48)
+            name="💾 Guardar todos los cambios",
+            button_type=_BTN_COLORS_ALL[0], width=300, height=56)
 
         def _hacer_word():
             try:
@@ -1347,7 +1350,7 @@ class EditorProgramas(param.Parameterized):
                 with open(ruta, 'rb') as f:
                     return io.BytesIO(f.read())
             except Exception as e:
-                self._status.object = f'<p style="color:#EF4444">✗ {e}</p>'
+                pn.state.notifications.error(str(e), duration=4000)
                 return io.BytesIO(b"")
 
         codigo_asig = (asig.get("codigo", "asig") or "asig").replace(" ", "_")
@@ -1356,7 +1359,7 @@ class EditorProgramas(param.Parameterized):
             filename=f"programa_{codigo_asig}.docx",
             label="📥 Descargar Word",
             button_type="primary",
-            width=220, height=48,
+            width=260, height=56,
             embed=False,
         )
 
@@ -1383,20 +1386,37 @@ class EditorProgramas(param.Parameterized):
                                   for b in self._biblio_widgets]
             }
             ok, msg = guardar_programa(self.asignatura_id, datos)
-            self._status.object = (
-                f'<p style="color:#10B981;font-weight:600;font-size:14px">✓ {msg}</p>'
-                if ok else
-                f'<p style="color:#EF4444">✗ {msg}</p>'
-            )
+            _btn_all_color_idx[0] = (_btn_all_color_idx[0] + 1) % len(_BTN_COLORS_ALL)
+            btn_guardar.button_type = _BTN_COLORS_ALL[_btn_all_color_idx[0]]
+            if ok:
+                pn.state.notifications.success(msg, duration=4000)
+            else:
+                pn.state.notifications.error(msg, duration=4000)
 
         btn_guardar.on_click(on_guardar)
 
         sec_acciones = pn.Column(
-            pn.Row(btn_guardar, btn_word, align="center",
-                   sizing_mode="stretch_width"),
-            self._status,
-            css_classes=["card"], sizing_mode="stretch_width",
-            align="center", margin=(16,0,40,0)
+            pn.pane.HTML(
+                '<div style="text-align:center;font-weight:700;font-size:15px;'
+                'color:#374151;margin-bottom:12px">Acciones del programa</div>'
+            ),
+            pn.Row(
+                pn.layout.HSpacer(),
+                btn_guardar,
+                pn.Spacer(width=20),
+                btn_word,
+                pn.layout.HSpacer(),
+                align="center",
+            ),
+            css_classes=["card"],
+            sizing_mode="stretch_width",
+            align="center",
+            margin=(16, 0, 40, 0),
+            styles={
+                "background": "linear-gradient(135deg,#1e3a5f 0%,#2d6a9f 100%)",
+                "border-radius": "10px",
+                "padding": "20px",
+            },
         )
 
         self._contenido_editor.objects = [
