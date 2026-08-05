@@ -1024,44 +1024,78 @@ class EditorProgramas(param.Parameterized):
         )
 
         # ── Tributación ───────────────────────────────────────────
+        # Colores de fondo por categoría de competencia
+        BG_CATEGORIA = {"cl": "#e8f4f8", "ce": "#fef9e7", "cg": "#f0f4e8", "titulo": "#f4f0f8"}
+        BORDER_CATEGORIA = {"cl": "#5b9bd5", "ce": "#e6a817", "cg": "#70a84c", "titulo": "#9b6bd5"}
+        LABEL_CATEGORIA = {"cl": "Competencias de Licenciatura (CL)", "ce": "Competencias de Especialidad (CE)", "cg": "Competencias Genéricas / Sello UV (CG)", "titulo": "Otras"}
+
         grupos_ra = {}
         for ra in todos_ras:
             grupos_ra.setdefault(ra["comp"], []).append(ra)
 
-        ra_checks = {}
-        ra_cols   = []
+        # Agrupar competencias por categoría (CL, CE, CG, etc.)
+        categorias = {}
         for comp, ras in grupos_ra.items():
             tipo_comp = ras[0]["tipo"]
-            color_comp = COLOR.get(tipo_comp, "#1F4E79")
-            checks = []
-            for ra in ras:
-                checked = (ra["id"] in ra_ids_actuales)
-                cb = pn.widgets.Toggle(
-                    name=ra["codigo_completo"],
-                    value=checked,
-                    button_type="success" if checked else "light",
-                    width=200, height=30, margin=(2, 4)
-                )
-                def _make_watcher(toggle):
-                    def _on_toggle(event):
-                        toggle.button_type = "success" if event.new else "light"
-                    return _on_toggle
-                cb.param.watch(_make_watcher(cb), "value")
-                ra_checks[ra["id"]] = cb
-                checks.append(cb)
-            ra_cols.append(pn.Column(
+            categorias.setdefault(tipo_comp, {})[comp] = ras
+
+        ra_checks = {}
+        bloques_categoria = []
+        for tipo_cat, comps in categorias.items():
+            bg    = BG_CATEGORIA.get(tipo_cat, "#f5f5f5")
+            bord  = BORDER_CATEGORIA.get(tipo_cat, "#999")
+            label = LABEL_CATEGORIA.get(tipo_cat, tipo_cat.upper())
+
+            comp_cols = []
+            for comp, ras in comps.items():
+                color_comp = COLOR.get(tipo_cat, "#1F4E79")
+                checks = []
+                for ra in ras:
+                    checked = (ra["id"] in ra_ids_actuales)
+                    cb = pn.widgets.Toggle(
+                        name=ra["codigo_completo"],
+                        value=checked,
+                        button_type="success" if checked else "light",
+                        width=195, height=30, margin=(2, 3)
+                    )
+                    def _make_watcher(toggle):
+                        def _on_toggle(event):
+                            toggle.button_type = "success" if event.new else "light"
+                        return _on_toggle
+                    cb.param.watch(_make_watcher(cb), "value")
+                    ra_checks[ra["id"]] = cb
+                    checks.append(cb)
+                comp_cols.append(pn.Column(
+                    pn.pane.HTML(
+                        f'<div style="font-weight:700;color:{color_comp};'
+                        f'font-size:12px;margin-bottom:4px;text-align:center">{comp}</div>'
+                    ),
+                    *checks,
+                    styles={"padding": "6px 4px"},
+                ))
+
+            bloque = pn.Column(
                 pn.pane.HTML(
-                    f'<div style="font-weight:700;color:{color_comp};'
-                    f'font-size:13px;margin-bottom:6px">{comp}</div>'
+                    f'<div style="font-weight:600;font-size:12px;color:{bord};'
+                    f'margin-bottom:6px;padding-bottom:3px;border-bottom:2px solid {bord}">'
+                    f'{label}</div>'
                 ),
-                *checks, width=220
-            ))
+                pn.Row(*comp_cols, sizing_mode="stretch_width"),
+                styles={
+                    "background": bg,
+                    "border": f"1px solid {bord}",
+                    "border-radius": "6px",
+                    "padding": "10px 12px",
+                    "margin-bottom": "8px",
+                },
+                sizing_mode="stretch_width",
+            )
+            bloques_categoria.append(bloque)
 
         self._ra_checks = ra_checks
-        ra_filas = [pn.Row(*ra_cols[i:i+3]) for i in range(0, len(ra_cols), 3)]
         sec_ras = pn.Column(
             pn.pane.HTML('<div class="card-title">Tributación — Resultados de Aprendizaje</div>'),
-            *ra_filas,
+            *bloques_categoria,
             css_classes=["card"], sizing_mode="stretch_width"
         )
 
