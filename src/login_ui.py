@@ -1,5 +1,5 @@
 import panel as pn
-from auth import USUARIOS, verificar_credenciales
+from auth import get_todos, verificar_credenciales
 
 pn.extension()
 
@@ -25,7 +25,7 @@ def crear_login(on_success=None):
     # ── Widgets ──────────────────────────────────────────────────
     w_usuario = pn.widgets.Select(
         name="Usuario",
-        options=list(USUARIOS.keys()),
+        options=list(get_todos().keys()),
         sizing_mode="stretch_width",
     )
     w_password = pn.widgets.PasswordInput(
