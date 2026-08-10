@@ -574,10 +574,23 @@ _BIBLIO_HEADERS = {"autor", "título", "titulo", "editorial", "año", "anio",
                    "isbn", "ejemplares", "n°", "nº", "nro", "número", "numero",
                    "disponible", "biblioteca"}
 
+def _cell_text(cell) -> str:
+    """Extrae texto de una celda uniendo runs con espacios para evitar CamelCase."""
+    parts = []
+    for para in cell.paragraphs:
+        run_text = "".join(r.text for r in para.runs)
+        if not run_text:
+            run_text = para.text
+        parts.append(run_text)
+    raw = " ".join(p for p in parts if p).strip()
+    # Insertar espacio antes de mayúsculas pegadas a minúsculas (CamelCase accidental)
+    raw = re.sub(r'([a-záéíóúñü])([A-ZÁÉÍÓÚÑÜ])', r'\1 \2', raw)
+    return re.sub(r' {2,}', ' ', raw).strip()
+
 def _parsear_biblio_tabla(t) -> list[dict]:
     entradas = []
     for row in t.rows[1:]:
-        cs = [c.text.strip() for c in row.cells]
+        cs = [_cell_text(c) for c in row.cells]
         # Saltar filas que parecen encabezados de columna
         non_empty = [c.lower().rstrip('.') for c in cs if c]
         if non_empty and sum(1 for c in non_empty if c in _BIBLIO_HEADERS) >= max(1, len(non_empty) // 2):
