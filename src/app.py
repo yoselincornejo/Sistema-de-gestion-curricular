@@ -3,6 +3,7 @@ app.py — Sistema de Gestión Curricular ICM
 panel serve src/app.py --show --autoreload
 """
 import sqlite3, os, sys, io, re
+import pandas as pd
 import panel as pn
 import param
 from auth import verificar_credenciales
@@ -1835,6 +1836,142 @@ def crear_gestion_usuarios():
     )
 
 
+# ── REGISTRO DE ACCIONES ──────────────────────────────────────────
+
+def get_registros_df() -> "pd.DataFrame":
+    """Extrae registro_acciones de la BD como DataFrame, del más reciente al más antiguo."""
+    conn = conexion()
+    try:
+        df = pd.read_sql_query(
+            """
+            SELECT id, timestamp, usuario, accion, detalles, entidad_afectada
+            FROM registro_acciones
+            ORDER BY id DESC
+            """,
+            conn,
+        )
+    finally:
+        conn.close()
+    df.columns = ["ID", "Timestamp", "Usuario", "Acción", "Detalles", "Entidad"]
+    return df
+
+
+def crear_vista_auditoria():
+    """Pestaña exclusiva para rol 'admin': visor de registro de acciones."""
+
+    # ── Carga inicial ─────────────────────────────────────────────
+    df_orig = get_registros_df()
+
+    # ── Filtros ───────────────────────────────────────────────────
+    usuarios_opts  = ["Todos"] + sorted(df_orig["Usuario"].dropna().unique().tolist())
+    acciones_opts  = ["Todas"] + sorted(df_orig["Acción"].dropna().unique().tolist())
+
+    sel_usuario = pn.widgets.Select(
+        name="Filtrar por usuario", options=usuarios_opts, value="Todos", width=220)
+    sel_accion  = pn.widgets.Select(
+        name="Filtrar por acción",  options=acciones_opts, value="Todas", width=220)
+    txt_entidad = pn.widgets.TextInput(
+        name="Filtrar por entidad", placeholder="Ej: IMAT 211", width=200)
+    btn_refresh = pn.widgets.Button(
+        name="🔄 Actualizar", button_type="light", width=130, height=38)
+
+    badge_total = pn.pane.HTML("", width=160)
+
+    # ── Tabla ─────────────────────────────────────────────────────
+    ACCION_COLOR = {
+        "LOGIN":            "#1F4E79",
+        "LOGOUT":           "#475569",
+        "MODIFICACION":     "#375623",
+        "CREACION":         "#065F46",
+        "CREACION_USUARIO": "#065F46",
+        "ELIMINACION":      "#7B2C2C",
+        "DESCARGA":         "#6B21A8",
+    }
+
+    tabla = pn.widgets.Tabulator(
+        df_orig,
+        pagination="local",
+        page_size=20,
+        sizing_mode="stretch_width",
+        show_index=False,
+        frozen_columns=["ID"],
+        header_filters=False,
+        stylesheets=["""
+            .tabulator { font-size: 12px; }
+            .tabulator-row:hover { background: #F8FAFC !important; }
+            .tabulator-col-title { font-weight: 700; font-size: 11px;
+                text-transform: uppercase; letter-spacing: 0.8px; color: #1F4E79; }
+            .tabulator-cell { padding: 7px 10px !important; }
+        """],
+        configuration={
+            "columnDefaults": {"resizable": True},
+        },
+    )
+
+    # Ancho fijo para columnas cortas
+    tabla.widths = {
+        "ID":       60,
+        "Timestamp": 160,
+        "Usuario":  160,
+        "Acción":   150,
+        "Entidad":  130,
+    }
+
+    def _badge_html(n):
+        return (
+            f'<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;'
+            f'padding:5px 14px;font-size:12px;font-weight:700;color:#1F4E79;'
+            f'display:inline-block">{n} registro(s)</div>'
+        )
+
+    def _aplicar_filtros(*_):
+        nonlocal df_orig
+        df = df_orig.copy()
+        u = sel_usuario.value
+        a = sel_accion.value
+        e = txt_entidad.value.strip().lower()
+        if u != "Todos":
+            df = df[df["Usuario"] == u]
+        if a != "Todas":
+            df = df[df["Acción"] == a]
+        if e:
+            df = df[df["Entidad"].str.lower().str.contains(e, na=False)]
+        tabla.value     = df
+        badge_total.object = _badge_html(len(df))
+
+    def on_refresh(event):
+        nonlocal df_orig
+        df_orig = get_registros_df()
+        nuevos_u = ["Todos"] + sorted(df_orig["Usuario"].dropna().unique().tolist())
+        nuevas_a = ["Todas"] + sorted(df_orig["Acción"].dropna().unique().tolist())
+        sel_usuario.options = nuevos_u
+        sel_accion.options  = nuevas_a
+        _aplicar_filtros()
+
+    sel_usuario.param.watch(_aplicar_filtros, "value")
+    sel_accion.param.watch(_aplicar_filtros,  "value")
+    txt_entidad.param.watch(_aplicar_filtros, "value")
+    btn_refresh.on_click(on_refresh)
+
+    badge_total.object = _badge_html(len(df_orig))
+
+    return pn.Column(
+        pn.pane.HTML('<div class="card-title">Registro de Acciones del Sistema</div>'),
+        pn.pane.HTML(
+            '<p style="font-size:12px;color:#64748B;margin-bottom:12px">'
+            'Historial completo de acciones realizadas por todos los usuarios. '
+            'Ordenado del más reciente al más antiguo.</p>'
+        ),
+        pn.Row(sel_usuario, sel_accion, txt_entidad,
+               pn.layout.HSpacer(), badge_total, btn_refresh,
+               align="end", sizing_mode="stretch_width"),
+        tabla,
+        css_classes=["card"],
+        sizing_mode="stretch_width",
+        margin=(0, 0, 40, 0),
+    )
+
+
 # ── APP ───────────────────────────────────────────────────────────
 
 def crear_app():
@@ -1908,6 +2045,7 @@ def crear_app():
     ]
     if rol_sesion == "admin":
         tabs_items.append(("⚙️ Gestión de Usuarios", crear_gestion_usuarios()))
+        tabs_items.append(("📋 Registro de Acciones", crear_vista_auditoria()))
 
     tabs = pn.Tabs(*tabs_items, dynamic=False)
 
