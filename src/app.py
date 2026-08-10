@@ -5,6 +5,8 @@ panel serve src/app.py --show --autoreload
 import sqlite3, os, sys, io, re
 import panel as pn
 import param
+from auth import verificar_credenciales
+from login_ui import crear_login
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(__file__))
@@ -1551,7 +1553,7 @@ class EditorProgramas(param.Parameterized):
 # ── APP ───────────────────────────────────────────────────────────
 
 def crear_app():
-    pn.config.raw_css.append(CSS)
+    # CSS ya inyectado por iniciar() al arrancar
 
     header = pn.pane.HTML("""
         <div class="app-header">
@@ -1575,5 +1577,33 @@ def crear_app():
         margin=(24, 40)
     )
 
-app = crear_app()
-app.servable()
+# ── Estado de sesión ──────────────────────────────────────────────
+# usuario_actual y rol se almacenan por sesión usando pn.state.cache
+# (cada conexión de navegador tiene su propia entrada en el cache).
+
+# ── Contenedor raíz dinámico ──────────────────────────────────────
+main_area = pn.Column(sizing_mode="stretch_both")
+
+
+def cargar_app_principal(rol: str, usuario: str):
+    """Limpia el login y carga la aplicación principal."""
+    pn.state.cache["usuario_actual"] = usuario
+    pn.state.cache["rol"]            = rol
+    main_area.clear()
+    main_area.append(crear_app())
+    pn.state.notifications.success(
+        f"Bienvenido/a, {usuario} ({rol})", duration=3000
+    )
+
+
+def iniciar():
+    """Punto de entrada: muestra el login al arrancar."""
+    pn.config.raw_css.append(CSS)
+    pn.state.cache.setdefault("usuario_actual", None)
+    pn.state.cache.setdefault("rol", None)
+    main_area.clear()
+    main_area.append(crear_login(on_success=cargar_app_principal))
+
+
+pn.state.onload(iniciar)
+main_area.servable()
