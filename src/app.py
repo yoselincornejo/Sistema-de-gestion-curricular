@@ -1096,7 +1096,8 @@ class EditorProgramas(param.Parameterized):
                         name=ra["codigo_completo"],
                         value=checked,
                         button_type="success" if checked else "light",
-                        width=195, height=30, margin=(2, 3)
+                        sizing_mode="stretch_width", min_width=0,
+                        height=30, margin=(2, 3)
                     )
                     def _make_watcher(toggle, rid):
                         def _on_toggle(event):
@@ -1117,6 +1118,7 @@ class EditorProgramas(param.Parameterized):
                         f'font-size:12px;margin-bottom:4px;text-align:center">{comp}</div>'
                     ),
                     *checks,
+                    sizing_mode="stretch_width", min_width=0,
                     styles={"padding": "6px 4px"},
                 ))
 
@@ -1126,13 +1128,15 @@ class EditorProgramas(param.Parameterized):
                     f'margin-bottom:6px;padding-bottom:3px;border-bottom:2px solid {bord}">'
                     f'{label}</div>'
                 ),
-                pn.Row(*comp_cols, sizing_mode="stretch_width"),
+                pn.Row(*comp_cols, sizing_mode="stretch_width", styles={"min-width": "0", "flex-wrap": "wrap"}),
                 styles={
                     "background": bg,
                     "border": f"1px solid {bord}",
                     "border-radius": "6px",
                     "padding": "10px 12px",
                     "margin-bottom": "8px",
+                    "overflow": "auto",
+                    "min-width": "0",
                 },
                 sizing_mode="stretch_width",
             )
