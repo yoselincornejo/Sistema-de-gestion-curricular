@@ -1656,7 +1656,7 @@ def crear_gestion_usuarios():
 
     def _tabla_html():
         filas = ""
-        for nombre, datos in _auth.USUARIOS.items():
+        for nombre, datos in _auth.get_todos().items():
             badge = ROL_COLOR.get(datos["rol"], "#475569")
             es_yo = "⭐ " if nombre == ADMIN_SESION else ""
             filas += (
@@ -1706,12 +1706,14 @@ def crear_gestion_usuarios():
         if not nombre or not pwd:
             msg_gral.object = _msg_error("Completa el nombre de usuario y la contraseña.")
             return
-        if nombre in _auth.USUARIOS:
+        if nombre in _auth.get_todos():
             msg_gral.object = _msg_error("Ese usuario ya existe.")
             return
-        _auth.USUARIOS[nombre] = {"password": pwd, "rol": rol,
-                                   "nombre_completo": ncomp or nombre}
-        _auth.guardar_usuarios()
+        try:
+            _auth.crear_usuario(nombre, pwd, rol, ncomp or nombre)
+        except Exception as e:
+            msg_gral.object = _msg_error(f"Error al crear usuario: {e}")
+            return
         registrar_accion(ADMIN_SESION, "CREACION",
                          f"Creó usuario '{nombre}' con rol '{rol}'")
         _refrescar()
@@ -1726,7 +1728,7 @@ def crear_gestion_usuarios():
     # ── Sección: Editar / Eliminar usuario ────────────────────────
     sel_usuario = pn.widgets.Select(
         name="Selecciona un usuario",
-        options=list(_auth.USUARIOS.keys()),
+        options=list(_auth.get_todos().keys()),
         width=260,
     )
     w_edit_nombre_c = pn.widgets.TextInput(name="Nombre completo", width=300)
@@ -1745,7 +1747,7 @@ def crear_gestion_usuarios():
     _confirm_timer  = [None]
 
     def _cargar_usuario_en_form(nombre):
-        datos = _auth.USUARIOS.get(nombre, {})
+        datos = _auth.get_usuario_info(nombre) or {}
         w_edit_nombre_c.value = datos.get("nombre_completo", "")
         w_edit_password.value = ""
         w_edit_rol.value      = datos.get("rol", "user")
@@ -1762,16 +1764,18 @@ def crear_gestion_usuarios():
 
     def on_guardar_edit(event):
         nombre = sel_usuario.value
-        if not nombre or nombre not in _auth.USUARIOS:
+        if not nombre or nombre not in _auth.get_todos():
             msg_gral.object = _msg_error("Selecciona un usuario válido.")
             return
-        _auth.USUARIOS[nombre]["nombre_completo"] = w_edit_nombre_c.value.strip() or nombre
-        _auth.USUARIOS[nombre]["rol"]             = w_edit_rol.value
-        nueva_pwd = w_edit_password.value
+        nueva_pwd = w_edit_password.value.strip() or None
+        _auth.actualizar_usuario(
+            nombre,
+            w_edit_nombre_c.value.strip() or nombre,
+            w_edit_rol.value,
+            nueva_pwd,
+        )
         if nueva_pwd:
-            _auth.USUARIOS[nombre]["password"] = nueva_pwd
             w_edit_password.value = ""
-        _auth.guardar_usuarios()
         cambios = f"Editó usuario '{nombre}': rol={w_edit_rol.value}" + (", contraseña cambiada" if nueva_pwd else "")
         registrar_accion(ADMIN_SESION, "MODIFICACION", cambios)
         _refrescar()
@@ -1780,7 +1784,7 @@ def crear_gestion_usuarios():
 
     def on_eliminar(event):
         nombre = sel_usuario.value
-        if not nombre or nombre not in _auth.USUARIOS:
+        if not nombre or nombre not in _auth.get_todos():
             msg_gral.object = _msg_error("Selecciona un usuario válido.")
             return
         if nombre == ADMIN_SESION:
@@ -1799,16 +1803,16 @@ def crear_gestion_usuarios():
             )
         else:
             # Segundo clic: eliminar
-            del _auth.USUARIOS[nombre]
-            _auth.guardar_usuarios()
+            _auth.eliminar_usuario(nombre)
             registrar_accion(ADMIN_SESION, "ELIMINACION",
                              f"Eliminó usuario '{nombre}'")
             _confirm_delete[0]       = False
             btn_eliminar.name        = "🗑️ Eliminar usuario"
             btn_eliminar.button_type = "danger"
             _refrescar()
-            if _auth.USUARIOS:
-                sel_usuario.value = list(_auth.USUARIOS.keys())[0]
+            restantes = list(_auth.get_todos().keys())
+            if restantes:
+                sel_usuario.value = restantes[0]
             msg_gral.object = _msg_ok(f'Usuario "<strong>{nombre}</strong>" eliminado.')
             pn.state.notifications.warning(f'Usuario "{nombre}" eliminado', duration=3000)
 
@@ -1817,7 +1821,7 @@ def crear_gestion_usuarios():
 
     def _refrescar():
         tabla_pane.object   = _tabla_html()
-        sel_usuario.options = list(_auth.USUARIOS.keys())
+        sel_usuario.options = list(_auth.get_todos().keys())
 
     def _msg_ok(txt):
         return (f'<div style="background:#DCFCE7;border:1px solid #86EFAC;border-radius:6px;'
