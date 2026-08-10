@@ -1,14 +1,10 @@
 # auth.py — Lógica de autenticación del Sistema de Gestión Curricular
-#
-# SEGURIDAD (producción):
-#   Las contraseñas aquí están en texto plano solo para desarrollo/pruebas.
-#   Para producción, reemplazar cada valor "password" por un hash generado con:
-#       import bcrypt
-#       bcrypt.hashpw("contraseña".encode(), bcrypt.gensalt()).decode()
-#   Y en verificar_credenciales(), usar:
-#       bcrypt.checkpw(password.encode(), usuario["password"].encode())
+import json
+from pathlib import Path
 
-USUARIOS = {
+_USUARIOS_FILE = Path(__file__).parent.parent / "data" / "usuarios.json"
+
+_USUARIOS_BUILTIN = {
     "Administradora": {
         "password": "admin123",
         "rol": "admin",
@@ -36,34 +32,43 @@ USUARIOS = {
     },
 }
 
-# Roles disponibles y sus permisos (referencia para la UI)
 ROLES = {
     "superuser": "Super usuario — acceso total, incluyendo configuración",
     "admin":     "Administrador — edición completa de programas y datos",
-    "user":      "Usuario — visualización y edición limitada",
+    "user":      "Usuario — visualización y edición limitada (solo sus propias asignaturas)",
 }
 
 
+def _cargar_usuarios() -> dict:
+    if _USUARIOS_FILE.exists():
+        try:
+            return json.loads(_USUARIOS_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return dict(_USUARIOS_BUILTIN)
+
+
+USUARIOS: dict = _cargar_usuarios()
+
+
+def guardar_usuarios() -> None:
+    """Persiste USUARIOS en disco (data/usuarios.json)."""
+    _USUARIOS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    _USUARIOS_FILE.write_text(
+        json.dumps(USUARIOS, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+
 def verificar_credenciales(usuario: str, password: str) -> str | None:
-    """
-    Verifica las credenciales del usuario.
-
-    Retorna el 'rol' (str) si las credenciales son correctas,
-    o None si el usuario no existe o la contraseña es incorrecta.
-
-    En producción: reemplazar la comparación directa por bcrypt.checkpw().
-    """
     datos = USUARIOS.get(usuario)
     if datos is None:
         return None
-    # TODO (producción): bcrypt.checkpw(password.encode(), datos["password"].encode())
     if password == datos["password"]:
         return datos["rol"]
     return None
 
 
 def get_usuario_info(usuario: str) -> dict | None:
-    """Retorna el dict completo del usuario (sin exponer la contraseña)."""
     datos = USUARIOS.get(usuario)
     if datos is None:
         return None

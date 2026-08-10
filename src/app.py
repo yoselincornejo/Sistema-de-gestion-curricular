@@ -6,6 +6,7 @@ import sqlite3, os, sys, io, re
 import panel as pn
 import param
 from auth import verificar_credenciales
+import auth as _auth
 from login_ui import crear_login
 from pathlib import Path
 
@@ -34,6 +35,20 @@ def conexion():
     conn.execute("PRAGMA foreign_keys = ON")
     conn.row_factory = sqlite3.Row
     return conn
+
+def _init_db_migration():
+    """Añade columnas nuevas a tablas existentes (idempotente)."""
+    conn = conexion()
+    try:
+        conn.execute("ALTER TABLE asignaturas ADD COLUMN docente_a_cargo TEXT DEFAULT ''")
+        conn.commit()
+    except Exception:
+        pass  # ya existe
+    finally:
+        conn.close()
+
+_init_db_migration()
+
 
 def get_dashboard_data():
     conn = conexion()
@@ -307,7 +322,8 @@ def get_asignaturas_lista():
 def get_programa_completo(asig_id):
     conn = conexion()
     asig = dict(conn.execute("""
-        SELECT id, codigo, nombre, semestre, duracion, requisitos, version
+        SELECT id, codigo, nombre, semestre, duracion, requisitos, version,
+               COALESCE(docente_a_cargo, '') as docente_a_cargo
         FROM asignaturas WHERE id=?""", (asig_id,)).fetchone())
     unidades = [dict(r) for r in conn.execute(
         "SELECT * FROM unidades WHERE asignatura_id=? ORDER BY orden",
@@ -394,10 +410,12 @@ def guardar_programa(asig_id, datos):
     try:
         conn.execute("""
             UPDATE asignaturas
-            SET nombre=?, semestre=?, nivel=?, duracion=?, requisitos=?
+            SET nombre=?, semestre=?, nivel=?, duracion=?, requisitos=?,
+                docente_a_cargo=?
             WHERE id=?
         """, (datos["nombre"], datos["semestre"], datos["nivel"],
-              datos["duracion"], datos["requisitos"], asig_id))
+              datos["duracion"], datos["requisitos"],
+              datos.get("docente_a_cargo", ""), asig_id))
         conn.execute("DELETE FROM unidades WHERE asignatura_id=?", (asig_id,))
         for i, u in enumerate(datos["unidades"]):
             conn.execute("""
@@ -440,6 +458,14 @@ def guardar_programa(asig_id, datos):
         return False, str(e)
     finally:
         conn.close()
+
+# ── RBAC ─────────────────────────────────────────────────────────
+
+def _puede_editar(rol: str, usuario: str, docente_asig: str) -> bool:
+    """Retorna True si el usuario puede editar la asignatura."""
+    if rol in ("admin", "superuser"):
+        return True
+    return (docente_asig or "").strip().lower() == (usuario or "").strip().lower()
 
 # ── CSS ───────────────────────────────────────────────────────────
 
@@ -1065,6 +1091,9 @@ class EditorProgramas(param.Parameterized):
             value=nivel_calc, width=90)
         w_dur = pn.widgets.TextInput(
             name="Duración", value=asig.get("duracion",""), width=200)
+        w_docente = pn.widgets.TextInput(
+            name="Docente a cargo", value=asig.get("docente_a_cargo",""), width=300,
+            placeholder="Nombre del docente responsable...")
 
         # Parsear el valor existente de requisitos para pre-seleccionar opciones
         _req_texto = asig.get("requisitos", "") or ""
@@ -1090,7 +1119,7 @@ class EditorProgramas(param.Parameterized):
         sec_ident = pn.Column(
             pn.pane.HTML('<div class="card-title">Identificación</div>'),
             pn.Row(w_nombre, w_sem, w_nivel),
-            pn.Row(w_dur, sizing_mode="stretch_width"),
+            pn.Row(w_dur, w_docente, sizing_mode="stretch_width"),
             w_req,
             css_classes=["card"], sizing_mode="stretch_width"
         )
@@ -1450,7 +1479,8 @@ class EditorProgramas(param.Parameterized):
         # ── Acciones ──────────────────────────────────────────────
         self._widgets = {
             "nombre": w_nombre, "semestre": w_sem, "nivel": w_nivel,
-            "duracion": w_dur, "requisitos": w_req, "metodologia": w_metod
+            "duracion": w_dur, "requisitos": w_req, "metodologia": w_metod,
+            "docente": w_docente,
         }
 
         _BTN_COLORS_ALL = ["success", "primary", "warning", "danger", "light"]
@@ -1480,11 +1510,12 @@ class EditorProgramas(param.Parameterized):
 
         def on_guardar(event):
             datos = {
-                "nombre":       self._widgets["nombre"].value,
-                "semestre":     self._widgets["semestre"].value,
-                "nivel":        self._widgets["nivel"].value,
-                "duracion":     self._widgets["duracion"].value,
-                "requisitos":   " · ".join(self._widgets["requisitos"].value),
+                "nombre":           self._widgets["nombre"].value,
+                "semestre":         self._widgets["semestre"].value,
+                "nivel":            self._widgets["nivel"].value,
+                "duracion":         self._widgets["duracion"].value,
+                "requisitos":       " · ".join(self._widgets["requisitos"].value),
+                "docente_a_cargo":  self._widgets["docente"].value,
                 "unidades":     [{"nombre": u["nombre"].value,
                                   "contenidos": u["contenidos"].value,
                                   "indicador_logro": u["indicador_logro"].value}
@@ -1534,7 +1565,46 @@ class EditorProgramas(param.Parameterized):
             },
         )
 
+        # ── RBAC: aplicar permisos de edición ─────────────────────
+        _rol_actual     = pn.state.cache.get("rol", "user")
+        _usuario_actual = pn.state.cache.get("usuario_actual", "")
+        _docente_asig   = asig.get("docente_a_cargo", "") or ""
+        _puede          = _puede_editar(_rol_actual, _usuario_actual, _docente_asig)
+
+        _banner_ro = pn.pane.HTML(
+            f'<div style="background:#FEF3C7;border:1px solid #F59E0B;border-radius:8px;'
+            f'padding:12px 16px;font-size:13px;">'
+            f'🔒 <strong>Modo lectura:</strong> Esta asignatura está asignada a '
+            f'<strong>{_docente_asig or "(sin asignar)"}</strong>. '
+            f'Solo puedes visualizar la información, no modificarla.</div>',
+            sizing_mode="stretch_width", visible=not _puede,
+        )
+
+        if not _puede:
+            _widgets_edit = (
+                [w_nombre, w_sem, w_nivel, w_dur, w_req, w_docente,
+                 btn_guardar_ras, btn_guardar, btn_add,
+                 btn_add_basica, btn_add_compl, btn_guardar_bib,
+                 btn_modal_si, btn_modal_no, w_metod]
+                + list(ra_checks.values())
+                + [u["nombre"] for u in self._unidades_widgets]
+                + [u["contenidos"] for u in self._unidades_widgets]
+                + [u["indicador_logro"] for u in self._unidades_widgets]
+                + [e["tipo"] for e in self._eval_widgets]
+                + [e["porcentaje"] for e in self._eval_widgets]
+                + [b["autor"] for b in self._biblio_widgets]
+                + [b["titulo"] for b in self._biblio_widgets]
+                + [b["editorial"] for b in self._biblio_widgets]
+                + [b["anio"] for b in self._biblio_widgets]
+                + [b["isbn"] for b in self._biblio_widgets]
+                + [b["ejemplares"] for b in self._biblio_widgets]
+            )
+            for _w in _widgets_edit:
+                if hasattr(_w, "disabled"):
+                    _w.disabled = True
+
         self._contenido_editor.objects = [
+            _banner_ro,
             modal_backdrop, modal_dialog,
             sec_ident, sec_ras,
             # sec_unidades, sec_metod, sec_eval,  # temporalmente ocultas
@@ -1548,6 +1618,101 @@ class EditorProgramas(param.Parameterized):
             self._contenido_editor,
             sizing_mode="stretch_width"
         )
+
+
+# ── GESTIÓN DE USUARIOS ───────────────────────────────────────────
+
+def crear_gestion_usuarios():
+    """Pestaña exclusiva para rol 'admin': crear y listar usuarios."""
+
+    def _tabla_html():
+        filas = ""
+        for nombre, datos in _auth.USUARIOS.items():
+            rol_badge_color = {
+                "admin": "#1F4E79", "superuser": "#375623", "user": "#7B2C2C"
+            }.get(datos["rol"], "#475569")
+            filas += (
+                f'<tr>'
+                f'<td style="padding:8px 12px;border-bottom:1px solid #F1F5F9;font-weight:600">{nombre}</td>'
+                f'<td style="padding:8px 12px;border-bottom:1px solid #F1F5F9">{datos.get("nombre_completo","")}</td>'
+                f'<td style="padding:8px 12px;border-bottom:1px solid #F1F5F9">'
+                f'<span style="background:{rol_badge_color};color:white;border-radius:12px;'
+                f'padding:2px 10px;font-size:11px;font-weight:700">{datos["rol"]}</span></td>'
+                f'</tr>'
+            )
+        return (
+            '<table style="width:100%;border-collapse:collapse;font-size:13px">'
+            '<thead><tr style="background:#F8FAFC">'
+            '<th style="text-align:left;padding:8px 12px;border-bottom:2px solid #E2E8F0;'
+            'font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#1F4E79">Usuario</th>'
+            '<th style="text-align:left;padding:8px 12px;border-bottom:2px solid #E2E8F0;'
+            'font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#1F4E79">Nombre completo</th>'
+            '<th style="text-align:left;padding:8px 12px;border-bottom:2px solid #E2E8F0;'
+            'font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#1F4E79">Rol</th>'
+            f'</tr></thead><tbody>{filas}</tbody></table>'
+        )
+
+    tabla_pane = pn.pane.HTML(_tabla_html(), sizing_mode="stretch_width")
+
+    w_usuario    = pn.widgets.TextInput(name="Nombre de usuario", width=240,
+                                         placeholder="Ej: Dr. García")
+    w_nombre_c   = pn.widgets.TextInput(name="Nombre completo",   width=300,
+                                         placeholder="Nombre para mostrar")
+    w_password   = pn.widgets.PasswordInput(name="Contraseña",    width=200,
+                                             placeholder="Contraseña inicial")
+    w_rol        = pn.widgets.Select(name="Rol",
+                                      options=["user", "superuser", "admin"],
+                                      value="user", width=160)
+    msg_usuario  = pn.pane.HTML("", sizing_mode="stretch_width")
+    btn_crear    = pn.widgets.Button(name="➕ Crear usuario",
+                                      button_type="primary", width=200, height=42)
+
+    def on_crear(event):
+        nombre = w_usuario.value.strip()
+        pwd    = w_password.value
+        ncomp  = w_nombre_c.value.strip()
+        rol    = w_rol.value
+        if not nombre or not pwd:
+            msg_usuario.object = (
+                '<div style="background:#FEE2E2;border:1px solid #F87171;border-radius:6px;'
+                'padding:8px 12px;color:#991B1B;font-size:13px">⚠ Completa el nombre de usuario y la contraseña.</div>'
+            )
+            return
+        if nombre in _auth.USUARIOS:
+            msg_usuario.object = (
+                '<div style="background:#FEE2E2;border:1px solid #F87171;border-radius:6px;'
+                'padding:8px 12px;color:#991B1B;font-size:13px">⚠ Ese usuario ya existe.</div>'
+            )
+            return
+        _auth.USUARIOS[nombre] = {
+            "password": pwd,
+            "rol": rol,
+            "nombre_completo": ncomp or nombre,
+        }
+        _auth.guardar_usuarios()
+        tabla_pane.object = _tabla_html()
+        w_usuario.value  = ""
+        w_nombre_c.value = ""
+        w_password.value = ""
+        msg_usuario.object = (
+            f'<div style="background:#DCFCE7;border:1px solid #86EFAC;border-radius:6px;'
+            f'padding:8px 12px;color:#166534;font-size:13px">✓ Usuario "<strong>{nombre}</strong>" creado correctamente.</div>'
+        )
+        pn.state.notifications.success(f'Usuario "{nombre}" creado', duration=3000)
+
+    btn_crear.on_click(on_crear)
+
+    return pn.Column(
+        pn.pane.HTML('<div class="card-title">Usuarios registrados</div>'),
+        tabla_pane,
+        pn.layout.Divider(),
+        pn.pane.HTML('<div class="card-title">Crear nuevo usuario</div>'),
+        pn.Row(w_usuario, w_nombre_c, w_password, w_rol, align="end"),
+        pn.Row(btn_crear, pn.Spacer(width=16), msg_usuario, align="center"),
+        css_classes=["card"],
+        sizing_mode="stretch_width",
+        margin=(0, 0, 40, 0),
+    )
 
 
 # ── APP ───────────────────────────────────────────────────────────
@@ -1565,11 +1730,16 @@ def crear_app():
         </div>
     """)
 
-    tabs = pn.Tabs(
+    rol_sesion = pn.state.cache.get("rol", "user")
+
+    tabs_items = [
         ("📊 Dashboard de Cobertura", Dashboard().view()),
         ("✏️ Editor de Programas",    EditorProgramas().view()),
-        dynamic=False
-    )
+    ]
+    if rol_sesion == "admin":
+        tabs_items.append(("⚙️ Gestión de Usuarios", crear_gestion_usuarios()))
+
+    tabs = pn.Tabs(*tabs_items, dynamic=False)
 
     return pn.Column(
         header, tabs,
