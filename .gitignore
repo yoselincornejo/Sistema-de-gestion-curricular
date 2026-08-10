@@ -5,3 +5,4 @@ __pycache__/
 data/programas/__pycache__/
 cambios_excel_cargar.patch
 .claude/
+data/sistema.db
