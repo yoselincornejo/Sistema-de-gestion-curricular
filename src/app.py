@@ -325,8 +325,12 @@ def get_programa_completo(asig_id):
     conn = conexion()
     asig = dict(conn.execute("""
         SELECT id, codigo, nombre, semestre, duracion, requisitos, version,
-               COALESCE(docente_a_cargo, '') as docente_a_cargo
-        FROM asignaturas WHERE id=?""", (asig_id,)).fetchone())
+               COALESCE((
+                   SELECT nombre FROM responsables
+                   WHERE asignatura_id=a.id AND rol='docente_a_cargo'
+                   LIMIT 1
+               ), '') as docente_a_cargo
+        FROM asignaturas a WHERE a.id=?""", (asig_id,)).fetchone())
     unidades = [dict(r) for r in conn.execute(
         "SELECT * FROM unidades WHERE asignatura_id=? ORDER BY orden",
         (asig_id,)).fetchall()]
@@ -412,12 +416,10 @@ def guardar_programa(asig_id, datos):
     try:
         conn.execute("""
             UPDATE asignaturas
-            SET nombre=?, semestre=?, nivel=?, duracion=?, requisitos=?,
-                docente_a_cargo=?
+            SET nombre=?, semestre=?, nivel=?, duracion=?, requisitos=?
             WHERE id=?
         """, (datos["nombre"], datos["semestre"], datos["nivel"],
-              datos["duracion"], datos["requisitos"],
-              datos.get("docente_a_cargo", ""), asig_id))
+              datos["duracion"], datos["requisitos"], asig_id))
         conn.execute("DELETE FROM unidades WHERE asignatura_id=?", (asig_id,))
         for i, u in enumerate(datos["unidades"]):
             conn.execute("""
@@ -1095,7 +1097,7 @@ class EditorProgramas(param.Parameterized):
             name="Duración", value=asig.get("duracion",""), width=200)
         w_docente = pn.widgets.TextInput(
             name="Docente a cargo", value=asig.get("docente_a_cargo",""), width=300,
-            placeholder="Nombre del docente responsable...")
+            placeholder="Sin docente asignado", disabled=True)
 
         # Parsear el valor existente de requisitos para pre-seleccionar opciones
         _req_texto = asig.get("requisitos", "") or ""
@@ -1525,7 +1527,6 @@ class EditorProgramas(param.Parameterized):
                 "nivel":            self._widgets["nivel"].value,
                 "duracion":         self._widgets["duracion"].value,
                 "requisitos":       " · ".join(self._widgets["requisitos"].value),
-                "docente_a_cargo":  self._widgets["docente"].value,
                 "unidades":     [{"nombre": u["nombre"].value,
                                   "contenidos": u["contenidos"].value,
                                   "indicador_logro": u["indicador_logro"].value}
