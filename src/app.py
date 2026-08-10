@@ -13,6 +13,7 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(__file__))
 from generador_excel import generar_matriz
 from generador_word import generar_programa_individual, generar_mapa_progreso
+from auditoria import registrar_accion
 
 pn.extension(notifications=True)
 RUTA_DB     = Path("data/sistema.db")
@@ -1220,6 +1221,10 @@ class EditorProgramas(param.Parameterized):
             _btn_ras_color_idx[0] = (_btn_ras_color_idx[0] + 1) % len(_BTN_COLORS_RAS)
             btn_guardar_ras.button_type = _BTN_COLORS_RAS[_btn_ras_color_idx[0]]
             if ok:
+                _u = pn.state.cache.get("usuario_actual") or "desconocido"
+                registrar_accion(_u, "MODIFICACION",
+                                 f"Guardó tributaciones ({len(ra_ids)} RAs seleccionados)",
+                                 entidad=asig.get("codigo", ""))
                 pn.state.notifications.success(msg, duration=4000)
             else:
                 pn.state.notifications.error(msg, duration=4000)
@@ -1462,6 +1467,10 @@ class EditorProgramas(param.Parameterized):
             _btn_bib_color_idx[0] = (_btn_bib_color_idx[0] + 1) % len(_BTN_COLORS_BIB)
             btn_guardar_bib.button_type = _BTN_COLORS_BIB[_btn_bib_color_idx[0]]
             if ok:
+                _u = pn.state.cache.get("usuario_actual") or "desconocido"
+                registrar_accion(_u, "MODIFICACION",
+                                 f"Guardó bibliografía ({len(bib)} entradas)",
+                                 entidad=asig.get("codigo", ""))
                 pn.state.notifications.success(msg, duration=4000)
             else:
                 pn.state.notifications.error(msg, duration=4000)
@@ -1535,6 +1544,10 @@ class EditorProgramas(param.Parameterized):
             _btn_all_color_idx[0] = (_btn_all_color_idx[0] + 1) % len(_BTN_COLORS_ALL)
             btn_guardar.button_type = _BTN_COLORS_ALL[_btn_all_color_idx[0]]
             if ok:
+                _u = pn.state.cache.get("usuario_actual") or "desconocido"
+                registrar_accion(_u, "MODIFICACION",
+                                 "Guardó todos los cambios del programa",
+                                 entidad=asig.get("codigo", ""))
                 pn.state.notifications.success(msg, duration=4000)
             else:
                 pn.state.notifications.error(msg, duration=4000)
@@ -1687,6 +1700,8 @@ def crear_gestion_usuarios():
         _auth.USUARIOS[nombre] = {"password": pwd, "rol": rol,
                                    "nombre_completo": ncomp or nombre}
         _auth.guardar_usuarios()
+        registrar_accion(ADMIN_SESION, "CREACION",
+                         f"Creó usuario '{nombre}' con rol '{rol}'")
         _refrescar()
         w_nuevo_usuario.value  = ""
         w_nuevo_nombre_c.value = ""
@@ -1745,6 +1760,8 @@ def crear_gestion_usuarios():
             _auth.USUARIOS[nombre]["password"] = nueva_pwd
             w_edit_password.value = ""
         _auth.guardar_usuarios()
+        cambios = f"Editó usuario '{nombre}': rol={w_edit_rol.value}" + (", contraseña cambiada" if nueva_pwd else "")
+        registrar_accion(ADMIN_SESION, "MODIFICACION", cambios)
         _refrescar()
         msg_gral.object = _msg_ok(f'Usuario "<strong>{nombre}</strong>" actualizado correctamente.')
         pn.state.notifications.success(f'Usuario "{nombre}" actualizado', duration=3000)
@@ -1772,6 +1789,8 @@ def crear_gestion_usuarios():
             # Segundo clic: eliminar
             del _auth.USUARIOS[nombre]
             _auth.guardar_usuarios()
+            registrar_accion(ADMIN_SESION, "ELIMINACION",
+                             f"Eliminó usuario '{nombre}'")
             _confirm_delete[0]       = False
             btn_eliminar.name        = "🗑️ Eliminar usuario"
             btn_eliminar.button_type = "danger"
@@ -1848,6 +1867,8 @@ def crear_app():
     )
 
     def on_logout(event):
+        _u = pn.state.cache.get("usuario_actual") or "desconocido"
+        registrar_accion(_u, "LOGOUT", "Cierre de sesión")
         pn.state.cache["usuario_actual"] = None
         pn.state.cache["rol"]            = None
         main_area.clear()
@@ -1908,6 +1929,7 @@ def cargar_app_principal(rol: str, usuario: str):
     """Limpia el login y carga la aplicación principal."""
     pn.state.cache["usuario_actual"] = usuario
     pn.state.cache["rol"]            = rol
+    registrar_accion(usuario, "LOGIN", f"Inicio de sesión exitoso (rol: {rol})")
     main_area.clear()
     main_area.append(crear_app())
     pn.state.notifications.success(
