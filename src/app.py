@@ -1720,17 +1720,58 @@ def crear_gestion_usuarios():
 def crear_app():
     # CSS ya inyectado por iniciar() al arrancar
 
-    header = pn.pane.HTML("""
-        <div class="app-header">
-            <div class="app-icon">ICM</div>
-            <div>
-                <h1 class="app-title">Sistema de Gestión Curricular</h1>
-                <p class="app-sub">Instituto de Matemática · Universidad de Valparaíso · Plan 2025</p>
-            </div>
-        </div>
-    """)
+    usuario_sesion = pn.state.cache.get("usuario_actual", "")
+    rol_sesion     = pn.state.cache.get("rol", "user")
 
-    rol_sesion = pn.state.cache.get("rol", "user")
+    ROL_LABEL = {"admin": "Administrador", "superuser": "Super usuario", "user": "Docente"}
+    rol_txt = ROL_LABEL.get(rol_sesion, rol_sesion)
+
+    btn_logout = pn.widgets.Button(
+        name="Cerrar sesión",
+        button_type="light",
+        width=150, height=36,
+        stylesheets=["""
+            :host button {
+                border: 1.5px solid #CBD5E1 !important;
+                border-radius: 8px !important;
+                font-size: 13px !important;
+                color: #475569 !important;
+                background: white !important;
+                cursor: pointer !important;
+            }
+            :host button:hover {
+                background: #F1F5F9 !important;
+                border-color: #94A3B8 !important;
+            }
+        """],
+    )
+
+    def on_logout(event):
+        pn.state.cache["usuario_actual"] = None
+        pn.state.cache["rol"]            = None
+        main_area.clear()
+        main_area.append(crear_login(on_success=cargar_app_principal))
+
+    btn_logout.on_click(on_logout)
+
+    header = pn.Row(
+        pn.pane.HTML(f"""
+            <div class="app-header" style="flex:1;margin-bottom:0">
+                <div class="app-icon">ICM</div>
+                <div style="flex:1">
+                    <h1 class="app-title">Sistema de Gestión Curricular</h1>
+                    <p class="app-sub">Instituto de Matemática · Universidad de Valparaíso · Plan 2025</p>
+                </div>
+                <div style="text-align:right;margin-right:8px">
+                    <div style="font-size:13px;font-weight:600;color:#1F4E79">{usuario_sesion}</div>
+                    <div style="font-size:11px;color:#64748B">{rol_txt}</div>
+                </div>
+            </div>
+        """, sizing_mode="stretch_width"),
+        pn.Column(btn_logout, align="center", margin=(0, 0, 0, 8)),
+        sizing_mode="stretch_width",
+        margin=(0, 0, 24, 0),
+    )
 
     tabs_items = [
         ("📊 Dashboard de Cobertura", Dashboard().view()),
