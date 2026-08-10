@@ -1036,6 +1036,24 @@ class EditorProgramas(param.Parameterized):
         nivel_calc = nivel_desde_semestre(asig.get("semestre"))
 
         # ── Identificación ────────────────────────────────────────
+        # Cargar todas las asignaturas para el selector de requisitos
+        _conn_asigs = conexion()
+        _todas_asigs = _conn_asigs.execute(
+            "SELECT codigo, nombre, semestre FROM asignaturas ORDER BY semestre, codigo"
+        ).fetchall()
+        _conn_asigs.close()
+        # {semestre: ["CODIGO -- Nombre", ...]}
+        _asigs_por_sem = {}
+        for _cod, _nom, _sem in _todas_asigs:
+            _asigs_por_sem.setdefault(_sem, []).append(f"{_cod} -- {_nom}")
+
+        def _opciones_requisitos(semestre):
+            opts = []
+            for s in sorted(_asigs_por_sem):
+                if s < semestre:
+                    opts.extend(_asigs_por_sem[s])
+            return opts
+
         w_nombre = pn.widgets.TextInput(
             name="Nombre", value=asig.get("nombre",""), width=460)
         w_sem = pn.widgets.IntInput(
@@ -1045,18 +1063,33 @@ class EditorProgramas(param.Parameterized):
             value=nivel_calc, width=90)
         w_dur = pn.widgets.TextInput(
             name="Duración", value=asig.get("duracion",""), width=200)
-        w_req = pn.widgets.TextInput(
-            name="Requisitos", value=asig.get("requisitos",""), width=460)
 
-        # El nivel se recalcula si cambia el semestre
+        # Parsear el valor existente de requisitos para pre-seleccionar opciones
+        _req_texto = asig.get("requisitos", "") or ""
+        _req_opts_ini = _opciones_requisitos(asig.get("semestre") or 1)
+        _req_val_ini = [v for v in _req_texto.split(" · ") if v in _req_opts_ini]
+
+        w_req = pn.widgets.MultiChoice(
+            name="Requisitos",
+            options=_req_opts_ini,
+            value=_req_val_ini,
+            sizing_mode="stretch_width",
+            placeholder="Selecciona asignaturas de semestres anteriores...",
+        )
+
+        # El nivel se recalcula si cambia el semestre; requisitos actualiza opciones
         def on_sem_change(event):
             w_nivel.value = nivel_desde_semestre(event.new)
+            nuevas_opts = _opciones_requisitos(event.new)
+            w_req.options = nuevas_opts
+            w_req.value = [v for v in w_req.value if v in nuevas_opts]
         w_sem.param.watch(on_sem_change, "value")
 
         sec_ident = pn.Column(
             pn.pane.HTML('<div class="card-title">Identificación</div>'),
             pn.Row(w_nombre, w_sem, w_nivel),
-            pn.Row(w_dur, w_req),
+            pn.Row(w_dur, sizing_mode="stretch_width"),
+            w_req,
             css_classes=["card"], sizing_mode="stretch_width"
         )
 
@@ -1444,7 +1477,7 @@ class EditorProgramas(param.Parameterized):
                 "semestre":     self._widgets["semestre"].value,
                 "nivel":        self._widgets["nivel"].value,
                 "duracion":     self._widgets["duracion"].value,
-                "requisitos":   self._widgets["requisitos"].value,
+                "requisitos":   " · ".join(self._widgets["requisitos"].value),
                 "unidades":     [{"nombre": u["nombre"].value,
                                   "contenidos": u["contenidos"].value,
                                   "indicador_logro": u["indicador_logro"].value}
