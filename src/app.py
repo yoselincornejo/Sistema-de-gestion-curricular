@@ -16,7 +16,7 @@ from generador_excel import generar_matriz
 from generador_word import generar_programa_individual, generar_mapa_progreso
 from auditoria import registrar_accion
 
-pn.extension(notifications=True)
+pn.extension("tabulator", notifications=True)
 RUTA_DB     = Path("data/sistema.db")
 RUTA_OUTPUT = Path("data/output")
 RUTA_OUTPUT.mkdir(parents=True, exist_ok=True)
