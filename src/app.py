@@ -465,11 +465,21 @@ def guardar_programa(asig_id, datos):
 
 # ── RBAC ─────────────────────────────────────────────────────────
 
-def _puede_editar(rol: str, usuario: str, docente_asig: str) -> bool:
-    """Retorna True si el usuario puede editar la asignatura."""
+def _puede_editar(rol: str, nombre_completo: str, docente_asig: str) -> bool:
+    """Retorna True si el usuario puede editar la asignatura.
+
+    nombre_completo: nombre real del usuario (e.g. 'Gerardo Honorato')
+    docente_asig: valor del campo docente_a_cargo en responsables (puede
+                  contener varios nombres separados por coma)
+    """
     if rol in ("admin", "superuser"):
         return True
-    return (docente_asig or "").strip().lower() == (usuario or "").strip().lower()
+    if not nombre_completo or not docente_asig:
+        return False
+    nombre_norm = nombre_completo.strip().lower()
+    # El campo puede tener varios docentes: "Gerardo Honorato, Rodrigo Meneses"
+    docentes = [d.strip().lower() for d in docente_asig.split(",")]
+    return any(nombre_norm in d or d in nombre_norm for d in docentes)
 
 # ── CSS ───────────────────────────────────────────────────────────
 
@@ -1581,10 +1591,10 @@ class EditorProgramas(param.Parameterized):
         )
 
         # ── RBAC: aplicar permisos de edición ─────────────────────
-        _rol_actual     = pn.state.cache.get("rol", "user")
-        _usuario_actual = pn.state.cache.get("usuario_actual", "")
-        _docente_asig   = asig.get("docente_a_cargo", "") or ""
-        _puede          = _puede_editar(_rol_actual, _usuario_actual, _docente_asig)
+        _rol_actual      = pn.state.cache.get("rol", "user")
+        _nombre_completo = pn.state.cache.get("nombre_completo", "") or ""
+        _docente_asig    = asig.get("docente_a_cargo", "") or ""
+        _puede           = _puede_editar(_rol_actual, _nombre_completo, _docente_asig)
 
         _banner_ro = pn.pane.HTML(
             f'<div style="background:#FEF3C7;border:1px solid #F59E0B;border-radius:8px;'
@@ -1978,11 +1988,17 @@ def crear_vista_auditoria():
 def crear_app():
     # CSS ya inyectado por iniciar() al arrancar
 
-    usuario_sesion = pn.state.cache.get("usuario_actual", "")
-    rol_sesion     = pn.state.cache.get("rol", "user")
+    usuario_sesion   = pn.state.cache.get("usuario_actual", "")
+    rol_sesion       = pn.state.cache.get("rol", "user")
+    nombre_completo  = pn.state.cache.get("nombre_completo", "") or usuario_sesion
 
     ROL_LABEL = {"admin": "Administrador", "superuser": "Super usuario", "user": "Docente"}
     rol_txt = ROL_LABEL.get(rol_sesion, rol_sesion)
+    # Admin ve: "Nombre Completo (username)" · Resto ve solo su nombre completo
+    if rol_sesion == "admin" and usuario_sesion != nombre_completo:
+        nombre_display = f"{nombre_completo} ({usuario_sesion})"
+    else:
+        nombre_display = nombre_completo
 
     btn_logout = pn.widgets.Button(
         name="Cerrar sesión",
@@ -2030,7 +2046,7 @@ def crear_app():
                         Instituto de Matemática · Universidad de Valparaíso · Plan 2025</p>
                 </div>
                 <div style="text-align:right;margin-right:8px">
-                    <div style="font-size:13px;font-weight:600;color:#1F4E79">{usuario_sesion}</div>
+                    <div style="font-size:13px;font-weight:600;color:#1F4E79">{nombre_display}</div>
                     <div style="font-size:11px;color:#64748B">{rol_txt}</div>
                 </div>
             </div>
@@ -2066,13 +2082,16 @@ main_area = pn.Column(sizing_mode="stretch_both")
 
 def cargar_app_principal(rol: str, usuario: str):
     """Limpia el login y carga la aplicación principal."""
-    pn.state.cache["usuario_actual"] = usuario
-    pn.state.cache["rol"]            = rol
+    info = _auth.get_usuario_info(usuario) or {}
+    nombre_completo = info.get("nombre_completo") or usuario
+    pn.state.cache["usuario_actual"]   = usuario
+    pn.state.cache["rol"]              = rol
+    pn.state.cache["nombre_completo"]  = nombre_completo
     registrar_accion(usuario, "LOGIN", f"Inicio de sesión exitoso (rol: {rol})")
     main_area.clear()
     main_area.append(crear_app())
     pn.state.notifications.success(
-        f"Bienvenido/a, {usuario} ({rol})", duration=3000
+        f"Bienvenido/a, {nombre_completo}", duration=3000
     )
 
 
