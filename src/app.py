@@ -1623,20 +1623,25 @@ class EditorProgramas(param.Parameterized):
 # ── GESTIÓN DE USUARIOS ───────────────────────────────────────────
 
 def crear_gestion_usuarios():
-    """Pestaña exclusiva para rol 'admin': crear y listar usuarios."""
+    """Pestaña exclusiva para rol 'admin': crear, editar y eliminar usuarios."""
+
+    ADMIN_SESION = pn.state.cache.get("usuario_actual", "")
+
+    ROL_COLOR = {"admin": "#1F4E79", "superuser": "#375623", "user": "#7B2C2C"}
 
     def _tabla_html():
         filas = ""
         for nombre, datos in _auth.USUARIOS.items():
-            rol_badge_color = {
-                "admin": "#1F4E79", "superuser": "#375623", "user": "#7B2C2C"
-            }.get(datos["rol"], "#475569")
+            badge = ROL_COLOR.get(datos["rol"], "#475569")
+            es_yo = "⭐ " if nombre == ADMIN_SESION else ""
             filas += (
                 f'<tr>'
-                f'<td style="padding:8px 12px;border-bottom:1px solid #F1F5F9;font-weight:600">{nombre}</td>'
-                f'<td style="padding:8px 12px;border-bottom:1px solid #F1F5F9">{datos.get("nombre_completo","")}</td>'
+                f'<td style="padding:8px 12px;border-bottom:1px solid #F1F5F9;font-weight:600">'
+                f'{es_yo}{nombre}</td>'
                 f'<td style="padding:8px 12px;border-bottom:1px solid #F1F5F9">'
-                f'<span style="background:{rol_badge_color};color:white;border-radius:12px;'
+                f'{datos.get("nombre_completo","")}</td>'
+                f'<td style="padding:8px 12px;border-bottom:1px solid #F1F5F9">'
+                f'<span style="background:{badge};color:white;border-radius:12px;'
                 f'padding:2px 10px;font-size:11px;font-weight:700">{datos["rol"]}</span></td>'
                 f'</tr>'
             )
@@ -1653,62 +1658,158 @@ def crear_gestion_usuarios():
         )
 
     tabla_pane = pn.pane.HTML(_tabla_html(), sizing_mode="stretch_width")
+    msg_gral   = pn.pane.HTML("", sizing_mode="stretch_width")
 
-    w_usuario    = pn.widgets.TextInput(name="Nombre de usuario", width=240,
-                                         placeholder="Ej: Dr. García")
-    w_nombre_c   = pn.widgets.TextInput(name="Nombre completo",   width=300,
-                                         placeholder="Nombre para mostrar")
-    w_password   = pn.widgets.PasswordInput(name="Contraseña",    width=200,
-                                             placeholder="Contraseña inicial")
-    w_rol        = pn.widgets.Select(name="Rol",
-                                      options=["user", "superuser", "admin"],
-                                      value="user", width=160)
-    msg_usuario  = pn.pane.HTML("", sizing_mode="stretch_width")
-    btn_crear    = pn.widgets.Button(name="➕ Crear usuario",
-                                      button_type="primary", width=200, height=42)
+    # ── Sección: Crear usuario ────────────────────────────────────
+    w_nuevo_usuario  = pn.widgets.TextInput(name="Nombre de usuario", width=240,
+                                             placeholder="Ej: Dr. García")
+    w_nuevo_nombre_c = pn.widgets.TextInput(name="Nombre completo",   width=300,
+                                             placeholder="Nombre para mostrar")
+    w_nuevo_password = pn.widgets.PasswordInput(name="Contraseña",    width=200,
+                                                 placeholder="Contraseña inicial")
+    w_nuevo_rol      = pn.widgets.Select(name="Rol",
+                                          options=["user", "superuser", "admin"],
+                                          value="user", width=160)
+    btn_crear = pn.widgets.Button(name="➕ Crear usuario",
+                                   button_type="primary", width=200, height=42)
 
     def on_crear(event):
-        nombre = w_usuario.value.strip()
-        pwd    = w_password.value
-        ncomp  = w_nombre_c.value.strip()
-        rol    = w_rol.value
+        nombre = w_nuevo_usuario.value.strip()
+        pwd    = w_nuevo_password.value
+        ncomp  = w_nuevo_nombre_c.value.strip()
+        rol    = w_nuevo_rol.value
         if not nombre or not pwd:
-            msg_usuario.object = (
-                '<div style="background:#FEE2E2;border:1px solid #F87171;border-radius:6px;'
-                'padding:8px 12px;color:#991B1B;font-size:13px">⚠ Completa el nombre de usuario y la contraseña.</div>'
-            )
+            msg_gral.object = _msg_error("Completa el nombre de usuario y la contraseña.")
             return
         if nombre in _auth.USUARIOS:
-            msg_usuario.object = (
-                '<div style="background:#FEE2E2;border:1px solid #F87171;border-radius:6px;'
-                'padding:8px 12px;color:#991B1B;font-size:13px">⚠ Ese usuario ya existe.</div>'
-            )
+            msg_gral.object = _msg_error("Ese usuario ya existe.")
             return
-        _auth.USUARIOS[nombre] = {
-            "password": pwd,
-            "rol": rol,
-            "nombre_completo": ncomp or nombre,
-        }
+        _auth.USUARIOS[nombre] = {"password": pwd, "rol": rol,
+                                   "nombre_completo": ncomp or nombre}
         _auth.guardar_usuarios()
-        tabla_pane.object = _tabla_html()
-        w_usuario.value  = ""
-        w_nombre_c.value = ""
-        w_password.value = ""
-        msg_usuario.object = (
-            f'<div style="background:#DCFCE7;border:1px solid #86EFAC;border-radius:6px;'
-            f'padding:8px 12px;color:#166534;font-size:13px">✓ Usuario "<strong>{nombre}</strong>" creado correctamente.</div>'
-        )
+        _refrescar()
+        w_nuevo_usuario.value  = ""
+        w_nuevo_nombre_c.value = ""
+        w_nuevo_password.value = ""
+        msg_gral.object = _msg_ok(f'Usuario "<strong>{nombre}</strong>" creado correctamente.')
         pn.state.notifications.success(f'Usuario "{nombre}" creado', duration=3000)
 
     btn_crear.on_click(on_crear)
+
+    # ── Sección: Editar / Eliminar usuario ────────────────────────
+    sel_usuario = pn.widgets.Select(
+        name="Selecciona un usuario",
+        options=list(_auth.USUARIOS.keys()),
+        width=260,
+    )
+    w_edit_nombre_c = pn.widgets.TextInput(name="Nombre completo", width=300)
+    w_edit_password = pn.widgets.PasswordInput(
+        name="Nueva contraseña", width=200,
+        placeholder="Dejar vacío para no cambiar")
+    w_edit_rol = pn.widgets.Select(name="Rol",
+                                    options=["user", "superuser", "admin"], width=160)
+    btn_guardar_edit = pn.widgets.Button(name="💾 Guardar cambios",
+                                          button_type="success", width=200, height=42)
+    btn_eliminar     = pn.widgets.Button(name="🗑️ Eliminar usuario",
+                                          button_type="danger",  width=200, height=42)
+
+    # Confirmación de eliminación (doble clic)
+    _confirm_delete = [False]
+    _confirm_timer  = [None]
+
+    def _cargar_usuario_en_form(nombre):
+        datos = _auth.USUARIOS.get(nombre, {})
+        w_edit_nombre_c.value = datos.get("nombre_completo", "")
+        w_edit_password.value = ""
+        w_edit_rol.value      = datos.get("rol", "user")
+        btn_eliminar.name     = "🗑️ Eliminar usuario"
+        btn_eliminar.button_type = "danger"
+        _confirm_delete[0]    = False
+
+    def on_sel_change(event):
+        _cargar_usuario_en_form(event.new)
+
+    sel_usuario.param.watch(on_sel_change, "value")
+    if sel_usuario.value:
+        _cargar_usuario_en_form(sel_usuario.value)
+
+    def on_guardar_edit(event):
+        nombre = sel_usuario.value
+        if not nombre or nombre not in _auth.USUARIOS:
+            msg_gral.object = _msg_error("Selecciona un usuario válido.")
+            return
+        _auth.USUARIOS[nombre]["nombre_completo"] = w_edit_nombre_c.value.strip() or nombre
+        _auth.USUARIOS[nombre]["rol"]             = w_edit_rol.value
+        nueva_pwd = w_edit_password.value
+        if nueva_pwd:
+            _auth.USUARIOS[nombre]["password"] = nueva_pwd
+            w_edit_password.value = ""
+        _auth.guardar_usuarios()
+        _refrescar()
+        msg_gral.object = _msg_ok(f'Usuario "<strong>{nombre}</strong>" actualizado correctamente.')
+        pn.state.notifications.success(f'Usuario "{nombre}" actualizado', duration=3000)
+
+    def on_eliminar(event):
+        nombre = sel_usuario.value
+        if not nombre or nombre not in _auth.USUARIOS:
+            msg_gral.object = _msg_error("Selecciona un usuario válido.")
+            return
+        if nombre == ADMIN_SESION:
+            msg_gral.object = _msg_error("No puedes eliminar tu propia cuenta.")
+            return
+        if not _confirm_delete[0]:
+            # Primer clic: pedir confirmación
+            _confirm_delete[0]       = True
+            btn_eliminar.name        = "⚠️ Confirmar eliminación"
+            btn_eliminar.button_type = "warning"
+            msg_gral.object = (
+                f'<div style="background:#FEF3C7;border:1px solid #F59E0B;border-radius:6px;'
+                f'padding:8px 12px;color:#92400E;font-size:13px">'
+                f'⚠ ¿Seguro que deseas eliminar a <strong>{nombre}</strong>? '
+                f'Haz clic de nuevo para confirmar.</div>'
+            )
+        else:
+            # Segundo clic: eliminar
+            del _auth.USUARIOS[nombre]
+            _auth.guardar_usuarios()
+            _confirm_delete[0]       = False
+            btn_eliminar.name        = "🗑️ Eliminar usuario"
+            btn_eliminar.button_type = "danger"
+            _refrescar()
+            if _auth.USUARIOS:
+                sel_usuario.value = list(_auth.USUARIOS.keys())[0]
+            msg_gral.object = _msg_ok(f'Usuario "<strong>{nombre}</strong>" eliminado.')
+            pn.state.notifications.warning(f'Usuario "{nombre}" eliminado', duration=3000)
+
+    btn_guardar_edit.on_click(on_guardar_edit)
+    btn_eliminar.on_click(on_eliminar)
+
+    def _refrescar():
+        tabla_pane.object   = _tabla_html()
+        sel_usuario.options = list(_auth.USUARIOS.keys())
+
+    def _msg_ok(txt):
+        return (f'<div style="background:#DCFCE7;border:1px solid #86EFAC;border-radius:6px;'
+                f'padding:8px 12px;color:#166534;font-size:13px">✓ {txt}</div>')
+
+    def _msg_error(txt):
+        return (f'<div style="background:#FEE2E2;border:1px solid #F87171;border-radius:6px;'
+                f'padding:8px 12px;color:#991B1B;font-size:13px">⚠ {txt}</div>')
 
     return pn.Column(
         pn.pane.HTML('<div class="card-title">Usuarios registrados</div>'),
         tabla_pane,
         pn.layout.Divider(),
+        # Editar / Eliminar
+        pn.pane.HTML('<div class="card-title">Editar o eliminar usuario</div>'),
+        pn.Row(sel_usuario, w_edit_nombre_c, w_edit_password, w_edit_rol, align="end"),
+        pn.Row(btn_guardar_edit, pn.Spacer(width=12), btn_eliminar),
+        pn.layout.Divider(),
+        # Crear
         pn.pane.HTML('<div class="card-title">Crear nuevo usuario</div>'),
-        pn.Row(w_usuario, w_nombre_c, w_password, w_rol, align="end"),
-        pn.Row(btn_crear, pn.Spacer(width=16), msg_usuario, align="center"),
+        pn.Row(w_nuevo_usuario, w_nuevo_nombre_c, w_nuevo_password, w_nuevo_rol, align="end"),
+        pn.Row(btn_crear),
+        msg_gral,
         css_classes=["card"],
         sizing_mode="stretch_width",
         margin=(0, 0, 40, 0),
