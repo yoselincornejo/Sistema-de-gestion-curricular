@@ -1756,11 +1756,18 @@ def crear_app():
 
     header = pn.Row(
         pn.pane.HTML(f"""
-            <div class="app-header" style="flex:1;margin-bottom:0">
-                <div class="app-icon">ICM</div>
+            <div style="background:white;padding:20px 28px;border-radius:12px;
+                        box-shadow:0 2px 8px rgba(0,0,0,0.06);display:flex;
+                        align-items:center;gap:16px;border-left:6px solid #1F4E79;
+                        margin-bottom:0;flex:1">
+                <div style="width:44px;height:44px;background:#1F4E79;border-radius:8px;
+                            display:flex;align-items:center;justify-content:center;
+                            color:white;font-size:18px;font-weight:700;flex-shrink:0">ICM</div>
                 <div style="flex:1">
-                    <h1 class="app-title">Sistema de Gestión Curricular</h1>
-                    <p class="app-sub">Instituto de Matemática · Universidad de Valparaíso · Plan 2025</p>
+                    <h1 style="margin:0;font-size:20px;font-weight:700;color:#1E293B">
+                        Sistema de Gestión Curricular</h1>
+                    <p style="margin:3px 0 0;font-size:13px;color:#64748B">
+                        Instituto de Matemática · Universidad de Valparaíso · Plan 2025</p>
                 </div>
                 <div style="text-align:right;margin-right:8px">
                     <div style="font-size:13px;font-weight:600;color:#1F4E79">{usuario_sesion}</div>
