@@ -2,7 +2,7 @@
 app.py — Sistema de Gestión Curricular ICM
 panel serve src/app.py --show --autoreload
 """
-import sqlite3, os, sys, io
+import sqlite3, os, sys, io, re
 import panel as pn
 import param
 from pathlib import Path
@@ -1384,11 +1384,16 @@ class EditorProgramas(param.Parameterized):
             ws["panel"] = panel
             return ws
 
+        def _fix_spacing(txt):
+            txt = str(txt or "")
+            txt = re.sub(r'([a-záéíóúñü])([A-ZÁÉÍÓÚÑÜ])', r'\1 \2', txt)
+            return re.sub(r' {2,}', ' ', txt).strip()
+
         for b in bibliografia:
             w = crear_entrada_biblio(
-                b.get("tipo","basica"), b.get("autor",""), b.get("titulo",""),
-                b.get("editorial",""), b.get("anio",""), b.get("isbn",""),
-                b.get("ejemplares",""))
+                b.get("tipo","basica"), _fix_spacing(b.get("autor","")),
+                _fix_spacing(b.get("titulo","")), b.get("editorial",""),
+                b.get("anio",""), b.get("isbn",""), b.get("ejemplares",""))
             self._biblio_widgets.append(w)
             col_biblio.append(w["panel"])
 
