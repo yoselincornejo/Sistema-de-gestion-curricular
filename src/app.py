@@ -2109,4 +2109,4 @@ def iniciar():
 
 
 pn.state.onload(iniciar)
-main_area.servable()
+main_area.servable(title="SGC - Sistema de Gestión Curricular")
