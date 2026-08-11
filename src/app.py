@@ -1113,36 +1113,75 @@ class EditorProgramas(param.Parameterized):
         _req_texto = asig.get("requisitos", "") or ""
         _req_opts_ini = _opciones_requisitos(asig.get("semestre") or 1)
 
+        def _normalizar_cod(cod):
+            """Normaliza un código: quita espacios extra, inserta espacio entre letras y dígitos.
+            Ej: 'MAT121' -> 'MAT 121', 'IMAT321' -> 'IMAT 321', 'MAT 121' -> 'MAT 121'
+            """
+            cod = cod.strip().upper()
+            cod = re.sub(r'([A-Z])(\d)', r'\1 \2', cod)
+            return cod
+
+        def _extraer_codigo(texto):
+            """Extrae el código de asignatura de un fragmento de texto en varios formatos:
+            - 'Nombre (CODIGO)'  → código en paréntesis
+            - 'CODIGO: Nombre'   → código al inicio con dos puntos
+            - 'CODIGO Nombre'    → código al inicio (letras + dígitos)
+            - 'CODIGO'           → solo el código
+            Retorna el código normalizado o None si no se reconoce el patrón.
+            """
+            # Limpiar caracteres zero-width y puntos finales
+            t = texto.strip().lstrip('​‌‍﻿').rstrip('.').strip()
+            # Formato "Nombre (CODIGO)" — código entre paréntesis
+            m = re.search(r'\(([A-Za-z]{2,5}\s*\d{3})\)', t)
+            if m:
+                return _normalizar_cod(m.group(1))
+            # Formato "CODIGO: Nombre" o "CODIGO Nombre" o solo "CODIGO"
+            m = re.match(r'^([A-Za-z]{2,5}\s*\d{3})', t)
+            if m:
+                return _normalizar_cod(m.group(1))
+            return None
+
         def _match_requisitos(texto, opciones):
             """Convierte el texto guardado en BD a una lista de opciones válidas del widget.
 
-            Soporta dos formatos:
-            - Nuevo (guardado por el widget): 'MAT 121 -- Cálculo · ING 111 -- ...'  (sep ' · ')
-            - Viejo (importado de docx):      'MAT 121, ING 111'  o  'MAT 121'
-            La búsqueda es por código: compara el prefijo de cada opción antes del ' -- '.
+            Soporta los distintos formatos encontrados en los documentos originales:
+            - Widget (nuevo):     'MAT 121 -- Cálculo · ING 111 -- ...'   (sep ' · ')
+            - Código simple:      'IMAT 311, IMAT 312'                    (sep ',')
+            - Código+nombre:      'FIS 211 Física Mecánica\\nMAT 211 ...' (sep '\\n')
+            - Nombre(código):     'Fundamentos de Matemática (MAT 111)'
+            - Código pegado:      'MAT121', 'IMAT321'
+            - Separador ';':      'MAT221: Cálculo; IMAT221: Taller...'
             """
             if not texto:
                 return []
-            # Intentar separar por ' · ' (formato widget) o por ',' o '\n' (formato docx)
+            # Separar por ' · ' (widget), ';', ',' o '\n'
             if " · " in texto:
-                candidatos = [t.strip() for t in texto.split(" · ")]
+                partes = [t.strip() for t in texto.split(" · ")]
             else:
-                candidatos = [t.strip() for t in re.split(r"[,\n]+", texto)]
-            # Construir índice código -> opción completa (ej. 'MAT 121' -> 'MAT 121 -- Cálculo...')
+                partes = [t.strip() for t in re.split(r"[;,\n]+", texto)]
+
+            # Índice código_normalizado -> opción completa del widget
             idx = {}
             for opt in opciones:
-                codigo_opt = opt.split(" -- ")[0].strip().upper()
-                idx[codigo_opt] = opt
+                cod = _normalizar_cod(opt.split(" -- ")[0])
+                idx[cod] = opt
+
             resultado = []
-            for cand in candidatos:
-                # Coincidencia exacta con opción completa (formato widget ya guardado)
-                if cand in opciones:
-                    resultado.append(cand)
+            vistos = set()
+            for parte in partes:
+                parte = parte.strip()
+                if not parte:
                     continue
-                # Extraer código del candidato (puede ser 'MAT 121' o 'MAT 121 -- ...')
-                codigo_cand = cand.split(" -- ")[0].strip().upper()
-                if codigo_cand in idx:
-                    resultado.append(idx[codigo_cand])
+                # 1) Coincidencia exacta con opción del widget (ya en formato correcto)
+                if parte in opciones and parte not in vistos:
+                    resultado.append(parte)
+                    vistos.add(parte)
+                    continue
+                # 2) Extraer código y buscar en índice
+                cod = _extraer_codigo(parte)
+                if cod and cod in idx and idx[cod] not in vistos:
+                    resultado.append(idx[cod])
+                    vistos.add(idx[cod])
             return resultado
 
         _req_val_ini = _match_requisitos(_req_texto, _req_opts_ini)
