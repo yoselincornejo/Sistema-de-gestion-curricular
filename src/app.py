@@ -1112,7 +1112,40 @@ class EditorProgramas(param.Parameterized):
         # Parsear el valor existente de requisitos para pre-seleccionar opciones
         _req_texto = asig.get("requisitos", "") or ""
         _req_opts_ini = _opciones_requisitos(asig.get("semestre") or 1)
-        _req_val_ini = [v for v in _req_texto.split(" · ") if v in _req_opts_ini]
+
+        def _match_requisitos(texto, opciones):
+            """Convierte el texto guardado en BD a una lista de opciones válidas del widget.
+
+            Soporta dos formatos:
+            - Nuevo (guardado por el widget): 'MAT 121 -- Cálculo · ING 111 -- ...'  (sep ' · ')
+            - Viejo (importado de docx):      'MAT 121, ING 111'  o  'MAT 121'
+            La búsqueda es por código: compara el prefijo de cada opción antes del ' -- '.
+            """
+            if not texto:
+                return []
+            # Intentar separar por ' · ' (formato widget) o por ',' o '\n' (formato docx)
+            if " · " in texto:
+                candidatos = [t.strip() for t in texto.split(" · ")]
+            else:
+                candidatos = [t.strip() for t in re.split(r"[,\n]+", texto)]
+            # Construir índice código -> opción completa (ej. 'MAT 121' -> 'MAT 121 -- Cálculo...')
+            idx = {}
+            for opt in opciones:
+                codigo_opt = opt.split(" -- ")[0].strip().upper()
+                idx[codigo_opt] = opt
+            resultado = []
+            for cand in candidatos:
+                # Coincidencia exacta con opción completa (formato widget ya guardado)
+                if cand in opciones:
+                    resultado.append(cand)
+                    continue
+                # Extraer código del candidato (puede ser 'MAT 121' o 'MAT 121 -- ...')
+                codigo_cand = cand.split(" -- ")[0].strip().upper()
+                if codigo_cand in idx:
+                    resultado.append(idx[codigo_cand])
+            return resultado
+
+        _req_val_ini = _match_requisitos(_req_texto, _req_opts_ini)
 
         w_req = pn.widgets.MultiChoice(
             name="Requisitos",
