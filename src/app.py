@@ -331,6 +331,11 @@ def get_programa_completo(asig_id):
                    LIMIT 1
                ), '') as docente_a_cargo
         FROM asignaturas a WHERE a.id=?""", (asig_id,)).fetchone())
+    req_rows = conn.execute(
+        "SELECT a2.codigo FROM requisitos r JOIN asignaturas a2 ON a2.id = r.requisito_id WHERE r.asignatura_id=?",
+        (asig_id,)
+    ).fetchall()
+    asig["requisitos_codigos"] = [r[0] for r in req_rows]
     unidades = [dict(r) for r in conn.execute(
         "SELECT * FROM unidades WHERE asignatura_id=? ORDER BY orden",
         (asig_id,)).fetchall()]
@@ -416,10 +421,18 @@ def guardar_programa(asig_id, datos):
     try:
         conn.execute("""
             UPDATE asignaturas
-            SET nombre=?, semestre=?, nivel=?, duracion=?, requisitos=?
+            SET nombre=?, semestre=?, nivel=?, duracion=?
             WHERE id=?
         """, (datos["nombre"], datos["semestre"], datos["nivel"],
-              datos["duracion"], datos["requisitos"], asig_id))
+              datos["duracion"], asig_id))
+        conn.execute("DELETE FROM requisitos WHERE asignatura_id=?", (asig_id,))
+        for req_cod in datos.get("requisitos_ids", []):
+            req_asig = conn.execute("SELECT id FROM asignaturas WHERE codigo=?", (req_cod,)).fetchone()
+            if req_asig:
+                conn.execute(
+                    "INSERT OR IGNORE INTO requisitos (asignatura_id, requisito_id) VALUES (?,?)",
+                    (asig_id, req_asig[0])
+                )
         conn.execute("DELETE FROM unidades WHERE asignatura_id=?", (asig_id,))
         for i, u in enumerate(datos["unidades"]):
             conn.execute("""
@@ -1109,82 +1122,13 @@ class EditorProgramas(param.Parameterized):
             name="Docente a cargo", value=asig.get("docente_a_cargo",""), width=300,
             placeholder="Sin docente asignado", disabled=True)
 
-        # Parsear el valor existente de requisitos para pre-seleccionar opciones
-        _req_texto = asig.get("requisitos", "") or ""
         _req_opts_ini = _opciones_requisitos(asig.get("semestre") or 1)
 
-        def _normalizar_cod(cod):
-            """Normaliza un código: quita espacios extra, inserta espacio entre letras y dígitos.
-            Ej: 'MAT121' -> 'MAT 121', 'IMAT321' -> 'IMAT 321', 'MAT 121' -> 'MAT 121'
-            """
-            cod = cod.strip().upper()
-            cod = re.sub(r'([A-Z])(\d)', r'\1 \2', cod)
-            return cod
-
-        def _extraer_codigo(texto):
-            """Extrae el código de asignatura de un fragmento de texto en varios formatos:
-            - 'Nombre (CODIGO)'  → código en paréntesis
-            - 'CODIGO: Nombre'   → código al inicio con dos puntos
-            - 'CODIGO Nombre'    → código al inicio (letras + dígitos)
-            - 'CODIGO'           → solo el código
-            Retorna el código normalizado o None si no se reconoce el patrón.
-            """
-            # Limpiar caracteres zero-width y puntos finales
-            t = texto.strip().lstrip('​‌‍﻿').rstrip('.').strip()
-            # Formato "Nombre (CODIGO)" — código entre paréntesis
-            m = re.search(r'\(([A-Za-z]{2,5}\s*\d{3})\)', t)
-            if m:
-                return _normalizar_cod(m.group(1))
-            # Formato "CODIGO: Nombre" o "CODIGO Nombre" o solo "CODIGO"
-            m = re.match(r'^([A-Za-z]{2,5}\s*\d{3})', t)
-            if m:
-                return _normalizar_cod(m.group(1))
-            return None
-
-        def _match_requisitos(texto, opciones):
-            """Convierte el texto guardado en BD a una lista de opciones válidas del widget.
-
-            Soporta los distintos formatos encontrados en los documentos originales:
-            - Widget (nuevo):     'MAT 121 -- Cálculo · ING 111 -- ...'   (sep ' · ')
-            - Código simple:      'IMAT 311, IMAT 312'                    (sep ',')
-            - Código+nombre:      'FIS 211 Física Mecánica\\nMAT 211 ...' (sep '\\n')
-            - Nombre(código):     'Fundamentos de Matemática (MAT 111)'
-            - Código pegado:      'MAT121', 'IMAT321'
-            - Separador ';':      'MAT221: Cálculo; IMAT221: Taller...'
-            """
-            if not texto:
-                return []
-            # Separar por ' · ' (widget), ';', ',' o '\n'
-            if " · " in texto:
-                partes = [t.strip() for t in texto.split(" · ")]
-            else:
-                partes = [t.strip() for t in re.split(r"[;,\n]+", texto)]
-
-            # Índice código_normalizado -> opción completa del widget
-            idx = {}
-            for opt in opciones:
-                cod = _normalizar_cod(opt.split(" -- ")[0])
-                idx[cod] = opt
-
-            resultado = []
-            vistos = set()
-            for parte in partes:
-                parte = parte.strip()
-                if not parte:
-                    continue
-                # 1) Coincidencia exacta con opción del widget (ya en formato correcto)
-                if parte in opciones and parte not in vistos:
-                    resultado.append(parte)
-                    vistos.add(parte)
-                    continue
-                # 2) Extraer código y buscar en índice
-                cod = _extraer_codigo(parte)
-                if cod and cod in idx and idx[cod] not in vistos:
-                    resultado.append(idx[cod])
-                    vistos.add(idx[cod])
-            return resultado
-
-        _req_val_ini = _match_requisitos(_req_texto, _req_opts_ini)
+        # Pre-seleccionar usando los códigos de la tabla relacional `requisitos`
+        _req_codigos = asig.get("requisitos_codigos", [])
+        # Índice código -> opción completa del widget ("CODIGO -- Nombre")
+        _req_idx = {opt.split(" -- ")[0]: opt for opt in _req_opts_ini}
+        _req_val_ini = [_req_idx[c] for c in _req_codigos if c in _req_idx]
 
         w_req = pn.widgets.MultiChoice(
             name="Requisitos",
@@ -1608,7 +1552,7 @@ class EditorProgramas(param.Parameterized):
                 "semestre":         self._widgets["semestre"].value,
                 "nivel":            self._widgets["nivel"].value,
                 "duracion":         self._widgets["duracion"].value,
-                "requisitos":       " · ".join(self._widgets["requisitos"].value),
+                "requisitos_ids":   [v.split(" -- ")[0] for v in self._widgets["requisitos"].value],
                 "unidades":     [{"nombre": u["nombre"].value,
                                   "contenidos": u["contenidos"].value,
                                   "indicador_logro": u["indicador_logro"].value}
