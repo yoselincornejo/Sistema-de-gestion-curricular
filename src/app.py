@@ -24,11 +24,10 @@ RUTA_OUTPUT.mkdir(parents=True, exist_ok=True)
 # ── Helpers ───────────────────────────────────────────────────────
 
 def nivel_desde_semestre(semestre):
-    if semestre is None: return "N1"
+    if semestre is None: return "1° Semestre del 1° Ciclo"
     s = int(semestre)
-    if s <= 4:  return "N1"
-    if s <= 8:  return "N2"
-    return "N3"
+    ciclo = 1 if s <= 4 else (2 if s <= 8 else 3)
+    return f"{s}° Semestre del {ciclo}° Ciclo"
 
 # ── BD ────────────────────────────────────────────────────────────
 
@@ -423,7 +422,8 @@ def guardar_programa(asig_id, datos):
             UPDATE asignaturas
             SET nombre=?, semestre=?, nivel=?, duracion=?
             WHERE id=?
-        """, (datos["nombre"], datos["semestre"], datos["nivel"],
+        """, (datos["nombre"], datos["semestre"],
+              nivel_desde_semestre(datos["semestre"]),
               datos["duracion"], asig_id))
         conn.execute("DELETE FROM requisitos WHERE asignatura_id=?", (asig_id,))
         for req_cod in datos.get("requisitos_ids", []):
@@ -1113,9 +1113,8 @@ class EditorProgramas(param.Parameterized):
             name="Nombre", value=asig.get("nombre",""), width=460)
         w_sem = pn.widgets.IntInput(
             name="Semestre", value=asig.get("semestre") or 1, width=110)
-        w_nivel = pn.widgets.Select(
-            name="Nivel", options=["N1","N2","N3"],
-            value=nivel_calc, width=90)
+        w_nivel = pn.widgets.TextInput(
+            name="Nivel", value=nivel_calc, width=280, disabled=True)
         w_dur = pn.widgets.TextInput(
             name="Duración", value=asig.get("duracion",""), width=200)
         w_docente = pn.widgets.TextInput(
@@ -1550,7 +1549,7 @@ class EditorProgramas(param.Parameterized):
             datos = {
                 "nombre":           self._widgets["nombre"].value,
                 "semestre":         self._widgets["semestre"].value,
-                "nivel":            self._widgets["nivel"].value,
+                "nivel":            self._widgets["semestre"].value,
                 "duracion":         self._widgets["duracion"].value,
                 "requisitos_ids":   [v.split(" -- ")[0] for v in self._widgets["requisitos"].value],
                 "unidades":     [{"nombre": u["nombre"].value,
