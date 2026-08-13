@@ -30,6 +30,21 @@ HEX_CLARO = {
 HEX_GRIS   = "D6DCE4"
 HEX_BLANCO = "FFFFFF"
 
+# Tonos por competencia individual (más oscuro → más claro dentro de cada tipo)
+HEX_COMP = {
+    # Licenciatura — azules
+    "CL1": "BDD7EE",
+    "CL2": "DEEAF1",
+    # Título — verdes
+    "CE1": "C6E0B4",
+    "CE2": "E2EFDA",
+    # Sello UV — naranjas
+    "CG1": "F4B183",
+    "CG2": "F8CBAD",
+    "CG3": "FAD9C1",
+    "CG4": "FCE4D6",
+}
+
 LABEL = {
     "licenciatura": "Competencias de Licenciatura",
     "titulo":       "Competencias Específicas del Título",
@@ -255,9 +270,10 @@ def generar_matriz(salida=None):
         ws.cell(ROW_RA, c).border = _border_thin()
     for ra_id, ccomp, nivel, cod_ra, comp_cod, comp_tipo in ra_list:
         c = ra_to_col[ra_id]
+        bg = HEX_COMP.get(comp_cod, HEX_CLARO[comp_tipo])
         _write(ws, ROW_RA, c, ccomp,
                font=_font(size=8, color=HEX[comp_tipo]),
-               fill=_fill(HEX_CLARO[comp_tipo]),
+               fill=_fill(bg),
                align=_align(h="center", v="bottom", rotation=90),
                border=_border_thin())
 
@@ -276,10 +292,11 @@ def generar_matriz(salida=None):
     for ra_id, ccomp, nivel, cod_ra, comp_cod, comp_tipo in ra_list:
         c = ra_to_col[ra_id]
         cl = get_column_letter(c)
+        bg = HEX_COMP.get(comp_cod, HEX_CLARO[comp_tipo])
         _write(ws, ROW_COUNT, c,
                f'=COUNTIF({cl}{ROW_DATOS}:{cl}{UF},"X")',
                font=_font(bold=True, size=9),
-               fill=_fill(HEX_GRIS), align=_align(h="center"),
+               fill=_fill(bg), align=_align(h="center"),
                border=_border_thin())
 
     # ── Filas de asignaturas ──────────────────────────────────────────
@@ -352,12 +369,16 @@ def generar_matriz(salida=None):
 
         for ra_id, ccomp, nivel, cod_ra, comp_cod, comp_tipo in ra_list:
             c = ra_to_col[ra_id]
+            bg = HEX_COMP.get(comp_cod, HEX_CLARO[comp_tipo])
             if (asig_id, ra_id) in tribs:
                 _write(ws, fila, c, "X",
                        font=_font(bold=True, size=10, color=HEX[comp_tipo]),
+                       fill=_fill(bg),
                        align=_align(h="center"), border=_border_thin())
             else:
-                ws.cell(fila, c).border = _border_thin()
+                _write(ws, fila, c, "",
+                       fill=_fill(bg),
+                       border=_border_thin())
 
     # Congelar encabezados
     ws.freeze_panes = ws.cell(ROW_DATOS, COL_RA_INI)
