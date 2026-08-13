@@ -12,9 +12,11 @@ from pathlib import Path
 import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
+from openpyxl.drawing.image import Image as XLImage
 
-DB_PATH = Path("data/sistema.db")
-OUT_DIR = Path("data/output")
+DB_PATH   = Path("data/sistema.db")
+OUT_DIR   = Path("data/output")
+LOGO_PATH = Path("data/uv_logo_nuevo.png")
 
 # Colores institucionales (mismos que generador_word.py)
 HEX = {
@@ -196,14 +198,32 @@ def generar_matriz(salida=None):
         ws.column_dimensions[get_column_letter(c)].width = 4
 
     # ── Filas de encabezado ───────────────────────────────────────────
-    ROW_TITLE = 1
-    ROW_TIPO  = 2
-    ROW_COMP  = 3
-    ROW_RA    = 4
-    ROW_COUNT = 5
-    ROW_DATOS = 6
+    ROW_LOGO  = 1
+    ROW_TITLE = 2
+    ROW_TIPO  = 3
+    ROW_COMP  = 4
+    ROW_RA    = 5
+    ROW_COUNT = 6
+    ROW_DATOS = 7
 
-    # Fila 1: título del documento
+    # Fila 1: logo UV
+    ws.row_dimensions[ROW_LOGO].height = 50
+    if LOGO_PATH.exists():
+        img = XLImage(str(LOGO_PATH))
+        img.height = 65
+        img.width  = int(img.height * (img.width / img.height)) if img.width else 200
+        # Calcular ancho proporcional desde las dimensiones reales de la imagen
+        try:
+            from PIL import Image as PILImage
+            with PILImage.open(str(LOGO_PATH)) as pil:
+                w_px, h_px = pil.size
+            img.width = int(65 * w_px / h_px)
+        except Exception:
+            img.width = 200
+        img.anchor = "A1"
+        ws.add_image(img)
+
+    # Fila 2: título del documento
     ws.merge_cells(start_row=ROW_TITLE, start_column=1,
                    end_row=ROW_TITLE, end_column=total_cols)
     _write(ws, ROW_TITLE, 1,
