@@ -47,12 +47,31 @@ def crear_login(on_success=None):
 
     # ── Lógica del botón ─────────────────────────────────────────
     def on_ingresar(event):
-        rol = verificar_credenciales(w_usuario.value, w_password.value)
+        try:
+            rol = verificar_credenciales(w_usuario.value, w_password.value)
+        except Exception as e:
+            msg_error.object = (
+                f'<div style="background:#FEE2E2;border:1px solid #F87171;'
+                f'border-radius:6px;padding:8px 12px;color:#991B1B;font-size:13px">'
+                f'⚠️ Error al verificar credenciales: {e}</div>'
+            )
+            w_password.value = ""
+            return
         if rol:
             msg_error.object = ""
             w_password.value = ""
             if on_success:
-                on_success(rol, w_usuario.value)
+                try:
+                    on_success(rol, w_usuario.value)
+                except Exception as e:
+                    import traceback
+                    msg_error.object = (
+                        f'<div style="background:#FEE2E2;border:1px solid #F87171;'
+                        f'border-radius:6px;padding:8px 12px;color:#991B1B;font-size:13px">'
+                        f'⚠️ Error al cargar la aplicación: {e}</div>'
+                    )
+                    print("ERROR en cargar_app_principal:")
+                    traceback.print_exc()
         else:
             msg_error.object = (
                 '<div style="background:#FEE2E2;border:1px solid #F87171;'
