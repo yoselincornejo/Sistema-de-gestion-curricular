@@ -22,7 +22,7 @@ PROG_DIR = Path("data/programas")
 # Alias usados por la nueva implementación
 RUTA_DB = DB_PATH
 RUTA_OUTPUT = OUT_DIR
-LOGO_PATH = Path("data/logo_uv.jpg")
+LOGO_PATH = Path("data/uv_logo_nuevo.png")
 
 UV_BLUE = RGBColor(0x1F, 0x4E, 0x79)
 UV_LIGHT = RGBColor(0xBD, 0xD7, 0xEE)
@@ -744,15 +744,15 @@ def generar_programa_individual(asignatura_id, salida=None):
     t_titulo = doc.add_table(rows=1, cols=2)
     t_titulo.style = "Table Grid"
     c_logo = t_titulo.cell(0, 0)
-    c_logo.width = Cm(4)
-    _set_cell_bg(c_logo, "1F4E79")
+    c_logo.width = Cm(5)
+    _set_cell_bg(c_logo, "FFFFFF")
     if LOGO_PATH.exists():
         p = c_logo.paragraphs[0]
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         run = p.add_run()
-        run.add_picture(str(LOGO_PATH), width=Cm(3))
+        run.add_picture(str(LOGO_PATH), width=Cm(4.5))
     else:
-        _cell_para(c_logo, "UV", bold=True, size=16, color=RGBColor(255, 255, 255), align=WD_ALIGN_PARAGRAPH.CENTER)
+        _cell_para(c_logo, "UV", bold=True, size=16, color=RGBColor(0x1F, 0x4E, 0x79), align=WD_ALIGN_PARAGRAPH.CENTER)
     c_title = t_titulo.cell(0, 1)
     _set_cell_bg(c_title, "1F4E79")
     _cell_para(c_title, "PROGRAMA DE ASIGNATURA UV", bold=True, size=14,
@@ -1033,7 +1033,7 @@ def generar_mapa_progreso(salida=None):
     from docx.enum.text import WD_ALIGN_PARAGRAPH
     from docx.enum.table import WD_TABLE_ALIGNMENT
 
-    LOGO_PATH = Path("data/logo_uv.jpg")
+    LOGO_PATH = Path("data/uv_logo_nuevo.png")
 
     conn = sqlite3.connect(str(DB_PATH)); conn.row_factory = None
 
