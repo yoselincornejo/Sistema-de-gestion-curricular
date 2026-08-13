@@ -13,7 +13,7 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(__file__))
 from generador_excel import generar_matriz
-from generador_word import generar_programa_individual, generar_mapa_progreso
+from generador_word import generar_programa_individual, generar_mapa_progreso, generar_mapa_ra
 from auditoria import registrar_accion
 
 pn.extension("tabulator", notifications=True)
@@ -810,6 +810,15 @@ class Dashboard(param.Parameterized):
                 status.object = f'<p style="color:#EF4444;text-align:center">✗ {e}</p>'
                 return io.BytesIO(b"")
 
+        def _hacer_mapa_ra():
+            try:
+                ruta = generar_mapa_ra()
+                with open(ruta, 'rb') as f:
+                    return io.BytesIO(f.read())
+            except Exception as e:
+                status.object = f'<p style="color:#EF4444;text-align:center">✗ {e}</p>'
+                return io.BytesIO(b"")
+
         btn_excel = pn.widgets.FileDownload(
             callback=_hacer_matriz,
             filename="matriz_competencias.xlsx",
@@ -826,6 +835,14 @@ class Dashboard(param.Parameterized):
             width=320, height=48,
             embed=False,
         )
+        btn_mapa_ra = pn.widgets.FileDownload(
+            callback=_hacer_mapa_ra,
+            filename="mapa_ra.docx",
+            label="📋 Descargar Mapa de R.A.",
+            button_type="default",
+            width=320, height=48,
+            embed=False,
+        )
 
         # ── Panel de discrepancias ────────────────────────────────
         discr_panel = self._build_discrepancias()
@@ -837,7 +854,7 @@ class Dashboard(param.Parameterized):
             pn.layout.Divider(),
             pn.Column(
                 pn.pane.HTML('<div class="card-title" style="text-align:center">Documentos Oficiales</div>'),
-                pn.Row(btn_excel, btn_word, align="center"),
+                pn.Row(btn_excel, btn_word, btn_mapa_ra, align="center"),
                 status,
                 css_classes=["card"],
                 sizing_mode="stretch_width",
