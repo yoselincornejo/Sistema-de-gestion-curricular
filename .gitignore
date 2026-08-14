@@ -6,3 +6,4 @@ data/programas/__pycache__/
 cambios_excel_cargar.patch
 .claude/
 data/sistema.db
+data/output/

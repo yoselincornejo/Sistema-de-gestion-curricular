@@ -1168,9 +1168,166 @@ def generar_mapa_progreso(salida=None):
     return salida
 
 
+def generar_mapa_ra(salida=None):
+    """Genera el Mapa de R.A. en Word desde la BD.
+
+    Misma estructura que el Mapa de Progreso, pero cada competencia
+    tiene una tabla de 2 columnas: 'Resultado de Aprendizaje' y
+    'Asignaturas', con una fila por cada RA.
+    """
+    from docx.shared import Pt, Cm, RGBColor
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+
+    LOGO_PATH = Path("data/uv_logo_nuevo.png")
+
+    conn = sqlite3.connect(str(DB_PATH)); conn.row_factory = None
+
+    competencias = conn.execute("""
+        SELECT id, codigo, tipo, descripcion FROM competencias
+        WHERE tipo != 'desconocido'
+        ORDER BY CASE tipo WHEN 'licenciatura' THEN 0 WHEN 'titulo' THEN 1 WHEN 'sello_uv' THEN 2 END, codigo
+    """).fetchall()
+
+    doc = Document()
+    for section in doc.sections:
+        section.top_margin = Cm(2); section.bottom_margin = Cm(2)
+        section.left_margin = Cm(2.5); section.right_margin = Cm(2.5)
+
+    def _set_cell_bg(cell, hex_color):
+        tc = cell._tc; tcPr = tc.get_or_add_tcPr()
+        shd = OxmlElement('w:shd')
+        shd.set(qn('w:val'), 'clear'); shd.set(qn('w:color'), 'auto')
+        shd.set(qn('w:fill'), hex_color); tcPr.append(shd)
+
+    def _para(cell, text, bold=False, size=10, color=None,
+              align=WD_ALIGN_PARAGRAPH.LEFT, italic=False):
+        p = cell.paragraphs[0]; p.alignment = align
+        run = p.add_run(text); run.bold = bold; run.italic = italic
+        run.font.size = Pt(size)
+        if color: run.font.color.rgb = color
+
+    def _hex_rgb(hx):
+        return RGBColor(int(hx[:2],16), int(hx[2:4],16), int(hx[4:],16))
+
+    # ── Header ────────────────────────────────────────────────────
+    t_hdr = doc.add_table(rows=1, cols=2); t_hdr.style = 'Table Grid'
+    c_logo = t_hdr.cell(0, 0); c_logo.width = Cm(5)
+    if LOGO_PATH.exists():
+        p = c_logo.paragraphs[0]; p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.add_run().add_picture(str(LOGO_PATH), width=Cm(4.5))
+    c_tit = t_hdr.cell(0, 1)
+    _set_cell_bg(c_tit, "1F4E79")
+    _para(c_tit, "MAPA DE R.A.\nINGENIERÍA CIVIL MATEMÁTICA — PLAN 2025",
+          bold=True, color=RGBColor(255, 255, 255), size=13,
+          align=WD_ALIGN_PARAGRAPH.CENTER)
+
+    doc.add_paragraph()
+
+    TIPO_HDR = {
+        "licenciatura": "COMPETENCIAS DE LICENCIATURA",
+        "titulo":       "COMPETENCIAS ESPECÍFICAS DEL TÍTULO PROFESIONAL",
+        "sello_uv":     "COMPETENCIAS GENÉRICAS SELLO UV",
+    }
+    TIPO_HEX = {"licenciatura": "1F4E79", "titulo": "375623", "sello_uv": "843C0C"}
+    BG_CLARO  = {"licenciatura": "DEEAF1", "titulo": "E2EFDA", "sello_uv": "FCE4D6"}
+
+    tipo_actual = None
+    for comp_id, comp_cod, comp_tipo, comp_desc in competencias:
+        hx     = TIPO_HEX.get(comp_tipo, "1F4E79")
+        hx_rgb = _hex_rgb(hx)
+        claro  = BG_CLARO.get(comp_tipo, "F2F2F2")
+
+        # Encabezado de tipo (solo cuando cambia)
+        if comp_tipo != tipo_actual:
+            tipo_actual = comp_tipo
+            p = doc.add_paragraph()
+            r = p.add_run(TIPO_HDR.get(tipo_actual, tipo_actual.upper()))
+            r.bold = True; r.font.size = Pt(13)
+            r.font.color.rgb = hx_rgb
+            p.paragraph_format.space_before = Pt(6)
+
+        # Línea de competencia: "CL1: descripción"
+        p2 = doc.add_paragraph()
+        r2 = p2.add_run(f"{comp_cod}: {comp_desc or ''}")
+        r2.bold = True; r2.font.size = Pt(11)
+        r2.font.color.rgb = hx_rgb
+
+        # Todos los RAs de esta competencia, ordenados por ND y código RA
+        ras_raw = conn.execute("""
+            SELECT nd.codigo_nivel, ra.codigo_completo, ra.descripcion, ra.id
+            FROM resultados_aprendizaje ra
+            JOIN niveles_dominio nd ON nd.id = ra.nivel_dominio_id
+            WHERE nd.competencia_id = ?
+            ORDER BY nd.codigo_nivel, ra.codigo_ra
+        """, (comp_id,)).fetchall()
+
+        if not ras_raw:
+            doc.add_paragraph("   (Sin resultados de aprendizaje declarados)").runs[0].italic = True
+            doc.add_paragraph(); continue
+
+        # Tabla 2 columnas: RA | Asignaturas
+        t = doc.add_table(rows=0, cols=2)
+        t.style = 'Table Grid'
+
+        # Anchura de columnas: RA más ancha
+        for cell in t.columns[0].cells if t.rows else []:
+            cell.width = Cm(9)
+
+        # Fila de encabezado de columnas
+        row_h = t.add_row()
+        for ci, lbl in enumerate(["Resultado de Aprendizaje", "Asignaturas"]):
+            c = row_h.cells[ci]; _set_cell_bg(c, hx)
+            _para(c, lbl, bold=True, size=10,
+                  color=RGBColor(255, 255, 255),
+                  align=WD_ALIGN_PARAGRAPH.CENTER)
+
+        nivel_actual = None
+        for nivel, ccomp, desc, ra_id in ras_raw:
+            # Fila separadora por Nivel de Dominio
+            if nivel != nivel_actual:
+                nivel_actual = nivel
+                row_nd = t.add_row()
+                c_nd = row_nd.cells[0].merge(row_nd.cells[1])
+                _set_cell_bg(c_nd, claro)
+                _para(c_nd, f"Nivel de Dominio {nivel}:",
+                      bold=True, size=10, color=hx_rgb)
+
+            # Fila con el RA y sus asignaturas
+            row_d = t.add_row()
+
+            # Columna RA
+            c_ra = row_d.cells[0]
+            txt_ra = f"• {ccomp}"
+            if desc: txt_ra += f": {desc}"
+            _para(c_ra, txt_ra, size=9)
+
+            # Columna Asignaturas
+            c_asig = row_d.cells[1]
+            asigs = conn.execute("""
+                SELECT DISTINCT a.codigo, a.nombre FROM asignaturas a
+                JOIN tributaciones ar ON ar.asignatura_id = a.id
+                WHERE ar.ra_id = ?
+                ORDER BY a.semestre, a.codigo
+            """, (ra_id,)).fetchall()
+            txt_asig = "\n".join(f"• {a[0]} {a[1]}" for a in asigs) or "(ninguna)"
+            _para(c_asig, txt_asig, size=9)
+
+        doc.add_paragraph()
+
+    conn.close()
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    if salida is None:
+        salida = str(OUT_DIR / f"mapa_ra_{datetime.now().strftime('%Y%m%d_%H%M')}.docx")
+    doc.save(salida)
+    print(f"✓ Mapa de R.A. generado: {salida}")
+    return salida
+
+
 if __name__ == "__main__":
     import sys
     if len(sys.argv) > 1 and sys.argv[1] == "mapa":
         generar_mapa_progreso()
+    elif len(sys.argv) > 1 and sys.argv[1] == "mapa_ra":
+        generar_mapa_ra()
     else:
-        print("Uso: python3 src/generador_word.py mapa")
+        print("Uso: python3 src/generador_word.py [mapa|mapa_ra]")
