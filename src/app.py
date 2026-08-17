@@ -1680,7 +1680,6 @@ class EditorProgramas(param.Parameterized):
 # ── REVISIÓN DE PROGRAMAS ─────────────────────────────────────────
 
 def _get_asig_completa(asig_id):
-    """Retorna todos los campos de la asignatura más responsable."""
     conn = conexion()
     row = conn.execute("SELECT * FROM asignaturas WHERE id=?", (asig_id,)).fetchone()
     if not row:
@@ -1692,8 +1691,86 @@ def _get_asig_completa(asig_id):
         (asig_id,)
     ).fetchall()
     asig["_responsables"] = {r["rol"]: r["nombre"] for r in resp}
+    linkografia = conn.execute(
+        "SELECT tipo_documento, autor, titulo_articulo, anio, titulo_revista, volumen, url, disponible_en "
+        "FROM linkografia WHERE asignatura_id=? ORDER BY id", (asig_id,)
+    ).fetchall()
+    asig["_linkografia"] = [dict(r) for r in linkografia]
     conn.close()
     return asig
+
+
+def guardar_revision_completa(asig_id, datos):
+    conn = conexion()
+    try:
+        conn.execute("""
+            UPDATE asignaturas
+            SET nombre=?, semestre=?, nivel=?, duracion=?,
+                descripcion=?, descripcion_evaluaciones=?,
+                experiencias_laboratorio=?, otros_recursos=?
+            WHERE id=?
+        """, (
+            datos["nombre"], datos["semestre"],
+            nivel_desde_semestre(datos["semestre"]),
+            datos["duracion"],
+            datos.get("descripcion", ""),
+            datos.get("descripcion_evaluaciones", ""),
+            datos.get("experiencias_laboratorio", ""),
+            datos.get("otros_recursos", ""),
+            asig_id,
+        ))
+        conn.execute("DELETE FROM requisitos WHERE asignatura_id=?", (asig_id,))
+        for req_cod in datos.get("requisitos_ids", []):
+            req_asig = conn.execute("SELECT id FROM asignaturas WHERE codigo=?", (req_cod,)).fetchone()
+            if req_asig:
+                conn.execute(
+                    "INSERT OR IGNORE INTO requisitos (asignatura_id, requisito_id) VALUES (?,?)",
+                    (asig_id, req_asig[0]))
+        conn.execute("DELETE FROM unidades WHERE asignatura_id=?", (asig_id,))
+        for i, u in enumerate(datos.get("unidades", [])):
+            conn.execute(
+                "INSERT INTO unidades (asignatura_id, orden, nombre, contenidos, indicador_logro) VALUES (?,?,?,?,?)",
+                (asig_id, i + 1, u["nombre"], u["contenidos"], u.get("indicador_logro", "")))
+        conn.execute("DELETE FROM metodologias WHERE asignatura_id=?", (asig_id,))
+        for m in datos.get("metodologias", []):
+            if m.strip():
+                conn.execute("INSERT INTO metodologias (asignatura_id, descripcion) VALUES (?,?)", (asig_id, m))
+        conn.execute("DELETE FROM evaluaciones WHERE asignatura_id=?", (asig_id,))
+        for ev in datos.get("evaluaciones", []):
+            if ev["tipo"].strip():
+                conn.execute(
+                    "INSERT INTO evaluaciones (asignatura_id, tipo, porcentaje) VALUES (?,?,?)",
+                    (asig_id, ev["tipo"], ev["porcentaje"]))
+        conn.execute("DELETE FROM tributaciones WHERE asignatura_id=?", (asig_id,))
+        for ra_id in datos.get("ra_ids", []):
+            conn.execute(
+                "INSERT OR IGNORE INTO tributaciones (asignatura_id, ra_id) VALUES (?,?)", (asig_id, ra_id))
+        conn.execute("DELETE FROM bibliografia WHERE asignatura_id=?", (asig_id,))
+        for b in datos.get("bibliografia", []):
+            if b["titulo"].strip():
+                conn.execute(
+                    "INSERT INTO bibliografia (asignatura_id, tipo, numero, autor, titulo, editorial, anio, isbn, ejemplares) "
+                    "VALUES (?,?,?,?,?,?,?,?,?)",
+                    (asig_id, b["tipo"], b.get("numero", ""), b.get("autor", ""),
+                     b["titulo"], b.get("editorial", ""), b.get("anio", ""),
+                     b.get("isbn", ""), b.get("ejemplares", "")))
+        conn.execute("DELETE FROM linkografia WHERE asignatura_id=?", (asig_id,))
+        for lk in datos.get("linkografia", []):
+            if lk.get("url", "").strip() or lk.get("titulo_articulo", "").strip():
+                conn.execute(
+                    "INSERT INTO linkografia (asignatura_id, tipo_documento, autor, titulo_articulo, anio, "
+                    "titulo_revista, volumen, url, disponible_en) VALUES (?,?,?,?,?,?,?,?,?)",
+                    (asig_id, lk.get("tipo_documento", ""), lk.get("autor", ""),
+                     lk.get("titulo_articulo", ""), lk.get("anio", ""),
+                     lk.get("titulo_revista", ""), lk.get("volumen", ""),
+                     lk.get("url", ""), lk.get("disponible_en", "")))
+        conn.commit()
+        return True, "Cambios guardados correctamente"
+    except Exception as e:
+        conn.rollback()
+        return False, str(e)
+    finally:
+        conn.close()
 
 
 class RevisionProgramas(param.Parameterized):
@@ -1701,7 +1778,13 @@ class RevisionProgramas(param.Parameterized):
 
     def __init__(self, **params):
         super().__init__(**params)
-        self._contenido = pn.Column(sizing_mode="stretch_width")
+        self._contenido      = pn.Column(sizing_mode="stretch_width")
+        self._widgets        = {}
+        self._unidades_w     = []
+        self._eval_w         = []
+        self._ra_checks      = {}
+        self._biblio_w       = []
+        self._linkografia_w  = []
 
     def _build_selector(self):
         import unicodedata, re as _re
@@ -1716,8 +1799,7 @@ class RevisionProgramas(param.Parameterized):
 
         buscador = pn.widgets.TextInput(
             placeholder="Buscar por código o nombre…",
-            width=460, margin=(0, 8, 0, 0),
-        )
+            width=460, margin=(0, 8, 0, 0))
         sel = pn.widgets.Select(
             name="", options=dict(todas_opciones), width=640, margin=(0, 0, 20, 0))
 
@@ -1758,8 +1840,7 @@ class RevisionProgramas(param.Parameterized):
             pn.pane.HTML('<label style="font-size:13px;font-weight:600;color:#475569;">'
                          'Selecciona una asignatura</label>'),
             pn.Row(buscador, sel, align="end"),
-            margin=(0, 0, 8, 0)
-        )
+            margin=(0, 0, 8, 0))
 
     def _cargar_revision(self):
         if not self.asignatura_id:
@@ -1768,175 +1849,428 @@ class RevisionProgramas(param.Parameterized):
 
         asig, unidades, metodologias, evaluaciones, ras_actuales, todos_ras, bibliografia = \
             get_programa_completo(self.asignatura_id)
-        asig_full = _get_asig_completa(self.asignatura_id)
+        asig_full = _get_asig_completa(self.asignatura_id) or {}
 
-        def _val(v, default="—"):
-            return str(v).strip() if v and str(v).strip() else default
+        # ── RBAC ─────────────────────────────────────────────────
+        _rol    = pn.state.cache.get("rol", "user")
+        _nombre = pn.state.cache.get("nombre_completo", "") or ""
+        resp_bd = asig_full.get("_responsables", {})
+        _resp_nombre = resp_bd.get("responsable", "") or ""
+        _puede  = _puede_editar(_rol, _nombre, _resp_nombre)
 
-        def _seccion(titulo, contenido_html):
-            return pn.pane.HTML(f"""
-                <div class="card" style="margin-bottom:16px">
-                  <div class="card-title">{titulo}</div>
-                  {contenido_html}
-                </div>""", sizing_mode="stretch_width")
+        banner_ro = pn.pane.HTML(
+            f'<div style="background:#FEF3C7;border:1px solid #F59E0B;border-radius:8px;'
+            f'padding:12px 16px;font-size:13px;margin-bottom:16px">'
+            f'🔒 <strong>Modo lectura:</strong> Responsable: '
+            f'<strong>{_resp_nombre or "(sin asignar)"}</strong>. '
+            f'Solo puedes visualizar la información.</div>',
+            sizing_mode="stretch_width", visible=not _puede)
 
-        def _fila(label, valor, col_label="#64748B"):
-            return (f'<div style="display:flex;gap:12px;padding:5px 0;'
-                    f'border-bottom:1px solid #F1F5F9;font-size:13px">'
-                    f'<span style="color:{col_label};min-width:160px;font-weight:600">{label}</span>'
-                    f'<span style="color:#1E293B;flex:1">{valor}</span></div>')
-
-        # ── Identificación ────────────────────────────────────────
-        req_str = ", ".join(asig.get("requisitos_codigos", [])) or "Sin requisito"
-        resp = (asig_full or {}).get("_responsables", {})
-        hd   = _val(asig_full and asig_full.get("horas_directa"))
-        ha   = _val(asig_full and asig_full.get("horas_autonoma"))
-        sem  = _val(asig_full and asig_full.get("semanas"))
-        cred = _val(asig_full and asig_full.get("creditos"))
-
-        html_ident = (
-            _fila("Nombre",        _val(asig.get("nombre")))
-            + _fila("Código",      _val(asig.get("codigo")))
-            + _fila("Semestre / Nivel", f"Semestre {_val(asig.get('semestre'))} · {_val(asig_full and asig_full.get('nivel'))}")
-            + _fila("Duración",    _val(asig.get("duracion")))
-            + _fila("Horas directa / autónoma", f"{hd} / {ha} hrs")
-            + _fila("Semanas",     f"{sem} semanas")
-            + _fila("Créditos",    cred)
-            + _fila("Requisito(s)", req_str)
-            + _fila("Responsable", _val(resp.get("responsable")))
-            + _fila("Docente a cargo", _val(resp.get("docente_a_cargo")))
-            + _fila("Versión",     _val(asig.get("version")))
-        )
-        sec_ident = _seccion("Identificación de la Asignatura", html_ident)
-
-        # ── Tributaciones ─────────────────────────────────────────
         ra_ids_actuales = {r["id"] for r in ras_actuales}
-        grupos = {}
+
+        # ── Cargar todas las asignaturas para requisitos ──────────
+        _conn_tmp = conexion()
+        _todas_asigs = _conn_tmp.execute(
+            "SELECT codigo, nombre, semestre FROM asignaturas ORDER BY semestre, codigo"
+        ).fetchall()
+        _conn_tmp.close()
+        _asigs_por_sem = {}
+        for _cod, _nom, _sem in _todas_asigs:
+            _asigs_por_sem.setdefault(_sem, []).append(f"{_cod} -- {_nom}")
+
+        def _opciones_req(semestre):
+            opts = []
+            for s in sorted(_asigs_por_sem):
+                if s < semestre:
+                    opts.extend(_asigs_por_sem[s])
+            return opts
+
+        # ── Sección: Identificación ───────────────────────────────
+        w_nombre = pn.widgets.TextInput(name="Nombre", value=asig.get("nombre", "") or "", width=460)
+        w_sem    = pn.widgets.IntInput(name="Semestre", value=asig.get("semestre") or 1, width=110)
+        w_nivel  = pn.widgets.TextInput(name="Nivel",
+                                         value=nivel_desde_semestre(asig.get("semestre")),
+                                         width=280, disabled=True)
+        w_dur    = pn.widgets.TextInput(name="Duración", value=asig.get("duracion", "") or "", width=200)
+        w_docente = pn.widgets.TextInput(
+            name="Docente a cargo", value=resp_bd.get("docente_a_cargo", "") or "",
+            width=300, placeholder="Sin docente asignado", disabled=True)
+
+        _req_opts_ini = _opciones_req(asig.get("semestre") or 1)
+        _req_codigos  = asig.get("requisitos_codigos", [])
+        _req_idx      = {opt.split(" -- ")[0]: opt for opt in _req_opts_ini}
+        _req_val_ini  = [_req_idx[c] for c in _req_codigos if c in _req_idx]
+        w_req = pn.widgets.MultiChoice(
+            name="Requisitos", options=_req_opts_ini, value=_req_val_ini,
+            sizing_mode="stretch_width",
+            placeholder="Selecciona asignaturas de semestres anteriores...")
+
+        def on_sem_change(event):
+            w_nivel.value = nivel_desde_semestre(event.new)
+            nuevas_opts = _opciones_req(event.new)
+            w_req.options = nuevas_opts
+            w_req.value = [v for v in w_req.value if v in nuevas_opts]
+        w_sem.param.watch(on_sem_change, "value")
+
+        sec_ident = pn.Column(
+            pn.pane.HTML('<div class="card-title">Identificación de la Asignatura</div>'),
+            pn.Row(w_nombre, w_sem, w_nivel),
+            pn.Row(w_dur, w_docente, sizing_mode="stretch_width"),
+            w_req,
+            css_classes=["card"], sizing_mode="stretch_width")
+
+        # ── Sección: Descripción de la asignatura ─────────────────
+        w_desc = pn.widgets.TextAreaInput(
+            name="Descripción",
+            value=asig_full.get("descripcion", "") or "",
+            height=100, sizing_mode="stretch_width")
+        sec_desc = pn.Column(
+            pn.pane.HTML('<div class="card-title">Descripción de la Asignatura</div>'),
+            w_desc, css_classes=["card"], sizing_mode="stretch_width")
+
+        # ── Sección: Tributaciones (casillas seleccionables) ──────
+        BG_CATEGORIA     = {"licenciatura": "#BBDEFB", "titulo": "#C8E6C9", "sello_uv": "#F8BBD0"}
+        BORDER_CATEGORIA = {"licenciatura": "#1565C0", "titulo": "#2E7D32", "sello_uv": "#880E4F"}
+        LABEL_CATEGORIA  = {"licenciatura": "Licenciatura (CL)", "titulo": "Título Profesional (CE)", "sello_uv": "Sello UV (CG)"}
+
+        grupos_ra = {}
+        for ra in todos_ras:
+            grupos_ra.setdefault(ra["comp"], []).append(ra)
+        categorias = {}
+        for comp, ras in grupos_ra.items():
+            categorias.setdefault(ras[0]["tipo"], {})[comp] = ras
+
+        ra_checks = {}
+        bloques_cat = []
+        for tipo_cat, comps in categorias.items():
+            bg    = BG_CATEGORIA.get(tipo_cat, "#f5f5f5")
+            bord  = BORDER_CATEGORIA.get(tipo_cat, "#999")
+            label = LABEL_CATEGORIA.get(tipo_cat, tipo_cat.upper())
+            comp_cols = []
+            for comp, ras in comps.items():
+                color_comp = COLOR.get(tipo_cat, "#1F4E79")
+                checks = []
+                for ra in ras:
+                    checked = ra["id"] in ra_ids_actuales
+                    cb = pn.widgets.Toggle(
+                        name=ra["codigo_completo"],
+                        value=checked,
+                        button_type="success" if checked else "light",
+                        sizing_mode="stretch_width", min_width=0,
+                        height=30, margin=(2, 3))
+                    def _mk_watcher(toggle):
+                        def _on(event):
+                            toggle.button_type = "success" if event.new else "light"
+                        return _on
+                    cb.param.watch(_mk_watcher(cb), "value")
+                    ra_checks[ra["id"]] = cb
+                    checks.append(cb)
+                comp_cols.append(pn.Column(
+                    pn.pane.HTML(
+                        f'<div style="font-weight:700;color:{color_comp};'
+                        f'font-size:12px;margin-bottom:4px;text-align:center">{comp}</div>'),
+                    *checks,
+                    sizing_mode="stretch_width", min_width=0,
+                    styles={"padding": "6px 4px"}))
+            bloque = pn.Column(
+                pn.pane.HTML(
+                    f'<div style="font-weight:600;font-size:12px;color:{bord};'
+                    f'margin-bottom:6px;padding-bottom:3px;border-bottom:2px solid {bord}">'
+                    f'{label}</div>'),
+                pn.Row(*comp_cols, sizing_mode="stretch_width",
+                       styles={"min-width": "0", "flex-wrap": "wrap"}),
+                styles={
+                    "background": bg, "border": f"1px solid {bord}",
+                    "border-radius": "6px", "padding": "10px 12px",
+                    "margin-bottom": "8px", "overflow": "auto", "min-width": "0",
+                    "flex": "1 1 280px",
+                },
+                sizing_mode="stretch_width")
+            bloques_cat.append(bloque)
+
+        self._ra_checks = ra_checks
+
+        _BTN_RAS_COLS = ["success", "primary", "warning", "danger", "light"]
+        _idx_ras = [0]
+        btn_guardar_ras = pn.widgets.Button(
+            name="💾 Guardar tributaciones",
+            button_type=_BTN_RAS_COLS[0], width=230, height=38)
+
+        def on_guardar_ras(event):
+            ra_ids = [rid for rid, cb in self._ra_checks.items() if cb.value]
+            ok, msg = guardar_tributaciones(self.asignatura_id, ra_ids)
+            _idx_ras[0] = (_idx_ras[0] + 1) % len(_BTN_RAS_COLS)
+            btn_guardar_ras.button_type = _BTN_RAS_COLS[_idx_ras[0]]
+            if ok:
+                pn.state.notifications.success(msg, duration=4000)
+            else:
+                pn.state.notifications.error(msg, duration=4000)
+
+        btn_guardar_ras.on_click(on_guardar_ras)
+
+        flex_bloques = pn.FlexBox(
+            *bloques_cat, flex_direction="row", flex_wrap="wrap",
+            sizing_mode="stretch_width")
+        sec_ras = pn.Column(
+            pn.pane.HTML('<div class="card-title">Aporte al Perfil de Egreso — Resultados de Aprendizaje</div>'),
+            flex_bloques,
+            pn.Row(pn.layout.HSpacer(), btn_guardar_ras),
+            css_classes=["card"], sizing_mode="stretch_width")
+
+        # ── Sección: Resultados de Aprendizaje (display) ──────────
+        ras_display = []
+        tipo_actual_ra = None
+        tipo_color_map = {"licenciatura": "#1F4E79", "titulo": "#375623", "sello_uv": "#7B2C2C"}
         for ra in ras_actuales:
-            grupos.setdefault(ra["comp"], []).append(ra)
+            col = tipo_color_map.get(ra["tipo"], "#475569")
+            if ra["tipo"] != tipo_actual_ra:
+                tipo_actual_ra = ra["tipo"]
+                ras_display.append(
+                    f'<div style="font-weight:700;font-size:11px;color:{col};'
+                    f'text-transform:uppercase;letter-spacing:1px;'
+                    f'padding:8px 0 4px;border-bottom:2px solid {col};margin-bottom:4px">'
+                    f'{LABEL.get(ra["tipo"], ra["tipo"])}</div>')
+            ras_display.append(
+                f'<div style="padding:3px 0 3px 8px;font-size:12px">'
+                f'<span style="font-weight:700;color:{col}">{ra["codigo_completo"]}</span></div>')
+        html_ras_list = "".join(ras_display) if ras_display else \
+            '<p style="color:#94A3B8;font-size:13px">Sin resultados de aprendizaje seleccionados.</p>'
+        sec_ra_display = pn.Column(
+            pn.pane.HTML('<div class="card-title">Resultados de Aprendizaje y Desempeños</div>'),
+            pn.pane.HTML(html_ras_list, sizing_mode="stretch_width"),
+            css_classes=["card"], sizing_mode="stretch_width")
 
-        tipo_color_map = {
-            "licenciatura": "#1F4E79", "titulo": "#375623", "sello_uv": "#7B2C2C"
+        # ── Sección: Unidades de Aprendizaje ─────────────────────
+        self._unidades_w = []
+        col_unidades = pn.Column(sizing_mode="stretch_width")
+
+        def crear_unidad(orden, nombre="", contenidos="", indicador=""):
+            wn = pn.widgets.TextInput(name=f"Unidad {orden}", value=str(nombre)[:100], width=460)
+            wc = pn.widgets.TextAreaInput(name="Contenidos", value=str(contenidos),
+                                           height=80, sizing_mode="stretch_width")
+            wi = pn.widgets.TextAreaInput(name="Indicador de logro", value=str(indicador),
+                                           height=60, sizing_mode="stretch_width")
+            panel = pn.Column(wn, wc, wi, css_classes=["card"],
+                               margin=(0, 0, 10, 0), sizing_mode="stretch_width")
+            return {"nombre": wn, "contenidos": wc, "indicador_logro": wi, "panel": panel}
+
+        for i, u in enumerate(unidades):
+            ud = crear_unidad(u.get("orden", i + 1), u.get("nombre", ""),
+                               u.get("contenidos", ""), u.get("indicador_logro", ""))
+            self._unidades_w.append(ud)
+            col_unidades.append(ud["panel"])
+
+        btn_add_uni = pn.widgets.Button(name="➕ Añadir unidad",
+                                         css_classes=["btn-add"], width=200, height=42)
+
+        def on_add_uni(event):
+            ud = crear_unidad(len(self._unidades_w) + 1)
+            self._unidades_w.append(ud)
+            col_unidades.append(ud["panel"])
+
+        btn_add_uni.on_click(on_add_uni)
+        sec_uni = pn.Column(
+            pn.pane.HTML('<div class="card-title">Unidades de Aprendizaje y Contenidos</div>'),
+            col_unidades,
+            pn.Row(pn.layout.HSpacer(), btn_add_uni, pn.layout.HSpacer()),
+            css_classes=["card"], sizing_mode="stretch_width")
+
+        # ── Sección: Experiencias de Laboratorio ──────────────────
+        w_lab = pn.widgets.TextAreaInput(
+            name="Experiencias de Laboratorio",
+            value=asig_full.get("experiencias_laboratorio", "") or "",
+            height=80, sizing_mode="stretch_width")
+        sec_lab = pn.Column(
+            pn.pane.HTML('<div class="card-title">Experiencias de Laboratorio</div>'),
+            w_lab, css_classes=["card"], sizing_mode="stretch_width")
+
+        # ── Sección: Metodología ──────────────────────────────────
+        w_metod = pn.widgets.TextAreaInput(
+            name="Metodología",
+            value="\n".join(m.get("descripcion", "") for m in metodologias),
+            height=100, sizing_mode="stretch_width")
+        sec_metod = pn.Column(
+            pn.pane.HTML('<div class="card-title">Metodología / Estrategia de Enseñanza-Aprendizaje</div>'),
+            w_metod, css_classes=["card"], sizing_mode="stretch_width")
+
+        # ── Sección: Evaluaciones ─────────────────────────────────
+        self._eval_w = []
+        for ev in evaluaciones:
+            self._eval_w.append({
+                "tipo":       pn.widgets.TextInput(name="Instrumento", value=ev.get("tipo", ""), width=360),
+                "porcentaje": pn.widgets.TextInput(name="Ponderación (%)", value=ev.get("porcentaje", ""), width=130),
+            })
+        self._eval_w.append({
+            "tipo":       pn.widgets.TextInput(name="Instrumento", placeholder="Nueva evaluación…", width=360),
+            "porcentaje": pn.widgets.TextInput(name="Ponderación (%)", placeholder="0%", width=130),
+        })
+        w_desc_ev = pn.widgets.TextAreaInput(
+            name="Notas adicionales de evaluación",
+            value=asig_full.get("descripcion_evaluaciones", "") or "",
+            height=70, sizing_mode="stretch_width")
+        sec_eval = pn.Column(
+            pn.pane.HTML('<div class="card-title">Estrategia de Evaluación</div>'),
+            *[pn.Row(e["tipo"], e["porcentaje"]) for e in self._eval_w],
+            w_desc_ev,
+            css_classes=["card"], sizing_mode="stretch_width")
+
+        # ── Sección: Bibliografía ─────────────────────────────────
+        self._biblio_w = []
+        col_biblio = pn.Column(sizing_mode="stretch_width")
+
+        def _fix_spacing(txt):
+            txt = str(txt or "")
+            txt = re.sub(r'([a-záéíóúñü])([A-ZÁÉÍÓÚÑÜ])', r'\1 \2', txt)
+            return re.sub(r' {2,}', ' ', txt).strip()
+
+        def crear_bib(tipo, autor="", titulo="", editorial="", anio="", isbn="", ejemplares=""):
+            ws = {
+                "tipo":       tipo,
+                "autor":      pn.widgets.TextInput(name="Autor(es)",        value=str(autor), width=400),
+                "titulo":     pn.widgets.TextInput(name="Título",           value=str(titulo), sizing_mode="stretch_width"),
+                "editorial":  pn.widgets.TextInput(name="Editorial",        value=str(editorial), width=200),
+                "anio":       pn.widgets.TextInput(name="Año",              value=str(anio), width=80),
+                "isbn":       pn.widgets.TextInput(name="ISBN",             value=str(isbn), width=160),
+                "ejemplares": pn.widgets.TextInput(name="Ejemplares/Acceso",value=str(ejemplares), width=140),
+            }
+            lc = "#1F4E79" if tipo == "basica" else "#375623"
+            lt = "Básica Obligatoria" if tipo == "basica" else "Complementaria"
+            ws["panel"] = pn.Column(
+                pn.pane.HTML(f'<span style="font-size:11px;font-weight:600;color:{lc};text-transform:uppercase">{lt}</span>'),
+                pn.Row(ws["autor"], ws["titulo"]),
+                pn.Row(ws["editorial"], ws["anio"], ws["isbn"], ws["ejemplares"]),
+                css_classes=["card"], margin=(0, 0, 8, 0), sizing_mode="stretch_width")
+            return ws
+
+        for b in bibliografia:
+            w = crear_bib(b.get("tipo", "basica"), _fix_spacing(b.get("autor", "")),
+                           _fix_spacing(b.get("titulo", "")), b.get("editorial", ""),
+                           b.get("anio", ""), b.get("isbn", ""), b.get("ejemplares", ""))
+            self._biblio_w.append(w); col_biblio.append(w["panel"])
+
+        btn_add_bib_b = pn.widgets.Button(name="➕ Básica", css_classes=["btn-add"], width=140, height=38)
+        btn_add_bib_c = pn.widgets.Button(name="➕ Complementaria", css_classes=["btn-add"], width=180, height=38)
+
+        def on_add_bib_b(event):
+            w = crear_bib("basica"); self._biblio_w.append(w); col_biblio.append(w["panel"])
+        def on_add_bib_c(event):
+            w = crear_bib("complementaria"); self._biblio_w.append(w); col_biblio.append(w["panel"])
+
+        btn_add_bib_b.on_click(on_add_bib_b); btn_add_bib_c.on_click(on_add_bib_c)
+        sec_bib = pn.Column(
+            pn.pane.HTML('<div class="card-title">Bibliografía</div>'),
+            col_biblio,
+            pn.Row(pn.layout.HSpacer(), btn_add_bib_b, btn_add_bib_c, pn.layout.HSpacer()),
+            css_classes=["card"], sizing_mode="stretch_width")
+
+        # ── Sección: Linkografía ──────────────────────────────────
+        self._linkografia_w = []
+        col_link = pn.Column(sizing_mode="stretch_width")
+
+        def crear_link(tipo_doc="", autor="", titulo="", anio="",
+                        revista="", volumen="", url="", disponible=""):
+            ws = {
+                "tipo_documento":  pn.widgets.TextInput(name="Tipo doc.", value=str(tipo_doc), width=140),
+                "autor":           pn.widgets.TextInput(name="Autor",     value=str(autor),    width=260),
+                "titulo_articulo": pn.widgets.TextInput(name="Título",    value=str(titulo),   sizing_mode="stretch_width"),
+                "anio":            pn.widgets.TextInput(name="Año",       value=str(anio),     width=70),
+                "titulo_revista":  pn.widgets.TextInput(name="Revista",   value=str(revista),  width=200),
+                "volumen":         pn.widgets.TextInput(name="Vol.",       value=str(volumen),  width=70),
+                "url":             pn.widgets.TextInput(name="URL",       value=str(url),      sizing_mode="stretch_width"),
+                "disponible_en":   pn.widgets.TextInput(name="Disponible",value=str(disponible), width=200),
+            }
+            ws["panel"] = pn.Column(
+                pn.Row(ws["tipo_documento"], ws["autor"], ws["titulo_articulo"], ws["anio"]),
+                pn.Row(ws["titulo_revista"], ws["volumen"], ws["url"], ws["disponible_en"]),
+                css_classes=["card"], margin=(0, 0, 8, 0), sizing_mode="stretch_width")
+            return ws
+
+        for lk in asig_full.get("_linkografia", []):
+            w = crear_link(lk.get("tipo_documento",""), lk.get("autor",""),
+                            lk.get("titulo_articulo",""), lk.get("anio",""),
+                            lk.get("titulo_revista",""), lk.get("volumen",""),
+                            lk.get("url",""), lk.get("disponible_en",""))
+            self._linkografia_w.append(w); col_link.append(w["panel"])
+
+        btn_add_link = pn.widgets.Button(name="➕ Agregar link", css_classes=["btn-add"], width=180, height=38)
+
+        def on_add_link(event):
+            w = crear_link(); self._linkografia_w.append(w); col_link.append(w["panel"])
+
+        btn_add_link.on_click(on_add_link)
+        sec_link = pn.Column(
+            pn.pane.HTML('<div class="card-title">Linkografía</div>'),
+            col_link,
+            pn.Row(pn.layout.HSpacer(), btn_add_link, pn.layout.HSpacer()),
+            css_classes=["card"], sizing_mode="stretch_width")
+
+        # ── Sección: Otros Recursos ───────────────────────────────
+        w_otros = pn.widgets.TextAreaInput(
+            name="Otros Recursos",
+            value=asig_full.get("otros_recursos", "") or "",
+            height=70, sizing_mode="stretch_width")
+        sec_otros = pn.Column(
+            pn.pane.HTML('<div class="card-title">Otros Recursos</div>'),
+            w_otros, css_classes=["card"], sizing_mode="stretch_width")
+
+        # ── Guardar y descargar ───────────────────────────────────
+        self._widgets = {
+            "nombre": w_nombre, "semestre": w_sem, "duracion": w_dur,
+            "requisitos": w_req, "descripcion": w_desc, "metodologia": w_metod,
+            "lab": w_lab, "desc_ev": w_desc_ev, "otros": w_otros,
         }
-        tipo_label_map = {
-            "licenciatura": "Licenciatura", "titulo": "Título Profesional", "sello_uv": "Sello UV"
-        }
 
-        if grupos:
-            items_ra = []
-            tipo_actual = None
-            for ra in ras_actuales:
-                tipo = ra["tipo"]
-                col  = tipo_color_map.get(tipo, "#475569")
-                lbl  = tipo_label_map.get(tipo, tipo)
-                if tipo != tipo_actual:
-                    tipo_actual = tipo
-                    items_ra.append(
-                        f'<div style="font-weight:700;font-size:11px;color:{col};'
-                        f'text-transform:uppercase;letter-spacing:1px;'
-                        f'padding:10px 0 4px 0;border-bottom:2px solid {col};margin-bottom:6px">'
-                        f'{lbl}</div>'
-                    )
-                items_ra.append(
-                    f'<div style="padding:4px 0 4px 8px;font-size:12px;color:#1E293B">'
-                    f'<span style="font-weight:700;color:{col}">{ra["codigo_completo"]}</span>'
-                    f'</div>'
-                )
-            html_ras = "".join(items_ra)
-        else:
-            html_ras = '<p style="color:#94A3B8;font-size:13px">Sin tributaciones registradas.</p>'
-        sec_ras = _seccion("Aporte al Perfil de Egreso — Resultados de Aprendizaje", html_ras)
+        _BTN_COLS = ["success", "primary", "warning", "danger", "light"]
+        _idx_all = [0]
+        btn_guardar = pn.widgets.Button(
+            name="💾 Guardar todos los cambios",
+            button_type=_BTN_COLS[0], width=300, height=56)
 
-        # ── Unidades ──────────────────────────────────────────────
-        if unidades:
-            filas_u = ""
-            for u in unidades:
-                filas_u += (
-                    f'<tr>'
-                    f'<td style="padding:8px 12px;border-bottom:1px solid #F1F5F9;'
-                    f'font-size:12px;color:#1E293B;vertical-align:top">'
-                    f'{_val(u.get("indicador_logro"), "")}</td>'
-                    f'<td style="padding:8px 12px;border-bottom:1px solid #F1F5F9;'
-                    f'font-size:12px;color:#475569;white-space:pre-wrap;vertical-align:top">'
-                    f'{_val(u.get("contenidos"), "")}</td>'
-                    f'</tr>'
-                )
-            html_uni = (
-                f'<table style="width:100%;border-collapse:collapse">'
-                f'<thead><tr style="background:#F8FAFC">'
-                f'<th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;'
-                f'text-transform:uppercase;letter-spacing:1px;color:#1F4E79;'
-                f'border-bottom:2px solid #E2E8F0;width:40%">Indicador de Logro</th>'
-                f'<th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;'
-                f'text-transform:uppercase;letter-spacing:1px;color:#1F4E79;'
-                f'border-bottom:2px solid #E2E8F0">Contenidos</th>'
-                f'</tr></thead><tbody>{filas_u}</tbody></table>'
-            )
-        else:
-            html_uni = '<p style="color:#94A3B8;font-size:13px">Sin unidades registradas.</p>'
-        sec_uni = _seccion("Unidades de Aprendizaje y Contenidos", html_uni)
+        def on_guardar(event):
+            datos = {
+                "nombre":                   self._widgets["nombre"].value,
+                "semestre":                 self._widgets["semestre"].value,
+                "duracion":                 self._widgets["duracion"].value,
+                "descripcion":              self._widgets["descripcion"].value,
+                "descripcion_evaluaciones": self._widgets["desc_ev"].value,
+                "experiencias_laboratorio": self._widgets["lab"].value,
+                "otros_recursos":           self._widgets["otros"].value,
+                "requisitos_ids": [v.split(" -- ")[0] for v in self._widgets["requisitos"].value],
+                "unidades": [{"nombre": u["nombre"].value, "contenidos": u["contenidos"].value,
+                               "indicador_logro": u["indicador_logro"].value}
+                              for u in self._unidades_w],
+                "metodologias": [self._widgets["metodologia"].value],
+                "evaluaciones": [{"tipo": e["tipo"].value, "porcentaje": e["porcentaje"].value}
+                                  for e in self._eval_w],
+                "ra_ids": [rid for rid, cb in self._ra_checks.items() if cb.value],
+                "bibliografia": [{"tipo": b["tipo"], "autor": b["autor"].value,
+                                   "titulo": b["titulo"].value, "editorial": b["editorial"].value,
+                                   "anio": b["anio"].value, "isbn": b["isbn"].value,
+                                   "ejemplares": b["ejemplares"].value}
+                                  for b in self._biblio_w],
+                "linkografia": [{"tipo_documento": lk["tipo_documento"].value,
+                                  "autor": lk["autor"].value,
+                                  "titulo_articulo": lk["titulo_articulo"].value,
+                                  "anio": lk["anio"].value,
+                                  "titulo_revista": lk["titulo_revista"].value,
+                                  "volumen": lk["volumen"].value,
+                                  "url": lk["url"].value,
+                                  "disponible_en": lk["disponible_en"].value}
+                                 for lk in self._linkografia_w],
+            }
+            ok, msg = guardar_revision_completa(self.asignatura_id, datos)
+            _idx_all[0] = (_idx_all[0] + 1) % len(_BTN_COLS)
+            btn_guardar.button_type = _BTN_COLS[_idx_all[0]]
+            if ok:
+                _u = pn.state.cache.get("usuario_actual") or "desconocido"
+                registrar_accion(_u, "MODIFICACION", "Guardó programa completo (revisión)",
+                                 entidad=asig.get("codigo", ""))
+                pn.state.notifications.success(msg, duration=4000)
+            else:
+                pn.state.notifications.error(msg, duration=4000)
 
-        # ── Metodología ───────────────────────────────────────────
-        metod_txt = "\n".join(m.get("descripcion", "") for m in metodologias).strip()
-        html_metod = (
-            f'<p style="font-size:13px;color:#1E293B;white-space:pre-wrap">{metod_txt}</p>'
-            if metod_txt else
-            '<p style="color:#94A3B8;font-size:13px">Sin metodología registrada.</p>'
-        )
-        sec_metod = _seccion("Estrategia Metodológica", html_metod)
+        btn_guardar.on_click(on_guardar)
 
-        # ── Evaluaciones ──────────────────────────────────────────
-        if evaluaciones:
-            filas_ev = "".join(
-                f'<tr>'
-                f'<td style="padding:7px 12px;border-bottom:1px solid #F1F5F9;font-size:13px">{_val(ev.get("tipo"))}</td>'
-                f'<td style="padding:7px 12px;border-bottom:1px solid #F1F5F9;font-size:13px;font-weight:600;color:#1F4E79;text-align:center">{_val(ev.get("porcentaje"))}</td>'
-                f'</tr>'
-                for ev in evaluaciones
-            )
-            html_ev = (
-                f'<table style="width:100%;border-collapse:collapse">'
-                f'<thead><tr style="background:#F8FAFC">'
-                f'<th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;'
-                f'text-transform:uppercase;letter-spacing:1px;color:#1F4E79;border-bottom:2px solid #E2E8F0">Tipo de Evaluación</th>'
-                f'<th style="text-align:center;padding:8px 12px;font-size:11px;font-weight:700;'
-                f'text-transform:uppercase;letter-spacing:1px;color:#1F4E79;border-bottom:2px solid #E2E8F0;width:180px">Porcentaje</th>'
-                f'</tr></thead><tbody>{filas_ev}</tbody></table>'
-            )
-        else:
-            html_ev = '<p style="color:#94A3B8;font-size:13px">Sin evaluaciones registradas.</p>'
-        sec_eval = _seccion("Estrategia de Evaluación", html_ev)
-
-        # ── Bibliografía ──────────────────────────────────────────
-        if bibliografia:
-            filas_bib = ""
-            for b in bibliografia:
-                tipo = b.get("tipo", "basica")
-                col_tipo  = "#1F4E79" if tipo == "basica" else "#375623"
-                lbl_tipo  = "Básica" if tipo == "basica" else "Complementaria"
-                filas_bib += (
-                    f'<tr>'
-                    f'<td style="padding:7px 12px;border-bottom:1px solid #F1F5F9">'
-                    f'<span style="font-size:11px;color:{col_tipo};font-weight:700">{lbl_tipo}</span></td>'
-                    f'<td style="padding:7px 12px;border-bottom:1px solid #F1F5F9;font-size:12px">{_val(b.get("autor"),"")}</td>'
-                    f'<td style="padding:7px 12px;border-bottom:1px solid #F1F5F9;font-size:12px">{_val(b.get("titulo"),"")}</td>'
-                    f'<td style="padding:7px 12px;border-bottom:1px solid #F1F5F9;font-size:12px;color:#64748B">{_val(b.get("anio"),"")}</td>'
-                    f'</tr>'
-                )
-            html_bib = (
-                f'<table style="width:100%;border-collapse:collapse">'
-                f'<thead><tr style="background:#F8FAFC">'
-                f'<th style="padding:8px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#1F4E79;border-bottom:2px solid #E2E8F0">Tipo</th>'
-                f'<th style="padding:8px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#1F4E79;border-bottom:2px solid #E2E8F0">Autor</th>'
-                f'<th style="padding:8px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#1F4E79;border-bottom:2px solid #E2E8F0">Título</th>'
-                f'<th style="padding:8px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#1F4E79;border-bottom:2px solid #E2E8F0">Año</th>'
-                f'</tr></thead><tbody>{filas_bib}</tbody></table>'
-            )
-        else:
-            html_bib = '<p style="color:#94A3B8;font-size:13px">Sin bibliografía registrada.</p>'
-        sec_bib = _seccion("Bibliografía", html_bib)
-
-        # ── Descarga Word ─────────────────────────────────────────
         def _hacer_word():
             try:
                 ruta = generar_programa_individual(self.asignatura_id)
@@ -1945,23 +2279,60 @@ class RevisionProgramas(param.Parameterized):
             except Exception as e:
                 return io.BytesIO(b"")
 
-        codigo_asig = (_val(asig.get("codigo"), "asig")).replace(" ", "_")
+        codigo_asig = (asig.get("codigo", "asig") or "asig").replace(" ", "_")
         btn_word = pn.widgets.FileDownload(
             callback=_hacer_word,
             filename=f"programa_{codigo_asig}.docx",
             label="📥 Descargar Word",
             button_type="primary",
-            width=240, height=48,
-            embed=False,
-        )
-        sec_descarga = pn.Column(
-            pn.Row(pn.layout.HSpacer(), btn_word, pn.layout.HSpacer(), align="center"),
-            css_classes=["card"], sizing_mode="stretch_width",
-            margin=(0, 0, 40, 0),
-        )
+            width=260, height=56, embed=False)
+
+        sec_acciones = pn.Column(
+            pn.pane.HTML('<div style="text-align:center;font-weight:700;font-size:15px;'
+                         'color:#374151;margin-bottom:12px">Acciones del programa</div>'),
+            pn.Row(pn.layout.HSpacer(), btn_guardar, pn.Spacer(width=20), btn_word,
+                   pn.layout.HSpacer(), align="center"),
+            css_classes=["card"], sizing_mode="stretch_width", align="center",
+            margin=(16, 0, 40, 0),
+            styles={"background": "linear-gradient(135deg,#1e3a5f 0%,#2d6a9f 100%)",
+                    "border-radius": "10px", "padding": "20px"})
+
+        # ── RBAC: deshabilitar si solo lectura ────────────────────
+        if not _puede:
+            _todos_widgets = (
+                [w_nombre, w_sem, w_dur, w_req, w_desc, w_metod, w_lab,
+                 w_desc_ev, w_otros, btn_guardar, btn_add_uni,
+                 btn_add_bib_b, btn_add_bib_c, btn_add_link, btn_guardar_ras]
+                + list(ra_checks.values())
+                + [u["nombre"] for u in self._unidades_w]
+                + [u["contenidos"] for u in self._unidades_w]
+                + [u["indicador_logro"] for u in self._unidades_w]
+                + [e["tipo"] for e in self._eval_w]
+                + [e["porcentaje"] for e in self._eval_w]
+                + [b["autor"] for b in self._biblio_w]
+                + [b["titulo"] for b in self._biblio_w]
+                + [b["editorial"] for b in self._biblio_w]
+                + [b["anio"] for b in self._biblio_w]
+                + [b["isbn"] for b in self._biblio_w]
+                + [b["ejemplares"] for b in self._biblio_w]
+                + [lk["tipo_documento"] for lk in self._linkografia_w]
+                + [lk["autor"] for lk in self._linkografia_w]
+                + [lk["titulo_articulo"] for lk in self._linkografia_w]
+                + [lk["anio"] for lk in self._linkografia_w]
+                + [lk["titulo_revista"] for lk in self._linkografia_w]
+                + [lk["volumen"] for lk in self._linkografia_w]
+                + [lk["url"] for lk in self._linkografia_w]
+                + [lk["disponible_en"] for lk in self._linkografia_w]
+            )
+            for _w in _todos_widgets:
+                if hasattr(_w, "disabled"):
+                    _w.disabled = True
 
         self._contenido.objects = [
-            sec_ident, sec_ras, sec_uni, sec_metod, sec_eval, sec_bib, sec_descarga
+            banner_ro,
+            sec_ident, sec_desc, sec_ras, sec_ra_display,
+            sec_uni, sec_lab, sec_metod, sec_eval,
+            sec_bib, sec_link, sec_otros, sec_acciones,
         ]
 
     def view(self):
