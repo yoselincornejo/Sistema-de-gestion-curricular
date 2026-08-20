@@ -132,7 +132,24 @@ def _nivel_academico(semestre):
 
 # ── Generador ────────────────────────────────────────────────────────
 
-def generar_matriz(salida=None):
+def _subtones_ciclo(base_hex, n):
+    """Genera n sub-tonos progresivos del color base (de más claro a más oscuro)."""
+    r = int(base_hex[:2], 16); g = int(base_hex[2:4], 16); b = int(base_hex[4:], 16)
+    tones = []
+    for i in range(n):
+        t = 0.12 + (i / max(n - 1, 1)) * 0.35 if n > 1 else 0.22
+        nr = int(255 + (r - 255) * t); ng = int(255 + (g - 255) * t); nb = int(255 + (b - 255) * t)
+        tones.append(f"{nr:02X}{ng:02X}{nb:02X}")
+    return tones
+
+
+def generar_matriz(salida=None, por_ciclo=False):
+    """Genera la matriz de competencias.
+
+    por_ciclo=True: cada nivel de dominio dentro de una competencia recibe
+    un sub-tono distinto del color base de esa competencia.
+    por_ciclo=False (default): usa HEX_COMP (comportamiento original).
+    """
     ras, asigs, tribs = _obtener_datos()
 
     if not ras:
@@ -145,6 +162,25 @@ def generar_matriz(salida=None):
 
     # ra_list: (ra_id, codigo_completo, nivel_dominio, codigo_ra, comp_codigo, comp_tipo)
     ra_list = [(r[0], r[1], r[2], r[3], r[5], r[6]) for r in ras]
+
+    # Construir mapa (comp_cod, nivel) → color de fondo para modo por_ciclo
+    ciclo_color = {}
+    if por_ciclo:
+        from collections import defaultdict
+        comp_niveles = defaultdict(list)
+        for _, _, nivel, _, comp_cod, comp_tipo in ra_list:
+            if nivel not in comp_niveles[(comp_cod, comp_tipo)]:
+                comp_niveles[(comp_cod, comp_tipo)].append(nivel)
+        for (comp_cod, comp_tipo), niveles in comp_niveles.items():
+            base = HEX[comp_tipo]
+            tones = _subtones_ciclo(base, len(niveles))
+            for i, nivel in enumerate(sorted(niveles)):
+                ciclo_color[(comp_cod, nivel)] = tones[i]
+
+    def _bg_ra(comp_cod, comp_tipo, nivel):
+        if por_ciclo:
+            return ciclo_color.get((comp_cod, nivel), HEX_CLARO[comp_tipo])
+        return HEX_COMP.get(comp_cod, HEX_CLARO[comp_tipo])
 
     # Agrupar RAs por competencia (orden preservado)
     comp_ras = OrderedDict()
@@ -290,7 +326,7 @@ def generar_matriz(salida=None):
         ws.cell(ROW_RA, c).border = _border_thin()
     for ra_id, ccomp, nivel, cod_ra, comp_cod, comp_tipo in ra_list:
         c = ra_to_col[ra_id]
-        bg = HEX_COMP.get(comp_cod, HEX_CLARO[comp_tipo])
+        bg = _bg_ra(comp_cod, comp_tipo, nivel)
         _write(ws, ROW_RA, c, ccomp,
                font=_font(size=8, color=HEX[comp_tipo]),
                fill=_fill(bg),
@@ -312,7 +348,7 @@ def generar_matriz(salida=None):
     for ra_id, ccomp, nivel, cod_ra, comp_cod, comp_tipo in ra_list:
         c = ra_to_col[ra_id]
         cl = get_column_letter(c)
-        bg = HEX_COMP.get(comp_cod, HEX_CLARO[comp_tipo])
+        bg = _bg_ra(comp_cod, comp_tipo, nivel)
         _write(ws, ROW_COUNT, c,
                f'=COUNTIF({cl}{ROW_DATOS}:{cl}{UF},"X")',
                font=_font(bold=True, size=9),
@@ -389,7 +425,7 @@ def generar_matriz(salida=None):
 
         for ra_id, ccomp, nivel, cod_ra, comp_cod, comp_tipo in ra_list:
             c = ra_to_col[ra_id]
-            bg = HEX_COMP.get(comp_cod, HEX_CLARO[comp_tipo])
+            bg = _bg_ra(comp_cod, comp_tipo, nivel)
             if (asig_id, ra_id) in tribs:
                 _write(ws, fila, c, "X",
                        font=_font(bold=True, size=10, color=HEX[comp_tipo]),
