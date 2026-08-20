@@ -794,7 +794,7 @@ class Dashboard(param.Parameterized):
 
         def _hacer_matriz():
             try:
-                ruta = generar_matriz()
+                ruta = generar_matriz(por_ciclo=True)
                 with open(ruta, 'rb') as f:
                     return io.BytesIO(f.read())
             except Exception as e:
