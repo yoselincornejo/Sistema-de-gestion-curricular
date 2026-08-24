@@ -2984,17 +2984,17 @@ def crear_app():
         sizing_mode="stretch_width",
         visible=False,
         styles={
-            "background": "white",
-            "border": "1.5px solid #E2E8F0",
-            "border-radius": "10px",
-            "box-shadow": "0 4px 16px rgba(0,0,0,0.12)",
-            "padding": "16px",
+            "background": "linear-gradient(160deg, #1e3a5f 0%, #1F4E79 100%)",
+            "border-radius": "14px",
+            "box-shadow": "0 8px 32px rgba(31,78,121,0.28), 0 2px 8px rgba(0,0,0,0.16)",
+            "padding": "0",
             "position": "absolute",
             "right": "0",
-            "top": "52px",
+            "top": "56px",
             "z-index": "9999",
-            "min-width": "320px",
-            "max-width": "440px",
+            "min-width": "380px",
+            "max-width": "480px",
+            "overflow": "hidden",
         }
     )
 
@@ -3003,49 +3003,115 @@ def crear_app():
 
     def _refrescar_docs_panel():
         docs = obtener_documentos_en_progreso(usuario_sesion)
-        titulo = pn.pane.HTML(
-            '<div style="font-weight:700;font-size:14px;color:#1F4E79;margin-bottom:10px">'
-            '📋 Documentos pendientes</div>',
+
+        header_html = pn.pane.HTML(
+            f'<div style="padding:20px 22px 14px;border-bottom:1px solid rgba(255,255,255,0.12)">'
+            f'  <div style="font-size:11px;font-weight:700;letter-spacing:1.2px;'
+            f'              color:rgba(255,255,255,0.55);text-transform:uppercase;margin-bottom:4px">'
+            f'    Revisión de Programas</div>'
+            f'  <div style="font-size:18px;font-weight:700;color:#FFFFFF">'
+            f'    📋 Documentos pendientes</div>'
+            f'  <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:2px">'
+            f'    {nombre_display}</div>'
+            f'</div>',
             sizing_mode="stretch_width")
 
         if not docs:
-            _docs_panel.objects = [
-                titulo,
-                pn.pane.HTML('<p style="color:#94A3B8;font-size:13px;margin:0">'
-                             'No hay documentos pendientes.</p>')]
+            empty = pn.pane.HTML(
+                '<div style="padding:24px 22px;text-align:center">'
+                '  <div style="font-size:32px;margin-bottom:8px">✅</div>'
+                '  <div style="font-size:14px;font-weight:600;color:#FFFFFF">Sin pendientes</div>'
+                '  <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:4px">'
+                '    Todos los programas están al día.</div>'
+                '</div>',
+                sizing_mode="stretch_width")
+            _docs_panel.objects = [header_html, empty]
             return
+
+        # Sección de chips de sección (colores por tipo)
+        SEC_COLOR = {
+            "Identificación": "#3B82F6",
+            "Descripción": "#8B5CF6",
+            "Aporte al Perfil de Egreso": "#10B981",
+            "Resultados de Aprendizaje": "#10B981",
+            "Unidades de Aprendizaje": "#F59E0B",
+            "Laboratorio": "#EF4444",
+            "Metodología": "#6366F1",
+            "Evaluaciones": "#EC4899",
+            "Bibliografía": "#14B8A6",
+            "Linkografía": "#14B8A6",
+            "Otros Recursos": "#64748B",
+            "Acciones del Programa": "#1D4ED8",
+        }
 
         btn_items = []
         for d in docs:
             ts_corto = d["ts"][:10] if d["ts"] else ""
-            sec_id = d["seccion"].replace(" ", "_")
-            lbl = f"{d['codigo']} — {d['nombre']}"
-            desc_html = (f'<div style="font-weight:600;font-size:13px;color:#1E293B">{lbl}</div>'
-                         f'<div style="font-size:11px;color:#64748B;margin-top:2px">'
-                         f'Última sección: <strong>{d["seccion"]}</strong> · {ts_corto}</div>')
+            sec_id   = d["seccion"].replace(" ", "_")
+            color    = SEC_COLOR.get(d["seccion"], "#64748B")
+
+            card_html = (
+                f'<div style="padding:14px 18px;cursor:pointer">'
+                f'  <div style="display:flex;align-items:center;gap:10px">'
+                f'    <div style="width:38px;height:38px;background:rgba(255,255,255,0.12);'
+                f'               border-radius:8px;display:flex;align-items:center;'
+                f'               justify-content:center;font-size:18px;flex-shrink:0">📄</div>'
+                f'    <div style="flex:1;min-width:0">'
+                f'      <div style="font-weight:700;font-size:14px;color:#FFFFFF;'
+                f'                 white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
+                f'        {d["codigo"]}</div>'
+                f'      <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-top:1px;'
+                f'                 white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
+                f'        {d["nombre"]}</div>'
+                f'    </div>'
+                f'    <div style="font-size:11px;color:rgba(255,255,255,0.45);flex-shrink:0">{ts_corto}</div>'
+                f'  </div>'
+                f'  <div style="margin-top:10px;display:flex;align-items:center;gap:8px">'
+                f'    <span style="display:inline-block;background:{color};color:#fff;'
+                f'                border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700">'
+                f'      {d["seccion"]}</span>'
+                f'    <span style="font-size:11px;color:rgba(255,255,255,0.45)">→ continuar aquí</span>'
+                f'  </div>'
+                f'</div>'
+            )
+
             btn_doc = pn.widgets.Button(
-                name=lbl,
+                name=f"{d['codigo']}  ·  {d['nombre']}",
                 button_type="light",
-                sizing_mode="stretch_width", height=52,
+                sizing_mode="stretch_width",
                 stylesheets=[f"""
                     :host button {{
-                        text-align:left !important; padding:10px 12px !important;
-                        border-radius:8px !important; border:1px solid #E2E8F0 !important;
-                        background:#F8FAFC !important; cursor:pointer !important;
-                        white-space:normal !important; height:auto !important;
+                        padding: 14px 18px !important;
+                        border: none !important;
+                        background: transparent !important;
+                        cursor: pointer !important;
+                        border-radius: 0 !important;
+                        text-align: left !important;
+                        height: auto !important;
+                        min-height: 0 !important;
+                        font-size: 14px !important;
+                        font-weight: 700 !important;
+                        color: #FFFFFF !important;
+                        white-space: normal !important;
+                        line-height: 1.3 !important;
                     }}
-                    :host button:hover {{ background:#EFF6FF !important; }}
+                    :host button:hover {{ background: rgba(255,255,255,0.09) !important; }}
                 """],
             )
-            # Usar pane HTML para mostrar descripción enriquecida debajo del botón
-            desc_pane = pn.pane.HTML(desc_html, sizing_mode="stretch_width",
-                                      styles={"pointer-events": "none", "margin-top": "-6px"})
+            sec_chip = pn.pane.HTML(
+                f'<div style="padding:0 18px 14px;margin-top:-8px;pointer-events:none">'
+                f'  <span style="display:inline-block;background:{color};color:#fff;'
+                f'               border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700">'
+                f'    {d["seccion"]}</span>'
+                f'  <span style="font-size:11px;color:rgba(255,255,255,0.45);margin-left:8px">'
+                f'    {ts_corto}</span>'
+                f'</div>',
+                sizing_mode="stretch_width")
 
-            def _ir_a_doc(event, _sec=sec_id, _d=d):
+            def _ir_a_doc(event, _sec=sec_id):
                 tabs.active = _IDX_REVISION
                 _docs_panel.visible = False
                 _docs_visible[0] = False
-                # Inyectar JS scroll tras un breve delay para que el tab se renderice
                 _scroll_script.object = (
                     f'<script>setTimeout(function(){{'
                     f'var el=document.getElementById("rev-sec-{_sec}");'
@@ -3053,30 +3119,46 @@ def crear_app():
                     f'}}, 700);</script>')
 
             btn_doc.on_click(_ir_a_doc)
-            btn_items.append(pn.Column(btn_doc, sizing_mode="stretch_width",
-                                        margin=(0, 0, 6, 0)))
 
-        _docs_panel.objects = [titulo] + btn_items
+            separador = pn.pane.HTML(
+                '<div style="height:1px;background:rgba(255,255,255,0.08);margin:0 18px"></div>',
+                sizing_mode="stretch_width")
+
+            btn_items += [
+                pn.Column(btn_doc, sec_chip,
+                          sizing_mode="stretch_width", margin=0),
+                separador,
+            ]
+
+        if btn_items:
+            btn_items.pop()  # quitar último separador
+
+        _docs_panel.objects = [header_html] + btn_items
 
     _refrescar_docs_panel()
 
     _docs_visible = [False]
 
     btn_usuario = pn.widgets.Button(
-        name=f"👤 {nombre_display}",
+        name=f"👤  {nombre_display}",
         button_type="light",
-        width=220, height=36,
+        width=230, height=38,
         stylesheets=["""
             :host button {
-                border: 1.5px solid #CBD5E1 !important;
-                border-radius: 8px !important;
+                border: 1.5px solid #1F4E79 !important;
+                border-radius: 9px !important;
                 font-size: 13px !important;
                 color: #1F4E79 !important;
                 background: white !important;
                 cursor: pointer !important;
-                font-weight: 600 !important;
+                font-weight: 700 !important;
+                letter-spacing: 0.2px !important;
+                transition: background 0.15s, box-shadow 0.15s !important;
             }
-            :host button:hover { background: #EFF6FF !important; }
+            :host button:hover {
+                background: #EFF6FF !important;
+                box-shadow: 0 2px 8px rgba(31,78,121,0.18) !important;
+            }
         """],
     )
 
