@@ -44,11 +44,60 @@ def _init_db_migration():
         conn.execute("ALTER TABLE asignaturas ADD COLUMN docente_a_cargo TEXT DEFAULT ''")
         conn.commit()
     except Exception:
-        pass  # ya existe
+        pass
+    try:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS revisiones_en_progreso (
+                usuario       TEXT NOT NULL,
+                asignatura_id INTEGER NOT NULL,
+                seccion       TEXT NOT NULL,
+                ts            TEXT NOT NULL,
+                PRIMARY KEY (usuario, asignatura_id)
+            )
+        """)
+        conn.commit()
+    except Exception:
+        pass
     finally:
         conn.close()
 
 _init_db_migration()
+
+
+def registrar_progreso(usuario, asig_id, seccion):
+    """Guarda la última sección editada por el usuario en esa asignatura."""
+    from datetime import datetime
+    conn = conexion()
+    try:
+        conn.execute("""
+            INSERT INTO revisiones_en_progreso (usuario, asignatura_id, seccion, ts)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(usuario, asignatura_id) DO UPDATE SET seccion=excluded.seccion, ts=excluded.ts
+        """, (usuario, asig_id, seccion, datetime.now().isoformat(timespec="seconds")))
+        conn.commit()
+    except Exception:
+        pass
+    finally:
+        conn.close()
+
+
+def obtener_documentos_en_progreso(usuario):
+    """Devuelve lista de dict {codigo, nombre, asignatura_id, seccion, ts}."""
+    conn = conexion()
+    try:
+        filas = conn.execute("""
+            SELECT a.id, a.codigo, a.nombre, r.seccion, r.ts
+            FROM revisiones_en_progreso r
+            JOIN asignaturas a ON a.id = r.asignatura_id
+            WHERE r.usuario = ?
+            ORDER BY r.ts DESC
+        """, (usuario,)).fetchall()
+        return [{"asignatura_id": f[0], "codigo": f[1], "nombre": f[2],
+                 "seccion": f[3], "ts": f[4]} for f in filas]
+    except Exception:
+        return []
+    finally:
+        conn.close()
 
 
 def get_dashboard_data():
@@ -1824,16 +1873,22 @@ class RevisionProgramas(param.Parameterized):
             w_req.value = [v for v in w_req.value if v in nuevas_opts]
         w_sem.param.watch(on_sem_change, "value")
 
-        def _btn_guardar(label="💾 Guardar", width=200):
+        _usuario_sesion = pn.state.cache.get("usuario_actual") or ""
+
+        def _btn_guardar(label="💾 Guardar", width=200, seccion=""):
             btn = pn.widgets.Button(name=label, button_type="success",
                                     width=width, height=38, disabled=not _puede)
-            def _feedback(ok, msg, b=btn):
+            def _feedback(ok, msg, b=btn, sec=seccion):
                 b.button_type = "success" if ok else "danger"
-                if ok: pn.state.notifications.success(msg, duration=3500)
-                else:  pn.state.notifications.error(msg, duration=4000)
+                if ok:
+                    pn.state.notifications.success(msg, duration=3500)
+                    if sec and _usuario_sesion:
+                        registrar_progreso(_usuario_sesion, self.asignatura_id, sec)
+                else:
+                    pn.state.notifications.error(msg, duration=4000)
             return btn, _feedback
 
-        btn_id, fb_id = _btn_guardar("💾 Guardar identificación", 220)
+        btn_id, fb_id = _btn_guardar("💾 Guardar identificación", 220, "Identificación")
         def on_guardar_id(event):
             ok, msg = guardar_identificacion(self.asignatura_id, {
                 "nombre":        self._widgets["nombre"].value,
@@ -1845,7 +1900,7 @@ class RevisionProgramas(param.Parameterized):
         btn_id.on_click(on_guardar_id)
 
         sec_ident = pn.Column(
-            pn.pane.HTML('<div class="card-title">Identificación de la Asignatura</div>'),
+            pn.pane.HTML('<div id="rev-sec-Identificación" class="card-title">Identificación de la Asignatura</div>'),
             pn.Row(w_nombre, w_sem, w_nivel),
             pn.Row(w_dur, w_docente, sizing_mode="stretch_width"),
             w_req,
@@ -1857,14 +1912,14 @@ class RevisionProgramas(param.Parameterized):
             name="Descripción",
             value=asig_full.get("descripcion", "") or "",
             height=180, sizing_mode="stretch_width")
-        btn_desc, fb_desc = _btn_guardar("💾 Guardar descripción", 210)
+        btn_desc, fb_desc = _btn_guardar("💾 Guardar descripción", 210, "Descripción")
         def on_guardar_desc(event):
             ok, msg = guardar_descripcion(self.asignatura_id, self._widgets["descripcion"].value)
             fb_desc(ok, msg)
         btn_desc.on_click(on_guardar_desc)
 
         sec_desc = pn.Column(
-            pn.pane.HTML('<div class="card-title">Descripción de la Asignatura</div>'),
+            pn.pane.HTML('<div id="rev-sec-Descripción" class="card-title">Descripción de la Asignatura</div>'),
             w_desc,
             pn.Row(pn.layout.HSpacer(), btn_desc),
             css_classes=["card"], sizing_mode="stretch_width")
@@ -2047,13 +2102,15 @@ class RevisionProgramas(param.Parameterized):
             btn_guardar_ras.button_type = _BTN_RAS_COLS[_idx_ras[0]]
             if ok:
                 pn.state.notifications.success(msg, duration=4000)
+                if _usuario_sesion:
+                    registrar_progreso(_usuario_sesion, self.asignatura_id, "Aporte al Perfil de Egreso")
             else:
                 pn.state.notifications.error(msg, duration=4000)
 
         btn_guardar_ras.on_click(on_guardar_ras)
 
         sec_ras = pn.Column(
-            pn.pane.HTML('<div class="card-title">Aporte al Perfil de Egreso</div>'),
+            pn.pane.HTML('<div id="rev-sec-Aporte_al_Perfil_de_Egreso" class="card-title">Aporte al Perfil de Egreso</div>'),
             pn.pane.HTML('<p style="font-size:12px;color:#64748B;margin:0 0 10px">'
                          'Selecciona los niveles de dominio a los que tributa esta asignatura. '
                          'Cada botón activa todos los resultados de aprendizaje de ese nivel.</p>'),
@@ -2097,7 +2154,7 @@ class RevisionProgramas(param.Parameterized):
                     "border-radius": "8px", "margin-bottom": "12px", "overflow": "hidden"},
                 sizing_mode="stretch_width"))
 
-        btn_ra, fb_ra = _btn_guardar("💾 Guardar RAs seleccionados", 230)
+        btn_ra, fb_ra = _btn_guardar("💾 Guardar RAs seleccionados", 230, "Resultados de Aprendizaje")
         def on_guardar_ra(event):
             ra_ids = [rid for rid, cb in self._ra_checks.items() if cb.value]
             ok, msg = guardar_tributaciones(self.asignatura_id, ra_ids)
@@ -2105,7 +2162,7 @@ class RevisionProgramas(param.Parameterized):
         btn_ra.on_click(on_guardar_ra)
 
         sec_ra_display = pn.Column(
-            pn.pane.HTML('<div class="card-title">Resultados de Aprendizaje y Desempeños</div>'),
+            pn.pane.HTML('<div id="rev-sec-Resultados_de_Aprendizaje" class="card-title">Resultados de Aprendizaje y Desempeños</div>'),
             pn.pane.HTML('<p style="font-size:12px;color:#64748B;margin:0 0 10px">'
                          'Selecciona los resultados de aprendizaje específicos. '
                          'Al seleccionar un nivel completo en la sección anterior, '
@@ -2139,8 +2196,12 @@ class RevisionProgramas(param.Parameterized):
                          for u in self._unidades_w]
                 ok, msg = guardar_unidades(self.asignatura_id, all_u)
                 _btn.button_type = "success" if ok else "danger"
-                if ok: pn.state.notifications.success(msg, duration=3500)
-                else:  pn.state.notifications.error(msg, duration=4000)
+                if ok:
+                    pn.state.notifications.success(msg, duration=3500)
+                    if _usuario_sesion:
+                        registrar_progreso(_usuario_sesion, self.asignatura_id, "Unidades de Aprendizaje")
+                else:
+                    pn.state.notifications.error(msg, duration=4000)
 
             btn_u.on_click(_guardar_esta_unidad)
             panel = pn.Column(
@@ -2166,7 +2227,7 @@ class RevisionProgramas(param.Parameterized):
 
         btn_add_uni.on_click(on_add_uni)
         sec_uni = pn.Column(
-            pn.pane.HTML('<div class="card-title">Unidades de Aprendizaje y Contenidos</div>'),
+            pn.pane.HTML('<div id="rev-sec-Unidades_de_Aprendizaje" class="card-title">Unidades de Aprendizaje y Contenidos</div>'),
             col_unidades,
             pn.Row(btn_add_uni),
             css_classes=["card"], sizing_mode="stretch_width")
@@ -2176,14 +2237,14 @@ class RevisionProgramas(param.Parameterized):
             name="Experiencias de Laboratorio",
             value=asig_full.get("experiencias_laboratorio", "") or "",
             height=150, sizing_mode="stretch_width")
-        btn_lab, fb_lab = _btn_guardar("💾 Guardar laboratorio", 210)
+        btn_lab, fb_lab = _btn_guardar("💾 Guardar laboratorio", 210, "Laboratorio")
         def on_guardar_lab(event):
             ok, msg = guardar_lab(self.asignatura_id, self._widgets["lab"].value)
             fb_lab(ok, msg)
         btn_lab.on_click(on_guardar_lab)
 
         sec_lab = pn.Column(
-            pn.pane.HTML('<div class="card-title">Experiencias de Laboratorio</div>'),
+            pn.pane.HTML('<div id="rev-sec-Laboratorio" class="card-title">Experiencias de Laboratorio</div>'),
             w_lab,
             pn.Row(pn.layout.HSpacer(), btn_lab),
             css_classes=["card"], sizing_mode="stretch_width")
@@ -2193,14 +2254,14 @@ class RevisionProgramas(param.Parameterized):
             name="Metodología",
             value="\n".join(m.get("descripcion", "") for m in metodologias),
             height=180, sizing_mode="stretch_width")
-        btn_metod, fb_metod = _btn_guardar("💾 Guardar metodología", 210)
+        btn_metod, fb_metod = _btn_guardar("💾 Guardar metodología", 210, "Metodología")
         def on_guardar_metod(event):
             ok, msg = guardar_metodologia(self.asignatura_id, self._widgets["metodologia"].value)
             fb_metod(ok, msg)
         btn_metod.on_click(on_guardar_metod)
 
         sec_metod = pn.Column(
-            pn.pane.HTML('<div class="card-title">Metodología / Estrategia de Enseñanza-Aprendizaje</div>'),
+            pn.pane.HTML('<div id="rev-sec-Metodología" class="card-title">Metodología / Estrategia de Enseñanza-Aprendizaje</div>'),
             w_metod,
             pn.Row(pn.layout.HSpacer(), btn_metod),
             css_classes=["card"], sizing_mode="stretch_width")
@@ -2220,7 +2281,7 @@ class RevisionProgramas(param.Parameterized):
             name="Notas adicionales de evaluación",
             value=asig_full.get("descripcion_evaluaciones", "") or "",
             height=120, sizing_mode="stretch_width")
-        btn_eval, fb_eval = _btn_guardar("💾 Guardar evaluaciones", 210)
+        btn_eval, fb_eval = _btn_guardar("💾 Guardar evaluaciones", 210, "Evaluaciones")
         def on_guardar_eval(event):
             ok, msg = guardar_evaluaciones(
                 self.asignatura_id,
@@ -2231,7 +2292,7 @@ class RevisionProgramas(param.Parameterized):
         btn_eval.on_click(on_guardar_eval)
 
         sec_eval = pn.Column(
-            pn.pane.HTML('<div class="card-title">Estrategia de Evaluación</div>'),
+            pn.pane.HTML('<div id="rev-sec-Evaluaciones" class="card-title">Estrategia de Evaluación</div>'),
             *[pn.Row(e["tipo"], e["porcentaje"]) for e in self._eval_w],
             w_desc_ev,
             pn.Row(pn.layout.HSpacer(), btn_eval),
@@ -2281,7 +2342,7 @@ class RevisionProgramas(param.Parameterized):
 
         btn_add_bib_b.on_click(on_add_bib_b); btn_add_bib_c.on_click(on_add_bib_c)
 
-        btn_bib, fb_bib = _btn_guardar("💾 Guardar bibliografía", 210)
+        btn_bib, fb_bib = _btn_guardar("💾 Guardar bibliografía", 210, "Bibliografía")
         def on_guardar_bib(event):
             ok, msg = guardar_bibliografia(self.asignatura_id, [
                 {"tipo": b["tipo"], "autor": b["autor"].value, "titulo": b["titulo"].value,
@@ -2292,7 +2353,7 @@ class RevisionProgramas(param.Parameterized):
         btn_bib.on_click(on_guardar_bib)
 
         sec_bib = pn.Column(
-            pn.pane.HTML('<div class="card-title">Bibliografía</div>'),
+            pn.pane.HTML('<div id="rev-sec-Bibliografía" class="card-title">Bibliografía</div>'),
             col_biblio,
             pn.Row(btn_add_bib_b, btn_add_bib_c, pn.layout.HSpacer(), btn_bib),
             css_classes=["card"], sizing_mode="stretch_width")
@@ -2333,7 +2394,7 @@ class RevisionProgramas(param.Parameterized):
 
         btn_add_link.on_click(on_add_link)
 
-        btn_link, fb_link = _btn_guardar("💾 Guardar linkografía", 210)
+        btn_link, fb_link = _btn_guardar("💾 Guardar linkografía", 210, "Linkografía")
         def on_guardar_link(event):
             conn = conexion()
             try:
@@ -2353,6 +2414,8 @@ class RevisionProgramas(param.Parameterized):
                               url_val, lk["disponible_en"].value))
                 conn.commit()
                 fb_link(True, "Linkografía guardada")
+                if _usuario_sesion:
+                    registrar_progreso(_usuario_sesion, self.asignatura_id, "Linkografía")
             except Exception as e:
                 conn.rollback(); fb_link(False, str(e))
             finally:
@@ -2360,7 +2423,7 @@ class RevisionProgramas(param.Parameterized):
         btn_link.on_click(on_guardar_link)
 
         sec_link = pn.Column(
-            pn.pane.HTML('<div class="card-title">Linkografía</div>'),
+            pn.pane.HTML('<div id="rev-sec-Linkografía" class="card-title">Linkografía</div>'),
             col_link,
             pn.Row(btn_add_link, pn.layout.HSpacer(), btn_link),
             css_classes=["card"], sizing_mode="stretch_width")
@@ -2370,14 +2433,14 @@ class RevisionProgramas(param.Parameterized):
             name="Otros Recursos",
             value=asig_full.get("otros_recursos", "") or "",
             height=120, sizing_mode="stretch_width")
-        btn_otros, fb_otros = _btn_guardar("💾 Guardar otros recursos", 220)
+        btn_otros, fb_otros = _btn_guardar("💾 Guardar otros recursos", 220, "Otros Recursos")
         def on_guardar_otros(event):
             ok, msg = guardar_otros_recursos(self.asignatura_id, self._widgets["otros"].value)
             fb_otros(ok, msg)
         btn_otros.on_click(on_guardar_otros)
 
         sec_otros = pn.Column(
-            pn.pane.HTML('<div class="card-title">Otros Recursos</div>'),
+            pn.pane.HTML('<div id="rev-sec-Otros_Recursos" class="card-title">Otros Recursos</div>'),
             w_otros,
             pn.Row(pn.layout.HSpacer(), btn_otros),
             css_classes=["card"], sizing_mode="stretch_width")
@@ -2435,6 +2498,8 @@ class RevisionProgramas(param.Parameterized):
                 registrar_accion(_u, "MODIFICACION", "Guardó programa completo (revisión)",
                                  entidad=asig.get("codigo", ""))
                 pn.state.notifications.success(msg, duration=4000)
+                if _usuario_sesion:
+                    registrar_progreso(_usuario_sesion, self.asignatura_id, "Acciones del Programa")
             else:
                 pn.state.notifications.error(msg, duration=4000)
 
@@ -2901,6 +2966,90 @@ def crear_app():
 
     btn_logout.on_click(on_logout)
 
+    # ── Panel de documentos en progreso ───────────────────────────
+    _docs_panel = pn.Column(
+        sizing_mode="stretch_width",
+        visible=False,
+        styles={
+            "background": "white",
+            "border": "1.5px solid #E2E8F0",
+            "border-radius": "10px",
+            "box-shadow": "0 4px 16px rgba(0,0,0,0.12)",
+            "padding": "16px",
+            "position": "absolute",
+            "right": "0",
+            "top": "52px",
+            "z-index": "9999",
+            "min-width": "320px",
+            "max-width": "440px",
+        }
+    )
+
+    def _refrescar_docs_panel():
+        docs = obtener_documentos_en_progreso(usuario_sesion)
+        items_html = ""
+        if not docs:
+            items_html = '<p style="color:#94A3B8;font-size:13px;margin:0">No hay documentos pendientes.</p>'
+        else:
+            for d in docs:
+                ts_corto = d["ts"][:10] if d["ts"] else ""
+                items_html += f"""
+                <div id="doc-prog-{d['asignatura_id']}"
+                     style="padding:10px 12px;border-radius:8px;margin-bottom:6px;
+                            background:#F8FAFC;border:1px solid #E2E8F0;cursor:pointer"
+                     onclick="
+                        document.querySelectorAll('.bk-tab').forEach(function(t){{
+                            if(t.textContent.trim().includes('Revisi')) t.click();
+                        }});
+                        setTimeout(function(){{
+                            var sid='{d['seccion'].replace(' ','_')}';
+                            var el=document.getElementById('rev-sec-'+sid);
+                            if(el) el.scrollIntoView({{behavior:'smooth',block:'start'}});
+                        }}, 600);
+                     ">
+                    <div style="font-weight:600;font-size:13px;color:#1E293B">{d['codigo']} — {d['nombre']}</div>
+                    <div style="font-size:11px;color:#64748B;margin-top:2px">
+                        Última sección: <strong>{d['seccion']}</strong> · {ts_corto}
+                    </div>
+                </div>"""
+        _docs_panel.objects = [
+            pn.pane.HTML(
+                f'<div style="font-weight:700;font-size:14px;color:#1F4E79;margin-bottom:10px">'
+                f'📋 Documentos pendientes</div>'
+                f'<div id="doc-prog-overlay">{items_html}</div>',
+                sizing_mode="stretch_width")
+        ]
+
+    _refrescar_docs_panel()
+
+    _docs_visible = [False]
+
+    btn_usuario = pn.widgets.Button(
+        name=f"👤 {nombre_display}",
+        button_type="light",
+        width=220, height=36,
+        stylesheets=["""
+            :host button {
+                border: 1.5px solid #CBD5E1 !important;
+                border-radius: 8px !important;
+                font-size: 13px !important;
+                color: #1F4E79 !important;
+                background: white !important;
+                cursor: pointer !important;
+                font-weight: 600 !important;
+            }
+            :host button:hover { background: #EFF6FF !important; }
+        """],
+    )
+
+    def on_toggle_docs(event):
+        _docs_visible[0] = not _docs_visible[0]
+        if _docs_visible[0]:
+            _refrescar_docs_panel()
+        _docs_panel.visible = _docs_visible[0]
+
+    btn_usuario.on_click(on_toggle_docs)
+
     header = pn.Row(
         pn.pane.HTML(f"""
             <div style="background:white;padding:20px 28px;border-radius:12px;
@@ -2917,12 +3066,17 @@ def crear_app():
                         Instituto de Matemática · Universidad de Valparaíso · Plan 2025</p>
                 </div>
                 <div style="text-align:right;margin-right:8px">
-                    <div style="font-size:13px;font-weight:600;color:#1F4E79">{nombre_display}</div>
                     <div style="font-size:11px;color:#64748B">{rol_txt}</div>
                 </div>
             </div>
         """, sizing_mode="stretch_width"),
-        pn.Column(btn_logout, align="center", margin=(0, 0, 0, 8)),
+        pn.Column(
+            pn.Row(btn_usuario, btn_logout, align="center"),
+            pn.layout.Spacer(height=4),
+            _docs_panel,
+            align="center", margin=(0, 0, 0, 8),
+            styles={"position": "relative"}
+        ),
         sizing_mode="stretch_width",
         margin=(0, 0, 24, 0),
     )
