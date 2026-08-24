@@ -227,7 +227,8 @@ def get_programa_completo(asig_id):
         ORDER BY c.codigo, ra.codigo_completo
     """, (asig_id,)).fetchall()
     todos_ras_raw = conn.execute("""
-        SELECT ra.id, ra.codigo_completo, c.codigo, c.tipo
+        SELECT ra.id, ra.codigo_completo, c.codigo, c.tipo,
+               nd.codigo_nivel, nd.id, ra.descripcion
         FROM resultados_aprendizaje ra
         JOIN niveles_dominio nd ON nd.id = ra.nivel_dominio_id
         JOIN competencias c ON c.id = nd.competencia_id
@@ -238,12 +239,13 @@ def get_programa_completo(asig_id):
                 WHEN 'titulo'       THEN 1
                 WHEN 'sello_uv'     THEN 2
                 ELSE 3
-            END, c.codigo, ra.codigo_completo
+            END, c.codigo, nd.codigo_nivel, ra.codigo_ra
     """).fetchall()
     conn.close()
     ras      = [{"id": r[0], "codigo_completo": r[1], "comp": r[2], "tipo": r[3]}
                 for r in ras_raw]
-    todos_ras = [{"id": r[0], "codigo_completo": r[1], "comp": r[2], "tipo": r[3]}
+    todos_ras = [{"id": r[0], "codigo_completo": r[1], "comp": r[2], "tipo": r[3],
+                  "nivel": r[4], "nd_id": r[5], "descripcion": r[6] or ""}
                  for r in todos_ras_raw]
     return asig, unidades, metodologias, evaluaciones, ras, todos_ras, bibliografia
 
@@ -1742,65 +1744,169 @@ class RevisionProgramas(param.Parameterized):
             pn.pane.HTML('<div class="card-title">Descripción de la Asignatura</div>'),
             w_desc, css_classes=["card"], sizing_mode="stretch_width")
 
-        # ── Sección: Tributaciones (checkboxes estilizados tipo Google Forms) ──
+        # ── Configuración de colores por tipo ────────────────────────
         TIPO_CONFIG = {
-            "licenciatura": {"label": "Competencias de Licenciatura",  "color": "#1565C0", "bg": "#EFF6FF", "bord": "#BFDBFE", "dot": "#3B82F6"},
-            "titulo":       {"label": "Competencias Específicas del Título Profesional", "color": "#166534", "bg": "#F0FDF4", "bord": "#BBF7D0", "dot": "#22C55E"},
-            "sello_uv":     {"label": "Competencias Genéricas Sello UV","color": "#9D174D", "bg": "#FFF1F2", "bord": "#FECDD3", "dot": "#F43F5E"},
+            "licenciatura": {"label": "Competencias de Licenciatura",
+                             "color": "#1565C0", "bg": "#EFF6FF", "bord": "#93C5FD",
+                             "activo_bg": "#1D4ED8", "activo_txt": "#FFFFFF"},
+            "titulo":       {"label": "Competencias Específicas del Título Profesional",
+                             "color": "#166534", "bg": "#F0FDF4", "bord": "#86EFAC",
+                             "activo_bg": "#16A34A", "activo_txt": "#FFFFFF"},
+            "sello_uv":     {"label": "Competencias Genéricas Sello UV",
+                             "color": "#9D174D", "bg": "#FFF1F2", "bord": "#FDA4AF",
+                             "activo_bg": "#E11D48", "activo_txt": "#FFFFFF"},
         }
 
-        grupos_ra = {}
+        # ── Agrupar todos_ras por (tipo, comp, nivel_dominio) ────────
+        # nd_map: (tipo, comp, nivel) -> list of ra dicts
+        from collections import OrderedDict as _OD
+        nd_map = _OD()
         for ra in todos_ras:
-            grupos_ra.setdefault(ra["comp"], []).append(ra)
-        categorias = {}
-        for comp, ras in grupos_ra.items():
-            categorias.setdefault(ras[0]["tipo"], {})[comp] = ras
+            key = (ra["tipo"], ra["comp"], ra["nivel"])
+            if key not in nd_map:
+                nd_map[key] = []
+            nd_map[key].append(ra)
 
-        ra_checks = {}
-        bloques_cat = []
-        for tipo_cat, comps in categorias.items():
-            cfg   = TIPO_CONFIG.get(tipo_cat, {"label": tipo_cat, "color": "#475569", "bg": "#F8FAFC", "bord": "#CBD5E1", "dot": "#64748B"})
-            comp_sections = []
-            for comp, ras in comps.items():
-                items_html = []
-                comp_checks = []
-                for ra in ras:
-                    checked = ra["id"] in ra_ids_actuales
-                    ra_id   = ra["id"]
-                    cb = pn.widgets.Checkbox(
-                        name=f'{ra["codigo_completo"]}  —  {ra.get("descripcion") or ""}',
-                        value=checked,
-                        margin=(2, 0))
-                    if not _puede:
-                        cb.disabled = True
-                    ra_checks[ra_id] = cb
-                    comp_checks.append(cb)
-                comp_sections.append(pn.Column(
+        # ── Crear RA checkboxes (para sección Resultados de Aprendizaje) ──
+        ra_checks = {}   # ra_id -> Checkbox
+        for ra in todos_ras:
+            checked = ra["id"] in ra_ids_actuales
+            lbl = ra["codigo_completo"]
+            if ra.get("descripcion"):
+                lbl += f'  —  {ra["descripcion"]}'
+            cb = pn.widgets.Checkbox(name=lbl, value=checked, margin=(3, 0))
+            if not _puede:
+                cb.disabled = True
+            ra_checks[ra["id"]] = cb
+        self._ra_checks = ra_checks
+
+        # ── Crear nd_toggles (para sección Aporte al Perfil de Egreso) ──
+        # Toggle a nivel (comp, nivel_dominio) — activo si ≥1 RA seleccionado
+        nd_toggles = {}  # (tipo, comp, nivel) -> Toggle
+        for key, ras_nd in nd_map.items():
+            tipo_cat, comp, nivel = key
+            cfg = TIPO_CONFIG.get(tipo_cat, {"color": "#475569", "activo_bg": "#475569", "activo_txt": "#FFF"})
+            activo = any(ra["id"] in ra_ids_actuales for ra in ras_nd)
+            tgl = pn.widgets.Toggle(
+                name=f"{comp}  N{nivel}",
+                value=activo,
+                button_type="primary" if activo else "light",
+                width=130, height=50,
+                disabled=not _puede)
+            nd_toggles[key] = tgl
+
+        # ── Panel resumen dinámico ────────────────────────────────────
+        resumen_nd  = pn.pane.HTML("", sizing_mode="stretch_width")
+        resumen_ra  = pn.pane.HTML("", sizing_mode="stretch_width")
+
+        def _html_resumen_nd():
+            seleccionados = [k for k, tgl in nd_toggles.items() if tgl.value]
+            if not seleccionados:
+                return '<p style="color:#94A3B8;font-size:12px;margin:0">Ninguna competencia seleccionada aún.</p>'
+            por_tipo = {}
+            for (tipo, comp, nivel) in seleccionados:
+                por_tipo.setdefault(tipo, []).append(f"{comp} N{nivel}")
+            partes = []
+            for tipo, items in por_tipo.items():
+                cfg = TIPO_CONFIG.get(tipo, {})
+                color = cfg.get("activo_bg", "#475569")
+                for it in items:
+                    partes.append(
+                        f'<span style="display:inline-block;background:{color};color:#fff;'
+                        f'border-radius:20px;padding:3px 12px;font-size:12px;'
+                        f'font-weight:600;margin:2px 4px 2px 0">{it}</span>')
+            return '<div style="padding:8px 0">' + "".join(partes) + "</div>"
+
+        def _html_resumen_ra():
+            seleccionados = [ra for ra in todos_ras if ra_checks.get(ra["id"]) and ra_checks[ra["id"]].value]
+            if not seleccionados:
+                return '<p style="color:#94A3B8;font-size:12px;margin:0">Ningún RA seleccionado aún.</p>'
+            por_tipo = {}
+            for ra in seleccionados:
+                por_tipo.setdefault(ra["tipo"], []).append(ra["codigo_completo"])
+            partes = []
+            for tipo, items in por_tipo.items():
+                cfg = TIPO_CONFIG.get(tipo, {})
+                color = cfg.get("activo_bg", "#475569")
+                for it in items:
+                    partes.append(
+                        f'<span style="display:inline-block;background:{color};color:#fff;'
+                        f'border-radius:20px;padding:3px 10px;font-size:11px;'
+                        f'font-weight:600;margin:2px 3px 2px 0">{it}</span>')
+            return '<div style="padding:8px 0">' + "".join(partes) + "</div>"
+
+        resumen_nd.object  = _html_resumen_nd()
+        resumen_ra.object  = _html_resumen_ra()
+
+        # ── Sincronización bidireccional ────────────────────────────
+        _syncing = [False]
+
+        def _on_nd_toggle(event, key):
+            if _syncing[0]: return
+            _syncing[0] = True
+            tipo_cat, comp, nivel = key
+            cfg = TIPO_CONFIG.get(tipo_cat, {})
+            nd_toggles[key].button_type = "primary" if event.new else "light"
+            for ra in nd_map[key]:
+                if ra["id"] in ra_checks:
+                    ra_checks[ra["id"]].value = event.new
+            resumen_nd.object = _html_resumen_nd()
+            resumen_ra.object = _html_resumen_ra()
+            _syncing[0] = False
+
+        def _on_ra_check(event, ra_dict):
+            if _syncing[0]: return
+            _syncing[0] = True
+            key = (ra_dict["tipo"], ra_dict["comp"], ra_dict["nivel"])
+            if key in nd_toggles:
+                activo = any(ra_checks[ra["id"]].value
+                             for ra in nd_map[key] if ra["id"] in ra_checks)
+                nd_toggles[key].value = activo
+                nd_toggles[key].button_type = "primary" if activo else "light"
+            resumen_nd.object = _html_resumen_nd()
+            resumen_ra.object = _html_resumen_ra()
+            _syncing[0] = False
+
+        for key, tgl in nd_toggles.items():
+            tgl.param.watch(lambda e, k=key: _on_nd_toggle(e, k), "value")
+        for ra in todos_ras:
+            if ra["id"] in ra_checks:
+                ra_checks[ra["id"]].param.watch(
+                    lambda e, r=ra: _on_ra_check(e, r), "value")
+
+        # ── Sección: Aporte al Perfil de Egreso (nivel_dominio) ──────
+        # Agrupar nd_toggles por tipo y comp
+        nd_por_tipo = {}
+        for key in nd_map:
+            tipo_cat, comp, nivel = key
+            nd_por_tipo.setdefault(tipo_cat, {}).setdefault(comp, []).append(key)
+
+        bloques_aporte = []
+        for tipo_cat, comps_nd in nd_por_tipo.items():
+            cfg = TIPO_CONFIG.get(tipo_cat, {"label": tipo_cat, "color": "#475569",
+                                              "bg": "#F8FAFC", "bord": "#CBD5E1"})
+            comp_rows = []
+            for comp, keys in comps_nd.items():
+                tgls = [nd_toggles[k] for k in sorted(keys, key=lambda x: x[2])]
+                comp_rows.append(pn.Column(
                     pn.pane.HTML(
-                        f'<div style="font-size:12px;font-weight:700;color:{cfg["color"]};'
-                        f'margin:10px 0 6px;letter-spacing:.3px">{comp}</div>'),
-                    *comp_checks,
-                    sizing_mode="stretch_width",
-                    styles={"padding-left": "4px"}))
-            bloque = pn.Column(
+                        f'<div style="font-size:11px;font-weight:700;color:{cfg["color"]};'
+                        f'margin-bottom:6px;letter-spacing:.5px">{comp}</div>'),
+                    pn.Row(*tgls, margin=(0, 0, 8, 0)),
+                    sizing_mode="stretch_width"))
+            bloques_aporte.append(pn.Column(
                 pn.pane.HTML(
                     f'<div style="font-size:13px;font-weight:700;color:{cfg["color"]};'
                     f'padding:10px 16px;border-radius:8px 8px 0 0;'
                     f'background:{cfg["bord"]};border-bottom:2px solid {cfg["color"]}">'
                     f'{cfg["label"]}</div>'),
-                *comp_sections,
+                pn.Column(*comp_rows,
+                           styles={"padding": "10px 16px"},
+                           sizing_mode="stretch_width"),
                 styles={
-                    "background": cfg["bg"],
-                    "border": f"1px solid {cfg['bord']}",
-                    "border-radius": "8px",
-                    "margin-bottom": "12px",
-                    "padding": "0 0 12px 0",
-                    "overflow": "hidden",
-                },
-                sizing_mode="stretch_width")
-            bloques_cat.append(bloque)
-
-        self._ra_checks = ra_checks
+                    "background": cfg["bg"], "border": f"1px solid {cfg['bord']}",
+                    "border-radius": "8px", "margin-bottom": "12px", "overflow": "hidden"},
+                sizing_mode="stretch_width"))
 
         _BTN_RAS_COLS = ["success", "primary", "warning", "danger", "light"]
         _idx_ras = [0]
@@ -1822,33 +1928,60 @@ class RevisionProgramas(param.Parameterized):
         btn_guardar_ras.on_click(on_guardar_ras)
 
         sec_ras = pn.Column(
-            pn.pane.HTML('<div class="card-title">Aporte al Perfil de Egreso — Resultados de Aprendizaje</div>'),
-            pn.pane.HTML('<p style="font-size:12px;color:#64748B;margin:0 0 12px">Selecciona los resultados de aprendizaje a los que tributa esta asignatura:</p>'),
-            *bloques_cat,
+            pn.pane.HTML('<div class="card-title">Aporte al Perfil de Egreso</div>'),
+            pn.pane.HTML('<p style="font-size:12px;color:#64748B;margin:0 0 10px">'
+                         'Selecciona los niveles de dominio a los que tributa esta asignatura. '
+                         'Cada botón activa todos los resultados de aprendizaje de ese nivel.</p>'),
+            *bloques_aporte,
+            pn.pane.HTML('<div style="font-size:12px;font-weight:600;color:#475569;'
+                         'margin:4px 0 4px">Seleccionados:</div>'),
+            resumen_nd,
             pn.Row(pn.layout.HSpacer(), btn_guardar_ras),
             css_classes=["card"], sizing_mode="stretch_width")
 
-        # ── Sección: Resultados de Aprendizaje (display) ──────────
-        ras_display = []
-        tipo_actual_ra = None
-        tipo_color_map = {"licenciatura": "#1F4E79", "titulo": "#375623", "sello_uv": "#7B2C2C"}
-        for ra in ras_actuales:
-            col = tipo_color_map.get(ra["tipo"], "#475569")
-            if ra["tipo"] != tipo_actual_ra:
-                tipo_actual_ra = ra["tipo"]
-                ras_display.append(
-                    f'<div style="font-weight:700;font-size:11px;color:{col};'
-                    f'text-transform:uppercase;letter-spacing:1px;'
-                    f'padding:8px 0 4px;border-bottom:2px solid {col};margin-bottom:4px">'
-                    f'{LABEL.get(ra["tipo"], ra["tipo"])}</div>')
-            ras_display.append(
-                f'<div style="padding:3px 0 3px 8px;font-size:12px">'
-                f'<span style="font-weight:700;color:{col}">{ra["codigo_completo"]}</span></div>')
-        html_ras_list = "".join(ras_display) if ras_display else \
-            '<p style="color:#94A3B8;font-size:13px">Sin resultados de aprendizaje seleccionados.</p>'
+        # ── Sección: Resultados de Aprendizaje (checkboxes RA) ───────
+        ra_por_tipo = {}
+        for ra in todos_ras:
+            ra_por_tipo.setdefault(ra["tipo"], {}).setdefault(ra["comp"], []).append(ra)
+
+        bloques_ra = []
+        for tipo_cat, comps_ra in ra_por_tipo.items():
+            cfg = TIPO_CONFIG.get(tipo_cat, {"label": tipo_cat, "color": "#475569",
+                                              "bg": "#F8FAFC", "bord": "#CBD5E1"})
+            comp_sections = []
+            for comp, ras_comp in comps_ra.items():
+                checks = [ra_checks[ra["id"]] for ra in ras_comp if ra["id"] in ra_checks]
+                comp_sections.append(pn.Column(
+                    pn.pane.HTML(
+                        f'<div style="font-size:12px;font-weight:700;color:{cfg["color"]};'
+                        f'margin:10px 0 6px">{comp}</div>'),
+                    *checks,
+                    sizing_mode="stretch_width",
+                    styles={"padding-left": "4px"}))
+            bloques_ra.append(pn.Column(
+                pn.pane.HTML(
+                    f'<div style="font-size:13px;font-weight:700;color:{cfg["color"]};'
+                    f'padding:10px 16px;border-radius:8px 8px 0 0;'
+                    f'background:{cfg["bord"]};border-bottom:2px solid {cfg["color"]}">'
+                    f'{cfg["label"]}</div>'),
+                pn.Column(*comp_sections,
+                           styles={"padding": "8px 16px 12px"},
+                           sizing_mode="stretch_width"),
+                styles={
+                    "background": cfg["bg"], "border": f"1px solid {cfg['bord']}",
+                    "border-radius": "8px", "margin-bottom": "12px", "overflow": "hidden"},
+                sizing_mode="stretch_width"))
+
         sec_ra_display = pn.Column(
             pn.pane.HTML('<div class="card-title">Resultados de Aprendizaje y Desempeños</div>'),
-            pn.pane.HTML(html_ras_list, sizing_mode="stretch_width"),
+            pn.pane.HTML('<p style="font-size:12px;color:#64748B;margin:0 0 10px">'
+                         'Selecciona los resultados de aprendizaje específicos. '
+                         'Al seleccionar un nivel completo en la sección anterior, '
+                         'se marcan automáticamente todos sus RAs.</p>'),
+            *bloques_ra,
+            pn.pane.HTML('<div style="font-size:12px;font-weight:600;color:#475569;'
+                         'margin:4px 0 4px">Seleccionados:</div>'),
+            resumen_ra,
             css_classes=["card"], sizing_mode="stretch_width")
 
         # ── Sección: Unidades de Aprendizaje ─────────────────────
