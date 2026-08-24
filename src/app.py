@@ -2966,6 +2966,19 @@ def crear_app():
 
     btn_logout.on_click(on_logout)
 
+    # ── Tabs (creados primero para que el panel de docs pueda referenciarlos) ──
+    tabs_items = [
+        ("📊 Dashboard de Cobertura",   Dashboard().view()),
+        ("✏️ Editor de Programas",      EditorProgramas().view()),
+        ("🔍 Revisión de Programas",    RevisionProgramas().view()),
+    ]
+    if rol_sesion == "admin":
+        tabs_items.append(("⚙️ Gestión de Usuarios", crear_gestion_usuarios()))
+        tabs_items.append(("📋 Registro de Acciones", crear_vista_auditoria()))
+
+    tabs = pn.Tabs(*tabs_items, dynamic=False)
+    _IDX_REVISION = 2  # índice de la pestaña Revisión de Programas
+
     # ── Panel de documentos en progreso ───────────────────────────
     _docs_panel = pn.Column(
         sizing_mode="stretch_width",
@@ -2985,40 +2998,65 @@ def crear_app():
         }
     )
 
+    # Contenedor para el script de scroll (se reemplaza en cada click)
+    _scroll_script = pn.pane.HTML("", width=0, height=0, margin=0)
+
     def _refrescar_docs_panel():
         docs = obtener_documentos_en_progreso(usuario_sesion)
-        items_html = ""
+        titulo = pn.pane.HTML(
+            '<div style="font-weight:700;font-size:14px;color:#1F4E79;margin-bottom:10px">'
+            '📋 Documentos pendientes</div>',
+            sizing_mode="stretch_width")
+
         if not docs:
-            items_html = '<p style="color:#94A3B8;font-size:13px;margin:0">No hay documentos pendientes.</p>'
-        else:
-            for d in docs:
-                ts_corto = d["ts"][:10] if d["ts"] else ""
-                items_html += f"""
-                <div id="doc-prog-{d['asignatura_id']}"
-                     style="padding:10px 12px;border-radius:8px;margin-bottom:6px;
-                            background:#F8FAFC;border:1px solid #E2E8F0;cursor:pointer"
-                     onclick="
-                        document.querySelectorAll('.bk-tab').forEach(function(t){{
-                            if(t.textContent.trim().includes('Revisi')) t.click();
-                        }});
-                        setTimeout(function(){{
-                            var sid='{d['seccion'].replace(' ','_')}';
-                            var el=document.getElementById('rev-sec-'+sid);
-                            if(el) el.scrollIntoView({{behavior:'smooth',block:'start'}});
-                        }}, 600);
-                     ">
-                    <div style="font-weight:600;font-size:13px;color:#1E293B">{d['codigo']} — {d['nombre']}</div>
-                    <div style="font-size:11px;color:#64748B;margin-top:2px">
-                        Última sección: <strong>{d['seccion']}</strong> · {ts_corto}
-                    </div>
-                </div>"""
-        _docs_panel.objects = [
-            pn.pane.HTML(
-                f'<div style="font-weight:700;font-size:14px;color:#1F4E79;margin-bottom:10px">'
-                f'📋 Documentos pendientes</div>'
-                f'<div id="doc-prog-overlay">{items_html}</div>',
-                sizing_mode="stretch_width")
-        ]
+            _docs_panel.objects = [
+                titulo,
+                pn.pane.HTML('<p style="color:#94A3B8;font-size:13px;margin:0">'
+                             'No hay documentos pendientes.</p>')]
+            return
+
+        btn_items = []
+        for d in docs:
+            ts_corto = d["ts"][:10] if d["ts"] else ""
+            sec_id = d["seccion"].replace(" ", "_")
+            lbl = f"{d['codigo']} — {d['nombre']}"
+            desc_html = (f'<div style="font-weight:600;font-size:13px;color:#1E293B">{lbl}</div>'
+                         f'<div style="font-size:11px;color:#64748B;margin-top:2px">'
+                         f'Última sección: <strong>{d["seccion"]}</strong> · {ts_corto}</div>')
+            btn_doc = pn.widgets.Button(
+                name=lbl,
+                button_type="light",
+                sizing_mode="stretch_width", height=52,
+                stylesheets=[f"""
+                    :host button {{
+                        text-align:left !important; padding:10px 12px !important;
+                        border-radius:8px !important; border:1px solid #E2E8F0 !important;
+                        background:#F8FAFC !important; cursor:pointer !important;
+                        white-space:normal !important; height:auto !important;
+                    }}
+                    :host button:hover {{ background:#EFF6FF !important; }}
+                """],
+            )
+            # Usar pane HTML para mostrar descripción enriquecida debajo del botón
+            desc_pane = pn.pane.HTML(desc_html, sizing_mode="stretch_width",
+                                      styles={"pointer-events": "none", "margin-top": "-6px"})
+
+            def _ir_a_doc(event, _sec=sec_id, _d=d):
+                tabs.active = _IDX_REVISION
+                _docs_panel.visible = False
+                _docs_visible[0] = False
+                # Inyectar JS scroll tras un breve delay para que el tab se renderice
+                _scroll_script.object = (
+                    f'<script>setTimeout(function(){{'
+                    f'var el=document.getElementById("rev-sec-{_sec}");'
+                    f'if(el)el.scrollIntoView({{behavior:"smooth",block:"start"}});'
+                    f'}}, 700);</script>')
+
+            btn_doc.on_click(_ir_a_doc)
+            btn_items.append(pn.Column(btn_doc, sizing_mode="stretch_width",
+                                        margin=(0, 0, 6, 0)))
+
+        _docs_panel.objects = [titulo] + btn_items
 
     _refrescar_docs_panel()
 
@@ -3074,23 +3112,13 @@ def crear_app():
             pn.Row(btn_usuario, btn_logout, align="center"),
             pn.layout.Spacer(height=4),
             _docs_panel,
+            _scroll_script,
             align="center", margin=(0, 0, 0, 8),
             styles={"position": "relative"}
         ),
         sizing_mode="stretch_width",
         margin=(0, 0, 24, 0),
     )
-
-    tabs_items = [
-        ("📊 Dashboard de Cobertura",   Dashboard().view()),
-        ("✏️ Editor de Programas",      EditorProgramas().view()),
-        ("🔍 Revisión de Programas",    RevisionProgramas().view()),
-    ]
-    if rol_sesion == "admin":
-        tabs_items.append(("⚙️ Gestión de Usuarios", crear_gestion_usuarios()))
-        tabs_items.append(("📋 Registro de Acciones", crear_vista_auditoria()))
-
-    tabs = pn.Tabs(*tabs_items, dynamic=False)
 
     return pn.Column(
         header, tabs,
