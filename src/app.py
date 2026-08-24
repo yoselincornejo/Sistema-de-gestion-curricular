@@ -347,6 +347,102 @@ def guardar_programa(asig_id, datos):
     finally:
         conn.close()
 
+def guardar_identificacion(asig_id, datos):
+    conn = conexion()
+    try:
+        conn.execute(
+            "UPDATE asignaturas SET nombre=?, semestre=?, duracion=? WHERE id=?",
+            (datos["nombre"], datos["semestre"], datos["duracion"], asig_id))
+        conn.execute("DELETE FROM requisitos WHERE asignatura_id=?", (asig_id,))
+        for req_cod in datos.get("requisitos_ids", []):
+            req_asig = conn.execute(
+                "SELECT id FROM asignaturas WHERE codigo=?", (req_cod,)).fetchone()
+            if req_asig:
+                conn.execute(
+                    "INSERT OR IGNORE INTO requisitos (asignatura_id, requisito_id) VALUES (?,?)",
+                    (asig_id, req_asig[0]))
+        conn.commit()
+        return True, "Identificación guardada"
+    except Exception as e:
+        conn.rollback(); return False, str(e)
+    finally:
+        conn.close()
+
+def guardar_descripcion(asig_id, descripcion):
+    conn = conexion()
+    try:
+        conn.execute("UPDATE asignaturas SET descripcion=? WHERE id=?", (descripcion, asig_id))
+        conn.commit(); return True, "Descripción guardada"
+    except Exception as e:
+        conn.rollback(); return False, str(e)
+    finally:
+        conn.close()
+
+def guardar_unidades(asig_id, unidades):
+    conn = conexion()
+    try:
+        conn.execute("DELETE FROM unidades WHERE asignatura_id=?", (asig_id,))
+        for i, u in enumerate(unidades):
+            if u["nombre"].strip() or u["contenidos"].strip():
+                conn.execute(
+                    "INSERT INTO unidades (asignatura_id, orden, nombre, contenidos, indicador_logro) VALUES (?,?,?,?,?)",
+                    (asig_id, i+1, u["nombre"], u["contenidos"], u.get("indicador_logro", "")))
+        conn.commit(); return True, "Unidades guardadas"
+    except Exception as e:
+        conn.rollback(); return False, str(e)
+    finally:
+        conn.close()
+
+def guardar_lab(asig_id, texto):
+    conn = conexion()
+    try:
+        conn.execute("UPDATE asignaturas SET experiencias_laboratorio=? WHERE id=?", (texto, asig_id))
+        conn.commit(); return True, "Experiencias de laboratorio guardadas"
+    except Exception as e:
+        conn.rollback(); return False, str(e)
+    finally:
+        conn.close()
+
+def guardar_metodologia(asig_id, texto):
+    conn = conexion()
+    try:
+        conn.execute("DELETE FROM metodologias WHERE asignatura_id=?", (asig_id,))
+        if texto.strip():
+            conn.execute("INSERT INTO metodologias (asignatura_id, descripcion) VALUES (?,?)",
+                         (asig_id, texto))
+        conn.commit(); return True, "Metodología guardada"
+    except Exception as e:
+        conn.rollback(); return False, str(e)
+    finally:
+        conn.close()
+
+def guardar_evaluaciones(asig_id, evaluaciones, desc_ev):
+    conn = conexion()
+    try:
+        conn.execute("DELETE FROM evaluaciones WHERE asignatura_id=?", (asig_id,))
+        for ev in evaluaciones:
+            if ev["tipo"].strip():
+                conn.execute(
+                    "INSERT INTO evaluaciones (asignatura_id, tipo, porcentaje) VALUES (?,?,?)",
+                    (asig_id, ev["tipo"], ev["porcentaje"]))
+        conn.execute("UPDATE asignaturas SET descripcion_evaluaciones=? WHERE id=?",
+                     (desc_ev, asig_id))
+        conn.commit(); return True, "Evaluaciones guardadas"
+    except Exception as e:
+        conn.rollback(); return False, str(e)
+    finally:
+        conn.close()
+
+def guardar_otros_recursos(asig_id, texto):
+    conn = conexion()
+    try:
+        conn.execute("UPDATE asignaturas SET otros_recursos=? WHERE id=?", (texto, asig_id))
+        conn.commit(); return True, "Otros recursos guardados"
+    except Exception as e:
+        conn.rollback(); return False, str(e)
+    finally:
+        conn.close()
+
 # ── RBAC ─────────────────────────────────────────────────────────
 
 def _puede_editar(rol: str, nombre_completo: str, docente_asig: str) -> bool:
@@ -1728,11 +1824,32 @@ class RevisionProgramas(param.Parameterized):
             w_req.value = [v for v in w_req.value if v in nuevas_opts]
         w_sem.param.watch(on_sem_change, "value")
 
+        def _btn_guardar(label="💾 Guardar", width=200):
+            btn = pn.widgets.Button(name=label, button_type="success",
+                                    width=width, height=38, disabled=not _puede)
+            def _feedback(ok, msg, b=btn):
+                b.button_type = "success" if ok else "danger"
+                if ok: pn.state.notifications.success(msg, duration=3500)
+                else:  pn.state.notifications.error(msg, duration=4000)
+            return btn, _feedback
+
+        btn_id, fb_id = _btn_guardar("💾 Guardar identificación", 220)
+        def on_guardar_id(event):
+            ok, msg = guardar_identificacion(self.asignatura_id, {
+                "nombre":        self._widgets["nombre"].value,
+                "semestre":      self._widgets["semestre"].value,
+                "duracion":      self._widgets["duracion"].value,
+                "requisitos_ids":[v.split(" -- ")[0] for v in self._widgets["requisitos"].value],
+            })
+            fb_id(ok, msg)
+        btn_id.on_click(on_guardar_id)
+
         sec_ident = pn.Column(
             pn.pane.HTML('<div class="card-title">Identificación de la Asignatura</div>'),
             pn.Row(w_nombre, w_sem, w_nivel),
             pn.Row(w_dur, w_docente, sizing_mode="stretch_width"),
             w_req,
+            pn.Row(pn.layout.HSpacer(), btn_id),
             css_classes=["card"], sizing_mode="stretch_width")
 
         # ── Sección: Descripción de la asignatura ─────────────────
@@ -1740,9 +1857,17 @@ class RevisionProgramas(param.Parameterized):
             name="Descripción",
             value=asig_full.get("descripcion", "") or "",
             height=180, sizing_mode="stretch_width")
+        btn_desc, fb_desc = _btn_guardar("💾 Guardar descripción", 210)
+        def on_guardar_desc(event):
+            ok, msg = guardar_descripcion(self.asignatura_id, self._widgets["descripcion"].value)
+            fb_desc(ok, msg)
+        btn_desc.on_click(on_guardar_desc)
+
         sec_desc = pn.Column(
             pn.pane.HTML('<div class="card-title">Descripción de la Asignatura</div>'),
-            w_desc, css_classes=["card"], sizing_mode="stretch_width")
+            w_desc,
+            pn.Row(pn.layout.HSpacer(), btn_desc),
+            css_classes=["card"], sizing_mode="stretch_width")
 
         # ── Configuración de colores por tipo ────────────────────────
         TIPO_CONFIG = {
@@ -1972,6 +2097,13 @@ class RevisionProgramas(param.Parameterized):
                     "border-radius": "8px", "margin-bottom": "12px", "overflow": "hidden"},
                 sizing_mode="stretch_width"))
 
+        btn_ra, fb_ra = _btn_guardar("💾 Guardar RAs seleccionados", 230)
+        def on_guardar_ra(event):
+            ra_ids = [rid for rid, cb in self._ra_checks.items() if cb.value]
+            ok, msg = guardar_tributaciones(self.asignatura_id, ra_ids)
+            fb_ra(ok, msg)
+        btn_ra.on_click(on_guardar_ra)
+
         sec_ra_display = pn.Column(
             pn.pane.HTML('<div class="card-title">Resultados de Aprendizaje y Desempeños</div>'),
             pn.pane.HTML('<p style="font-size:12px;color:#64748B;margin:0 0 10px">'
@@ -1982,6 +2114,7 @@ class RevisionProgramas(param.Parameterized):
             pn.pane.HTML('<div style="font-size:12px;font-weight:600;color:#475569;'
                          'margin:4px 0 4px">Seleccionados:</div>'),
             resumen_ra,
+            pn.Row(pn.layout.HSpacer(), btn_ra),
             css_classes=["card"], sizing_mode="stretch_width")
 
         # ── Sección: Unidades de Aprendizaje ─────────────────────
@@ -2006,17 +2139,26 @@ class RevisionProgramas(param.Parameterized):
 
         btn_add_uni = pn.widgets.Button(name="➕ Añadir unidad",
                                          css_classes=["btn-add"], width=200, height=42)
+        btn_uni_all, fb_uni_all = _btn_guardar("💾 Guardar todas las unidades", 240)
 
         def on_add_uni(event):
             ud = crear_unidad(len(self._unidades_w) + 1)
             self._unidades_w.append(ud)
             col_unidades.append(ud["panel"])
 
+        def on_guardar_uni_all(event):
+            ok, msg = guardar_unidades(self.asignatura_id, [
+                {"nombre": u["nombre"].value, "contenidos": u["contenidos"].value,
+                 "indicador_logro": u["indicador_logro"].value}
+                for u in self._unidades_w])
+            fb_uni_all(ok, msg)
+
         btn_add_uni.on_click(on_add_uni)
+        btn_uni_all.on_click(on_guardar_uni_all)
         sec_uni = pn.Column(
             pn.pane.HTML('<div class="card-title">Unidades de Aprendizaje y Contenidos</div>'),
             col_unidades,
-            pn.Row(pn.layout.HSpacer(), btn_add_uni, pn.layout.HSpacer()),
+            pn.Row(btn_add_uni, pn.layout.HSpacer(), btn_uni_all),
             css_classes=["card"], sizing_mode="stretch_width")
 
         # ── Sección: Experiencias de Laboratorio ──────────────────
@@ -2024,18 +2166,34 @@ class RevisionProgramas(param.Parameterized):
             name="Experiencias de Laboratorio",
             value=asig_full.get("experiencias_laboratorio", "") or "",
             height=150, sizing_mode="stretch_width")
+        btn_lab, fb_lab = _btn_guardar("💾 Guardar laboratorio", 210)
+        def on_guardar_lab(event):
+            ok, msg = guardar_lab(self.asignatura_id, self._widgets["lab"].value)
+            fb_lab(ok, msg)
+        btn_lab.on_click(on_guardar_lab)
+
         sec_lab = pn.Column(
             pn.pane.HTML('<div class="card-title">Experiencias de Laboratorio</div>'),
-            w_lab, css_classes=["card"], sizing_mode="stretch_width")
+            w_lab,
+            pn.Row(pn.layout.HSpacer(), btn_lab),
+            css_classes=["card"], sizing_mode="stretch_width")
 
         # ── Sección: Metodología ──────────────────────────────────
         w_metod = pn.widgets.TextAreaInput(
             name="Metodología",
             value="\n".join(m.get("descripcion", "") for m in metodologias),
             height=180, sizing_mode="stretch_width")
+        btn_metod, fb_metod = _btn_guardar("💾 Guardar metodología", 210)
+        def on_guardar_metod(event):
+            ok, msg = guardar_metodologia(self.asignatura_id, self._widgets["metodologia"].value)
+            fb_metod(ok, msg)
+        btn_metod.on_click(on_guardar_metod)
+
         sec_metod = pn.Column(
             pn.pane.HTML('<div class="card-title">Metodología / Estrategia de Enseñanza-Aprendizaje</div>'),
-            w_metod, css_classes=["card"], sizing_mode="stretch_width")
+            w_metod,
+            pn.Row(pn.layout.HSpacer(), btn_metod),
+            css_classes=["card"], sizing_mode="stretch_width")
 
         # ── Sección: Evaluaciones ─────────────────────────────────
         self._eval_w = []
@@ -2052,10 +2210,21 @@ class RevisionProgramas(param.Parameterized):
             name="Notas adicionales de evaluación",
             value=asig_full.get("descripcion_evaluaciones", "") or "",
             height=120, sizing_mode="stretch_width")
+        btn_eval, fb_eval = _btn_guardar("💾 Guardar evaluaciones", 210)
+        def on_guardar_eval(event):
+            ok, msg = guardar_evaluaciones(
+                self.asignatura_id,
+                [{"tipo": e["tipo"].value, "porcentaje": e["porcentaje"].value}
+                 for e in self._eval_w],
+                self._widgets["desc_ev"].value)
+            fb_eval(ok, msg)
+        btn_eval.on_click(on_guardar_eval)
+
         sec_eval = pn.Column(
             pn.pane.HTML('<div class="card-title">Estrategia de Evaluación</div>'),
             *[pn.Row(e["tipo"], e["porcentaje"]) for e in self._eval_w],
             w_desc_ev,
+            pn.Row(pn.layout.HSpacer(), btn_eval),
             css_classes=["card"], sizing_mode="stretch_width")
 
         # ── Sección: Bibliografía ─────────────────────────────────
@@ -2101,10 +2270,21 @@ class RevisionProgramas(param.Parameterized):
             w = crear_bib("complementaria"); self._biblio_w.append(w); col_biblio.append(w["panel"])
 
         btn_add_bib_b.on_click(on_add_bib_b); btn_add_bib_c.on_click(on_add_bib_c)
+
+        btn_bib, fb_bib = _btn_guardar("💾 Guardar bibliografía", 210)
+        def on_guardar_bib(event):
+            ok, msg = guardar_bibliografia(self.asignatura_id, [
+                {"tipo": b["tipo"], "autor": b["autor"].value, "titulo": b["titulo"].value,
+                 "editorial": b["editorial"].value, "anio": b["anio"].value,
+                 "isbn": b["isbn"].value, "ejemplares": b["ejemplares"].value}
+                for b in self._biblio_w])
+            fb_bib(ok, msg)
+        btn_bib.on_click(on_guardar_bib)
+
         sec_bib = pn.Column(
             pn.pane.HTML('<div class="card-title">Bibliografía</div>'),
             col_biblio,
-            pn.Row(pn.layout.HSpacer(), btn_add_bib_b, btn_add_bib_c, pn.layout.HSpacer()),
+            pn.Row(btn_add_bib_b, btn_add_bib_c, pn.layout.HSpacer(), btn_bib),
             css_classes=["card"], sizing_mode="stretch_width")
 
         # ── Sección: Linkografía ──────────────────────────────────
@@ -2142,10 +2322,37 @@ class RevisionProgramas(param.Parameterized):
             w = crear_link(); self._linkografia_w.append(w); col_link.append(w["panel"])
 
         btn_add_link.on_click(on_add_link)
+
+        btn_link, fb_link = _btn_guardar("💾 Guardar linkografía", 210)
+        def on_guardar_link(event):
+            conn = conexion()
+            try:
+                conn.execute("DELETE FROM linkografia WHERE asignatura_id=?", (self.asignatura_id,))
+                for lk in self._linkografia_w:
+                    url_val = lk["url"].value.strip()
+                    if url_val:
+                        conn.execute("""
+                            INSERT INTO linkografia
+                            (asignatura_id, tipo_documento, autor, titulo_articulo,
+                             anio, titulo_revista, volumen, url, disponible_en)
+                            VALUES (?,?,?,?,?,?,?,?,?)
+                        """, (self.asignatura_id,
+                              lk["tipo_documento"].value, lk["autor"].value,
+                              lk["titulo_articulo"].value, lk["anio"].value,
+                              lk["titulo_revista"].value, lk["volumen"].value,
+                              url_val, lk["disponible_en"].value))
+                conn.commit()
+                fb_link(True, "Linkografía guardada")
+            except Exception as e:
+                conn.rollback(); fb_link(False, str(e))
+            finally:
+                conn.close()
+        btn_link.on_click(on_guardar_link)
+
         sec_link = pn.Column(
             pn.pane.HTML('<div class="card-title">Linkografía</div>'),
             col_link,
-            pn.Row(pn.layout.HSpacer(), btn_add_link, pn.layout.HSpacer()),
+            pn.Row(btn_add_link, pn.layout.HSpacer(), btn_link),
             css_classes=["card"], sizing_mode="stretch_width")
 
         # ── Sección: Otros Recursos ───────────────────────────────
@@ -2153,9 +2360,17 @@ class RevisionProgramas(param.Parameterized):
             name="Otros Recursos",
             value=asig_full.get("otros_recursos", "") or "",
             height=120, sizing_mode="stretch_width")
+        btn_otros, fb_otros = _btn_guardar("💾 Guardar otros recursos", 220)
+        def on_guardar_otros(event):
+            ok, msg = guardar_otros_recursos(self.asignatura_id, self._widgets["otros"].value)
+            fb_otros(ok, msg)
+        btn_otros.on_click(on_guardar_otros)
+
         sec_otros = pn.Column(
             pn.pane.HTML('<div class="card-title">Otros Recursos</div>'),
-            w_otros, css_classes=["card"], sizing_mode="stretch_width")
+            w_otros,
+            pn.Row(pn.layout.HSpacer(), btn_otros),
+            css_classes=["card"], sizing_mode="stretch_width")
 
         # ── Guardar y descargar ───────────────────────────────────
         self._widgets = {
