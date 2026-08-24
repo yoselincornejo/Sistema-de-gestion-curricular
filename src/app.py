@@ -2127,9 +2127,28 @@ class RevisionProgramas(param.Parameterized):
                                            height=150, sizing_mode="stretch_width")
             wi = pn.widgets.TextAreaInput(name="Indicador de logro", value=str(indicador),
                                            height=120, sizing_mode="stretch_width")
-            panel = pn.Column(wn, wc, wi, css_classes=["card"],
-                               margin=(0, 0, 10, 0), sizing_mode="stretch_width")
-            return {"nombre": wn, "contenidos": wc, "indicador_logro": wi, "panel": panel}
+            btn_u = pn.widgets.Button(
+                name=f"💾 Guardar Unidad {orden}", button_type="success",
+                width=200, height=36, disabled=not _puede)
+
+            def _guardar_esta_unidad(event, _btn=btn_u, _idx=[None]):
+                _idx[0] = next(
+                    (i for i, u in enumerate(self._unidades_w) if u.get("_btn") is _btn), None)
+                all_u = [{"nombre": u["nombre"].value, "contenidos": u["contenidos"].value,
+                           "indicador_logro": u["indicador_logro"].value}
+                         for u in self._unidades_w]
+                ok, msg = guardar_unidades(self.asignatura_id, all_u)
+                _btn.button_type = "success" if ok else "danger"
+                if ok: pn.state.notifications.success(msg, duration=3500)
+                else:  pn.state.notifications.error(msg, duration=4000)
+
+            btn_u.on_click(_guardar_esta_unidad)
+            panel = pn.Column(
+                wn, wc, wi,
+                pn.Row(pn.layout.HSpacer(), btn_u),
+                css_classes=["card"], margin=(0, 0, 10, 0), sizing_mode="stretch_width")
+            return {"nombre": wn, "contenidos": wc, "indicador_logro": wi,
+                    "panel": panel, "_btn": btn_u}
 
         for i, u in enumerate(unidades):
             ud = crear_unidad(u.get("orden", i + 1), u.get("nombre", ""),
@@ -2139,26 +2158,17 @@ class RevisionProgramas(param.Parameterized):
 
         btn_add_uni = pn.widgets.Button(name="➕ Añadir unidad",
                                          css_classes=["btn-add"], width=200, height=42)
-        btn_uni_all, fb_uni_all = _btn_guardar("💾 Guardar todas las unidades", 240)
 
         def on_add_uni(event):
             ud = crear_unidad(len(self._unidades_w) + 1)
             self._unidades_w.append(ud)
             col_unidades.append(ud["panel"])
 
-        def on_guardar_uni_all(event):
-            ok, msg = guardar_unidades(self.asignatura_id, [
-                {"nombre": u["nombre"].value, "contenidos": u["contenidos"].value,
-                 "indicador_logro": u["indicador_logro"].value}
-                for u in self._unidades_w])
-            fb_uni_all(ok, msg)
-
         btn_add_uni.on_click(on_add_uni)
-        btn_uni_all.on_click(on_guardar_uni_all)
         sec_uni = pn.Column(
             pn.pane.HTML('<div class="card-title">Unidades de Aprendizaje y Contenidos</div>'),
             col_unidades,
-            pn.Row(btn_add_uni, pn.layout.HSpacer(), btn_uni_all),
+            pn.Row(btn_add_uni),
             css_classes=["card"], sizing_mode="stretch_width")
 
         # ── Sección: Experiencias de Laboratorio ──────────────────
