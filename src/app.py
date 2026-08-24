@@ -1737,15 +1737,17 @@ class RevisionProgramas(param.Parameterized):
         w_desc = pn.widgets.TextAreaInput(
             name="Descripción",
             value=asig_full.get("descripcion", "") or "",
-            height=100, sizing_mode="stretch_width")
+            height=180, sizing_mode="stretch_width")
         sec_desc = pn.Column(
             pn.pane.HTML('<div class="card-title">Descripción de la Asignatura</div>'),
             w_desc, css_classes=["card"], sizing_mode="stretch_width")
 
-        # ── Sección: Tributaciones (casillas seleccionables) ──────
-        BG_CATEGORIA     = {"licenciatura": "#BBDEFB", "titulo": "#C8E6C9", "sello_uv": "#F8BBD0"}
-        BORDER_CATEGORIA = {"licenciatura": "#1565C0", "titulo": "#2E7D32", "sello_uv": "#880E4F"}
-        LABEL_CATEGORIA  = {"licenciatura": "Licenciatura (CL)", "titulo": "Título Profesional (CE)", "sello_uv": "Sello UV (CG)"}
+        # ── Sección: Tributaciones (checkboxes estilizados tipo Google Forms) ──
+        TIPO_CONFIG = {
+            "licenciatura": {"label": "Competencias de Licenciatura",  "color": "#1565C0", "bg": "#EFF6FF", "bord": "#BFDBFE", "dot": "#3B82F6"},
+            "titulo":       {"label": "Competencias Específicas del Título Profesional", "color": "#166534", "bg": "#F0FDF4", "bord": "#BBF7D0", "dot": "#22C55E"},
+            "sello_uv":     {"label": "Competencias Genéricas Sello UV","color": "#9D174D", "bg": "#FFF1F2", "bord": "#FECDD3", "dot": "#F43F5E"},
+        }
 
         grupos_ra = {}
         for ra in todos_ras:
@@ -1757,47 +1759,43 @@ class RevisionProgramas(param.Parameterized):
         ra_checks = {}
         bloques_cat = []
         for tipo_cat, comps in categorias.items():
-            bg    = BG_CATEGORIA.get(tipo_cat, "#f5f5f5")
-            bord  = BORDER_CATEGORIA.get(tipo_cat, "#999")
-            label = LABEL_CATEGORIA.get(tipo_cat, tipo_cat.upper())
-            comp_cols = []
+            cfg   = TIPO_CONFIG.get(tipo_cat, {"label": tipo_cat, "color": "#475569", "bg": "#F8FAFC", "bord": "#CBD5E1", "dot": "#64748B"})
+            comp_sections = []
             for comp, ras in comps.items():
-                color_comp = COLOR.get(tipo_cat, "#1F4E79")
-                checks = []
+                items_html = []
+                comp_checks = []
                 for ra in ras:
                     checked = ra["id"] in ra_ids_actuales
-                    cb = pn.widgets.Toggle(
-                        name=ra["codigo_completo"],
+                    ra_id   = ra["id"]
+                    cb = pn.widgets.Checkbox(
+                        name=f'{ra["codigo_completo"]}  —  {ra.get("descripcion") or ""}',
                         value=checked,
-                        button_type="success" if checked else "light",
-                        sizing_mode="stretch_width", min_width=0,
-                        height=30, margin=(2, 3))
-                    def _mk_watcher(toggle):
-                        def _on(event):
-                            toggle.button_type = "success" if event.new else "light"
-                        return _on
-                    cb.param.watch(_mk_watcher(cb), "value")
-                    ra_checks[ra["id"]] = cb
-                    checks.append(cb)
-                comp_cols.append(pn.Column(
+                        margin=(2, 0))
+                    if not _puede:
+                        cb.disabled = True
+                    ra_checks[ra_id] = cb
+                    comp_checks.append(cb)
+                comp_sections.append(pn.Column(
                     pn.pane.HTML(
-                        f'<div style="font-weight:700;color:{color_comp};'
-                        f'font-size:12px;margin-bottom:4px;text-align:center">{comp}</div>'),
-                    *checks,
-                    sizing_mode="stretch_width", min_width=0,
-                    styles={"padding": "6px 4px"}))
+                        f'<div style="font-size:12px;font-weight:700;color:{cfg["color"]};'
+                        f'margin:10px 0 6px;letter-spacing:.3px">{comp}</div>'),
+                    *comp_checks,
+                    sizing_mode="stretch_width",
+                    styles={"padding-left": "4px"}))
             bloque = pn.Column(
                 pn.pane.HTML(
-                    f'<div style="font-weight:600;font-size:12px;color:{bord};'
-                    f'margin-bottom:6px;padding-bottom:3px;border-bottom:2px solid {bord}">'
-                    f'{label}</div>'),
-                pn.Row(*comp_cols, sizing_mode="stretch_width",
-                       styles={"min-width": "0", "flex-wrap": "wrap"}),
+                    f'<div style="font-size:13px;font-weight:700;color:{cfg["color"]};'
+                    f'padding:10px 16px;border-radius:8px 8px 0 0;'
+                    f'background:{cfg["bord"]};border-bottom:2px solid {cfg["color"]}">'
+                    f'{cfg["label"]}</div>'),
+                *comp_sections,
                 styles={
-                    "background": bg, "border": f"1px solid {bord}",
-                    "border-radius": "6px", "padding": "10px 12px",
-                    "margin-bottom": "8px", "overflow": "auto", "min-width": "0",
-                    "flex": "1 1 280px",
+                    "background": cfg["bg"],
+                    "border": f"1px solid {cfg['bord']}",
+                    "border-radius": "8px",
+                    "margin-bottom": "12px",
+                    "padding": "0 0 12px 0",
+                    "overflow": "hidden",
                 },
                 sizing_mode="stretch_width")
             bloques_cat.append(bloque)
@@ -1808,7 +1806,8 @@ class RevisionProgramas(param.Parameterized):
         _idx_ras = [0]
         btn_guardar_ras = pn.widgets.Button(
             name="💾 Guardar tributaciones",
-            button_type=_BTN_RAS_COLS[0], width=230, height=38)
+            button_type=_BTN_RAS_COLS[0], width=230, height=38,
+            disabled=not _puede)
 
         def on_guardar_ras(event):
             ra_ids = [rid for rid, cb in self._ra_checks.items() if cb.value]
@@ -1822,12 +1821,10 @@ class RevisionProgramas(param.Parameterized):
 
         btn_guardar_ras.on_click(on_guardar_ras)
 
-        flex_bloques = pn.FlexBox(
-            *bloques_cat, flex_direction="row", flex_wrap="wrap",
-            sizing_mode="stretch_width")
         sec_ras = pn.Column(
             pn.pane.HTML('<div class="card-title">Aporte al Perfil de Egreso — Resultados de Aprendizaje</div>'),
-            flex_bloques,
+            pn.pane.HTML('<p style="font-size:12px;color:#64748B;margin:0 0 12px">Selecciona los resultados de aprendizaje a los que tributa esta asignatura:</p>'),
+            *bloques_cat,
             pn.Row(pn.layout.HSpacer(), btn_guardar_ras),
             css_classes=["card"], sizing_mode="stretch_width")
 
@@ -1861,9 +1858,9 @@ class RevisionProgramas(param.Parameterized):
         def crear_unidad(orden, nombre="", contenidos="", indicador=""):
             wn = pn.widgets.TextInput(name=f"Unidad {orden}", value=str(nombre)[:100], width=460)
             wc = pn.widgets.TextAreaInput(name="Contenidos", value=str(contenidos),
-                                           height=80, sizing_mode="stretch_width")
+                                           height=150, sizing_mode="stretch_width")
             wi = pn.widgets.TextAreaInput(name="Indicador de logro", value=str(indicador),
-                                           height=60, sizing_mode="stretch_width")
+                                           height=120, sizing_mode="stretch_width")
             panel = pn.Column(wn, wc, wi, css_classes=["card"],
                                margin=(0, 0, 10, 0), sizing_mode="stretch_width")
             return {"nombre": wn, "contenidos": wc, "indicador_logro": wi, "panel": panel}
@@ -1893,7 +1890,7 @@ class RevisionProgramas(param.Parameterized):
         w_lab = pn.widgets.TextAreaInput(
             name="Experiencias de Laboratorio",
             value=asig_full.get("experiencias_laboratorio", "") or "",
-            height=80, sizing_mode="stretch_width")
+            height=150, sizing_mode="stretch_width")
         sec_lab = pn.Column(
             pn.pane.HTML('<div class="card-title">Experiencias de Laboratorio</div>'),
             w_lab, css_classes=["card"], sizing_mode="stretch_width")
@@ -1902,7 +1899,7 @@ class RevisionProgramas(param.Parameterized):
         w_metod = pn.widgets.TextAreaInput(
             name="Metodología",
             value="\n".join(m.get("descripcion", "") for m in metodologias),
-            height=100, sizing_mode="stretch_width")
+            height=180, sizing_mode="stretch_width")
         sec_metod = pn.Column(
             pn.pane.HTML('<div class="card-title">Metodología / Estrategia de Enseñanza-Aprendizaje</div>'),
             w_metod, css_classes=["card"], sizing_mode="stretch_width")
@@ -1921,7 +1918,7 @@ class RevisionProgramas(param.Parameterized):
         w_desc_ev = pn.widgets.TextAreaInput(
             name="Notas adicionales de evaluación",
             value=asig_full.get("descripcion_evaluaciones", "") or "",
-            height=70, sizing_mode="stretch_width")
+            height=120, sizing_mode="stretch_width")
         sec_eval = pn.Column(
             pn.pane.HTML('<div class="card-title">Estrategia de Evaluación</div>'),
             *[pn.Row(e["tipo"], e["porcentaje"]) for e in self._eval_w],
@@ -2022,7 +2019,7 @@ class RevisionProgramas(param.Parameterized):
         w_otros = pn.widgets.TextAreaInput(
             name="Otros Recursos",
             value=asig_full.get("otros_recursos", "") or "",
-            height=70, sizing_mode="stretch_width")
+            height=120, sizing_mode="stretch_width")
         sec_otros = pn.Column(
             pn.pane.HTML('<div class="card-title">Otros Recursos</div>'),
             w_otros, css_classes=["card"], sizing_mode="stretch_width")
