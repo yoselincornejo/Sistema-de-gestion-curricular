@@ -2981,19 +2981,17 @@ def crear_app():
 
     # ── Panel de documentos en progreso ───────────────────────────
     _docs_panel = pn.Column(
-        sizing_mode="stretch_width",
         visible=False,
+        width=440,
         styles={
             "background": "linear-gradient(160deg, #1e3a5f 0%, #1F4E79 100%)",
             "border-radius": "14px",
             "box-shadow": "0 8px 32px rgba(31,78,121,0.28), 0 2px 8px rgba(0,0,0,0.16)",
             "padding": "0",
-            "position": "absolute",
-            "right": "0",
-            "top": "56px",
-            "z-index": "9999",
-            "min-width": "380px",
-            "max-width": "480px",
+            "position": "fixed",
+            "right": "40px",
+            "top": "88px",
+            "z-index": "10000",
             "overflow": "hidden",
         }
     )
